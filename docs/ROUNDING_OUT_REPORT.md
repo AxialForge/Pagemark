@@ -426,7 +426,7 @@ Written 2026-10-11 from a read-through of the 0.1.0 source (`lib/*.dart`, Androi
 - **IS-37** Backup page shows the account email without a way to copy.
 - **IS-38** Time strings use `DateFormat.yMMMd()` without locale injection.
 - **IS-39** No haptic feedback anywhere.
-- **IS-40** The app icon is the default Flutter icon.
+- **IS-40** ~~The app icon is the default Flutter icon.~~ Done: logo icons added (legacy + adaptive); iOS icon set and monochrome themed icon still missing.
 - **IS-41** Splash screen is the default white.
 - **IS-42** App label in iOS `Info.plist` may still be the default lowercase.
 - **IS-43** No adaptive/monochrome Android icon.
