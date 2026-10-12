@@ -38,6 +38,11 @@
 | Care | Trash with 30-day recovery, in-app updates with release notes, offline version history, diagnostics log |
 | Look | Light/dark × two colour palettes, animated transitions |
 
+
+<div class="shots "><figure><img src="../screenshots/library.jpg" alt="Library"><figcaption>Library</figcaption></figure><figure><img src="../screenshots/book-finished.jpg" alt="Book page"><figcaption>Book page</figcaption></figure><figure><img src="../screenshots/stats-goal.jpg" alt="Stats"><figcaption>Stats</figcaption></figure></div>
+
+
+
 **Principles.** No accounts, no analytics, no ads, no paid services. The network is used for exactly three things: book lookup (Open Library), update checks (GitHub Releases), and — only if configured — Drive backup.
 
 **Who it's for.** Readers who want a durable, private record; people leaving other tracking sites; anyone who wants their data in a plain file they can open elsewhere.

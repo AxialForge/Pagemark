@@ -52,3 +52,6 @@ app.*.map.json
 *.jks
 key.properties
 /android/local.properties
+
+# raw emulator captures for documentation (processed JPEGs live in docs/screenshots)
+docs/_tools/screenshots/out/

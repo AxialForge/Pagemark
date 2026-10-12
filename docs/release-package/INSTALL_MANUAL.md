@@ -35,6 +35,10 @@ Pagemark is signed with the author's key, so future updates install over it and 
 
 Pagemark opens on an empty Library. Tap **Add book** to start. Allow the **camera** only if you want to scan barcodes; everything else needs no permissions. In **Settings** you can pick a theme and read **About**.
 
+<div class="shots one"><figure><img src="../screenshots/library.jpg" alt="Pagemark with a few books added"><figcaption>Pagemark with a few books added</figcaption></figure></div>
+
+
+
 ### Permissions Pagemark asks for
 
 | Permission | Why |

@@ -4,6 +4,15 @@ A private, fully local book tracker for Android (iOS planned): log what you read
 
 <img src="assets/branding/logo.png" width="96" alt="Pagemark logo" />
 
+<p align="center">
+  <img src="docs/screenshots/library.jpg" width="190" alt="Library" />
+  <img src="docs/screenshots/book-reading.jpg" width="190" alt="Reading progress" />
+  <img src="docs/screenshots/stats-goal.jpg" width="190" alt="Stats" />
+  <img src="docs/screenshots/dark-library.jpg" width="190" alt="Dark theme" />
+</p>
+
+*Screenshots use sample books.*
+
 ## Features
 
 - **Log any book**: print, e-book or audiobook, any genre; several reads per book, half-star ratings, private thoughts.

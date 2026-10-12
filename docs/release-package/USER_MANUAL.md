@@ -2,6 +2,8 @@
 
 **Version 0.4.1** · A private, fully local book tracker for Android
 
+*Screenshots show sample books and were captured from the Android app (0.4.1).*
+
 ---
 
 ## 1. What Pagemark is
@@ -21,6 +23,10 @@ There is no account, no server and no tracking. The only times Pagemark uses the
 
 A small dot on **Settings** means an app update is waiting.
 
+<div class="shots "><figure><img src="../screenshots/library.jpg" alt="Library"><figcaption>Library</figcaption></figure><figure><img src="../screenshots/settings.jpg" alt="Settings"><figcaption>Settings</figcaption></figure><figure><img src="../screenshots/about.jpg" alt="About"><figcaption>About</figcaption></figure></div>
+
+
+
 ## 3. Adding a book
 
 Tap **Add book** (bottom of the Library).
@@ -34,6 +40,10 @@ If the book is already in the same library (same ISBN, or the same title and aut
 
 Descriptions are fetched a moment after the book is saved when Open Library has one.
 
+<div class="shots one"><figure><img src="../screenshots/add-book.jpg" alt="Add a book: search results"><figcaption>Add a book: search results</figcaption></figure></div>
+
+
+
 ## 4. The book page
 
 Tap a book to open it. You'll see the cover, details, tags and shelves, your notes, and the **Reading log**.
@@ -45,8 +55,16 @@ Tap a book to open it. You'll see the cover, details, tags and shelves, your not
 ### Shelves
 Tap **+ Shelf** on a book to put it on any number of shelves ("Comfort reads", "Book club", "Lent out"). Create new shelves from there. Remove a book from a shelf by tapping the × on its chip.
 
+<div class="shots one"><figure><img src="../screenshots/book-finished.jpg" alt="A finished book, with shelf and log"><figcaption>A finished book, with shelf and log</figcaption></figure></div>
+
+
+
 ### Series
 In **Edit**, type the series name and the number in the series (decimals work: `2.5`). Rows show the badge, and the **Series** screen (Library ⋮ menu) groups your books, shows how many you've read, and names what's next. It knows only the books you've added, not how long the series really is.
+
+<div class="shots two"><figure><img src="../screenshots/series.jpg" alt="Series screen"><figcaption>Series screen</figcaption></figure><figure><img src="../screenshots/shelves.jpg" alt="Manage shelves"><figcaption>Manage shelves</figcaption></figure></div>
+
+
 
 ## 5. Logging a read
 
@@ -67,6 +85,10 @@ Delete a read with the bin icon (you'll be asked to confirm).
 ### Reading progress
 While a book has an active read, its page shows a **progress card**. Tap **Update progress** and enter the page you're on. If the book has a page count you get a progress bar, pages per day, and an estimate of days left at your pace. Reaching the last page offers to mark the read finished. Progress bars also appear on the Library list and in the **Currently reading** strip.
 
+<div class="shots two"><figure><img src="../screenshots/book-reading.jpg" alt="Progress card"><figcaption>Progress card</figcaption></figure><figure><img src="../screenshots/log-read.jpg" alt="Logging a read"><figcaption>Logging a read</figcaption></figure></div>
+
+
+
 ## 6. The Library
 
 - **Search** — title, author, tags, genre and series.
@@ -77,6 +99,10 @@ While a book has an active read, its page shows a **progress card**. Tap **Updat
 - **Ratings** show as stars (4.5 = ★★★★½) and average only your **finished** reads.
 - **⋮ menu** — **Series** and **Manage shelves** (rename or delete shelves; deleting a shelf never deletes books).
 
+<div class="shots one"><figure><img src="../screenshots/shelf-filter.jpg" alt="Filtering by a shelf"><figcaption>Filtering by a shelf</figcaption></figure></div>
+
+
+
 ## 7. Stats
 
 The Stats tab counts your **main library only** — locked books never appear in it.
@@ -85,6 +111,10 @@ The Stats tab counts your **main library only** — locked books never appear in
 - **Finished per month** and **Your ratings** (how your ratings are spread, and your average).
 - **Totals** — books tracked, finished, pages, logged time, average days to finish, and finished books by format.
 - **Top genres** and **Top authors**.
+
+<div class="shots two"><figure><img src="../screenshots/stats-goal.jpg" alt="Goal and charts"><figcaption>Goal and charts</figcaption></figure><figure><img src="../screenshots/stats-totals.jpg" alt="Totals and rankings"><figcaption>Totals and rankings</figcaption></figure></div>
+
+
 
 ## 8. The Locked library
 
@@ -98,6 +128,10 @@ Open the **Locked** tab the first time and choose:
 
 ### Using it
 Enter the PIN (or use the fingerprint button). Add books while the Locked tab is open, or move any book across with its ⋮ menu.
+
+<div class="shots one"><figure><img src="../screenshots/lock-gate.jpg" alt="First visit to the Locked tab"><figcaption>First visit to the Locked tab</figcaption></figure></div>
+
+
 
 ### Protection you can rely on
 - **Wrong PINs are limited.** After 5 misses the PIN is locked out for 30 seconds, doubling after every further 5 misses (up to 1 hour).
@@ -114,6 +148,10 @@ On the lock screen tap **Forgot PIN?**, enter the recovery code and a new PIN. Y
 ## 9. Themes
 
 Settings → Theme: **Light** or **Dark**, in a **blue** ("Him") or **rose/plum** ("Her") palette. Your choice is remembered.
+
+<div class="shots two"><figure><img src="../screenshots/dark-library.jpg" alt="Dark · Her (plum)"><figcaption>Dark · Her (plum)</figcaption></figure><figure><img src="../screenshots/dark-stats.jpg" alt="Stats in the dark theme"><figcaption>Stats in the dark theme</figcaption></figure></div>
+
+
 
 ## 10. Exporting your data
 
@@ -137,6 +175,10 @@ Settings → **Google Drive backup**. One-time setup (a free Google Cloud projec
 
 Backups go to Pagemark's private app-data area on your Drive (they don't appear among your normal files). The **newest 5** are kept. An unchanged library isn't uploaded again, and each upload is verified before older copies are removed. **Back up now** uploads immediately. The Settings page shows the last backup time, or **FAILED** if something went wrong (details are on the backup page).
 
+<div class="shots one"><figure><img src="../screenshots/backup.jpg" alt="Google Drive backup"><figcaption>Google Drive backup</figcaption></figure></div>
+
+
+
 Android decides exactly when scheduled work runs, so a "daily" backup may be a few hours late, especially with battery saver on.
 
 ## 12. Restoring
@@ -157,6 +199,10 @@ Settings → **Updates** (or the dot on the Settings tab).
 - **Download & install** fetches the right file for your phone, checks its size and checksum, and opens Android's installer. The first time, Android asks you to allow installs from Pagemark. The update installs over the current app, so your library and settings are kept.
 - **Check automatically** (on by default) does a quiet check at most once a day. The only thing sent is a request to GitHub for the release list. Switch it off any time.
 - **Version history** shows every change in every release, offline. After an update, a **What's new** prompt links to it.
+
+<div class="shots one"><figure><img src="../screenshots/updates.jpg" alt="Updates"><figcaption>Updates</figcaption></figure></div>
+
+
 
 ## 14. Trash
 

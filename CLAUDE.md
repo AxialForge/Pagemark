@@ -85,6 +85,12 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 - **`CHANGELOG.md` is a Flutter asset** (shown offline in Version history); keep its `## [x.y.z]` / `### Section` / `- bullet` shape - the in-app renderer depends on it.
 - The install step can't be unit-tested (needs a device); download/verify/selection/version logic is.
 
+## Docs & screenshots
+
+- Documentation lives in `docs/release-package/*.md`; `python docs/_tools/build_docs.py` builds the four PDFs plus the combined `Pagemark-Documentation.pdf` (needs Python `markdown` and Edge). Figures are inline HTML (`<div class="shots">`) pointing at `../screenshots/*.jpg`.
+- Screenshots are real captures from the emulator with a seeded sample library - see `docs/_tools/screenshots/README.md` (seed generator is `test/tool_seed_demo_test.dart`, skipped unless `SEED_OUT` is set).
+- Re-shoot and rebuild the docs whenever a screen changes; bump the version text in the manuals each release.
+
 ## Roadmap (unbuilt)
 
 - Encrypted database at rest (SQLCipher), auto-lock timeout setting, whole-app lock.
