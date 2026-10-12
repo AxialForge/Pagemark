@@ -1,4 +1,8 @@
 import 'dart:io';
+import 'package:crypto/crypto.dart' as hash;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:path_provider/path_provider.dart';
+import 'crypto_backup.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
@@ -109,24 +113,57 @@ class DriveBackup {
     return drive.DriveApi(_Auth(auth.accessToken));
   }
 
-  /// Upload a fresh database snapshot, then prune to the newest [keepBackups].
-  static Future<void> run(AppDb db, {required bool interactive}) async {
+  static const _store = FlutterSecureStorage();
+
+  static Future<String?> passphrase() => _store.read(key: 'bk_pass');
+  static Future<void> setPassphrase(String? p) =>
+      p == null || p.isEmpty ? _store.delete(key: 'bk_pass') : _store.write(key: 'bk_pass', value: p);
+
+  /// Upload a fresh database snapshot (encrypted when a passphrase is set), skipping the upload
+  /// when nothing changed. Old copies are pruned only after the new one is verified on Drive.
+  /// Returns 'uploaded' or 'unchanged'.
+  static Future<String> run(AppDb db, {required bool interactive, bool force = false}) async {
     final p = await SharedPreferences.getInstance();
     try {
       final api = await _api(interactive: interactive);
       final snap = await Exporter.snapshotDb(db);
-      final name = 'pagemark-${DateFormat('yyyyMMdd-HHmm').format(DateTime.now())}.sqlite';
-      final media = drive.Media(snap.openRead(), await snap.length());
-      await api.files.create(
+      final pass = await passphrase();
+      final digest = hash.sha256.convert(await snap.readAsBytes()).toString();
+      final sig = '$digest|${pass == null || pass.isEmpty ? 'plain' : 'enc'}';
+      if (!force && p.getString('bk_hash') == sig) {
+        await snap.delete();
+        await p.setString('bk_ok', DateTime.now().toIso8601String());
+        await p.remove('bk_err');
+        return 'unchanged';
+      }
+      var upload = snap;
+      var ext = 'sqlite';
+      if (pass != null && pass.isNotEmpty) {
+        final tmp = await getTemporaryDirectory();
+        upload = await BackupCrypto.encrypt(snap, File('${tmp.path}/pagemark-upload.pgbak'), pass);
+        ext = 'pgbak';
+      }
+      final name = 'pagemark-${DateFormat('yyyyMMdd-HHmm').format(DateTime.now())}.$ext';
+      final size = await upload.length();
+      final made = await api.files.create(
         drive.File(name: name, parents: ['appDataFolder']),
-        uploadMedia: media,
+        uploadMedia: drive.Media(upload.openRead(), size),
+        $fields: 'id,size',
       );
-      final old = await list(api: api);
-      for (final f in old.skip(keepBackups)) {
+      if (int.tryParse(made.size ?? '') != size) {
+        if (made.id != null) await api.files.delete(made.id!);
+        throw 'Upload verification failed (Drive reports ${made.size} bytes, expected $size). Nothing was pruned.';
+      }
+      for (final f in (await list(api: api)).skip(keepBackups)) {
         await api.files.delete(f.id!);
       }
+      for (final f in {snap, upload}) {
+        if (await f.exists()) await f.delete();
+      }
+      await p.setString('bk_hash', sig);
       await p.setString('bk_ok', DateTime.now().toIso8601String());
       await p.remove('bk_err');
+      return 'uploaded';
     } catch (e) {
       await p.setString('bk_err', '${DateTime.now().toIso8601String()}  $e');
       rethrow;
@@ -157,8 +194,13 @@ class DriveBackup {
     await Workmanager().initialize(backupDispatcher);
     if (!s.enabled) {
       await Workmanager().cancelByUniqueName(_task);
+      (await SharedPreferences.getInstance()).remove('bk_sched');
       return;
     }
+    final p = await SharedPreferences.getInstance();
+    final sig = '${s.frequency}|${s.wifiOnly}';
+    if (p.getString('bk_sched') == sig) return; // unchanged: don't reset the running period
+    await p.setString('bk_sched', sig);
     await Workmanager().registerPeriodicTask(
       _task, _task,
       frequency: s.frequency == 'weekly' ? const Duration(days: 7) : const Duration(days: 1),

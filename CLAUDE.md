@@ -7,7 +7,7 @@ Pagemark is a fully local book tracker for Android (iOS later): a log of what yo
 - **Local-first.** The only network calls are Open Library lookups/covers and the user-initiated or scheduled Drive backup. No analytics, no telemetry, no backend.
 - **No paid services.** Open Library (no key) and Drive's free `appDataFolder` only. Don't add paid APIs or require code-signing certs.
 - **Locked library never leaks.** CSV/JSON exports exclude locked books; the locked tab re-locks when you leave it. The full database export and Drive backup *do* include them (documented in the UI).
-- **No secrets in source.** The Google Web client ID is typed into the app (SharedPreferences), never committed. PIN is a salted SHA-256 in `flutter_secure_storage`.
+- **No secrets in source.** The Google Web client ID is typed into the app (SharedPreferences), never committed. PIN is PBKDF2-HMAC-SHA256 with a random salt in `flutter_secure_storage`.
 - **Android first, iOS later.** Keep code platform-neutral; Android-only calls (WorkManager) are guarded by `defaultTargetPlatform`.
 
 ## Commands
@@ -37,7 +37,9 @@ lib/
   ui.dart           all screens: Home/tabs, Library, AddBook, BookPage, EditBook, ReadEditor, Stats, LockGate, Settings
   lookup.dart       Open Library search + ISBN lookup, cover URLs (covers.openlibrary.org)
   themes.dart       4 themes: light/dark × him (blue) / her (rose/plum)
-  lock.dart         PIN (salted hash) + device biometric/screen-lock auth
+  lock.dart         PIN (PBKDF2, attempt limiting, recovery code) + device auth; lock_ui.dart = gate, setup, confirm-current
+  privacy.dart      FLAG_SECURE channel, locked-cover cache, temp-export cleanup, navigator key
+  crypto_backup.dart  AES-256-GCM passphrase container for backups/exports (PGMKENC1)
   export.dart       CSV/JSON of main library, VACUUM INTO db snapshot, restore
   backup.dart       Google Drive appDataFolder backup, WorkManager schedule, background dispatcher
   backup_page.dart  backup settings/restore UI
@@ -57,9 +59,17 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 - **google_sign_in 7 on Android needs a *Web* client ID** (`serverClientId`) plus an *Android* client with the package name and signing SHA-1; a release key needs its own Android client.
 - `file_picker` 13 uses `FilePicker.pickFile()`, not `FilePicker.platform.pickFiles()`; `csv` 8 uses `csv.encode(rows)`.
 
+- **Foreign keys are OFF by default in SQLite.** `AppDb.beforeOpen` runs `PRAGMA foreign_keys = ON`; without it `ON DELETE CASCADE` silently does nothing. Don't remove it (a test guards it).
+- **Schema changes need a migration + test.** `schemaVersion` is `AppDb.currentSchema`; add the step in `onUpgrade`, bump `currentSchema` (restore refuses newer-schema backups), and extend the v1->v2 migration test.
+- **Locked-library traces.** Anything that shows locked content must (a) use `Cover(locked: true)` so images go to `lockedCache`, (b) be a route that `wipeLockedTraces()` can pop (it pops to the first route), (c) never be counted/listed outside the vault (Stats, Trash, duplicate check, exports all filter on `locked`).
+- **FLAG_SECURE ordering.** `Secure.set(true)` when unlocking; on `paused` the vault relocks but the flag stays on until `resumed`, otherwise the recents thumbnail is captured unprotected.
+- **Restore swaps the file under a closed connection.** `Exporter.restoreDb` validates, snapshots the current DB to `pre-restore-*.sqlite` (newest 3), closes the DB, deletes `-wal/-shm`, then renames a staged copy; the app must be restarted afterwards (the UI exits).
+- **Backup passphrase lives in secure storage** (`bk_pass`) so the background isolate can encrypt unattended. A new phone needs the passphrase typed again to restore.
+- **Tests use `AppDb.memory()`** and `FlutterSecureStorage.setMockInitialValues`; PBKDF2 at 150k iterations makes lock tests take a few seconds.
+
 ## Roadmap (unbuilt)
 
-- Encrypted Drive backups (passphrase) and `FLAG_SECURE` on the locked tab.
+- Encrypted database at rest (SQLCipher), auto-lock timeout setting, whole-app lock.
 - A Flutter CI workflow (the template has none for Flutter). Release signing is local: `android/key.properties` (gitignored) points at `~/.android/pagemark-release.jks` — back that keystore up; losing it means users can't upgrade in place.
 - Reading goals/streaks, series grouping, CSV/Goodreads import, iOS build (needs a Mac).
 

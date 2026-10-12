@@ -1,11 +1,66 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'backup.dart';
+import 'crypto_backup.dart';
 import 'export.dart';
 import 'main.dart';
 import 'ui.dart';
+
+/// Decrypt (asking for the passphrase if needed) and validate a backup file, then offer to restore it.
+/// Shared by "Restore from file" and "Restore from Drive". Exits the app after a successful swap.
+Future<void> restoreFlow(BuildContext context, File picked) async {
+  var file = picked;
+  if (await BackupCrypto.isEncrypted(picked)) {
+    if (!context.mounted) return;
+    final pass = await ask(context, 'Backup passphrase', '', false, true);
+    if (pass == null || pass.isEmpty) return;
+    try {
+      final tmp = await getTemporaryDirectory();
+      file = await BackupCrypto.decrypt(picked, File('${tmp.path}/pagemark-restore.sqlite'), pass);
+    } on WrongPassphrase catch (e) {
+      if (context.mounted) snack(context, '$e');
+      return;
+    }
+  }
+  final check = Exporter.inspect(file);
+  if (!context.mounted) return;
+  if (!check.ok) {
+    snack(context, check.message);
+    return;
+  }
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (c) => AlertDialog(
+      title: const Text('Replace your library?'),
+      content: Text('This backup holds ${check.books} books and ${check.reads} reads. '
+          'Your current library is replaced; a safety copy of it is kept in the app (newest 3). The app will close afterwards.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+        FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Restore')),
+      ],
+    ),
+  );
+  if (ok != true || !context.mounted) return;
+  try {
+    await Exporter.restoreDb(db, file);
+  } catch (e) {
+    if (context.mounted) snack(context, '$e');
+    return;
+  }
+  if (!context.mounted) return;
+  await showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (c) => AlertDialog(
+      title: const Text('Restored'),
+      content: const Text('Pagemark will now close. Open it again to see your restored library.'),
+      actions: [FilledButton(onPressed: () => exit(0), child: const Text('Close app'))],
+    ),
+  );
+}
 
 class BackupPage extends StatefulWidget {
   const BackupPage({super.key});
@@ -15,13 +70,31 @@ class BackupPage extends StatefulWidget {
 
 class _BackupPageState extends State<BackupPage> {
   BackupSettings? s;
+  bool encrypted = false;
   final cid = TextEditingController();
   bool busy = false;
 
   @override
   void initState() {
     super.initState();
-    BackupSettings.load().then((v) => setState(() { s = v; cid.text = v.serverClientId; }));
+    _reload();
+  }
+
+  Future<void> _reload() async {
+    final v = await BackupSettings.load();
+    final pass = await DriveBackup.passphrase();
+    if (!mounted) return;
+    setState(() {
+      s = v;
+      encrypted = pass != null && pass.isNotEmpty;
+      if (cid.text.isEmpty) cid.text = v.serverClientId;
+    });
+  }
+
+  @override
+  void dispose() {
+    cid.dispose();
+    super.dispose();
   }
 
   Future<void> guard(Future<void> Function() f) async {
@@ -31,7 +104,7 @@ class _BackupPageState extends State<BackupPage> {
     } catch (e) {
       if (mounted) snack(context, '$e');
     }
-    s = await BackupSettings.load();
+    await _reload();
     if (mounted) setState(() => busy = false);
   }
 
@@ -43,6 +116,34 @@ class _BackupPageState extends State<BackupPage> {
 
   String fmt(String? iso) => iso == null ? 'never' : DateFormat.yMMMd().add_jm().format(DateTime.parse(iso));
 
+  Future<void> _toggleEncryption(bool on) async {
+    if (!on) {
+      await DriveBackup.setPassphrase(null);
+      return;
+    }
+    final a = await ask(context, 'Choose a backup passphrase', '', false, true);
+    if (a == null || a.length < 8 || !mounted) {
+      if (a != null && mounted) snack(context, 'Use at least 8 characters');
+      return;
+    }
+    final b = await ask(context, 'Re-enter the passphrase', '', false, true);
+    if (b != a) {
+      if (mounted) snack(context, 'Passphrases did not match');
+      return;
+    }
+    await DriveBackup.setPassphrase(a);
+    if (mounted) {
+      await showDialog<void>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('Remember this passphrase'),
+          content: const Text('Backups are now encrypted. If you lose both this phone and the passphrase, the backups cannot be opened — not even by Pagemark.'),
+          actions: [FilledButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final st = s;
@@ -53,7 +154,8 @@ class _BackupPageState extends State<BackupPage> {
           : ListView(padding: const EdgeInsets.all(16), children: [
               if (busy) const LinearProgressIndicator(),
               const Text('Backups are full database copies (including locked books) stored in Pagemark\'s private '
-                  'app-data folder on your Drive — they don\'t show in your normal Drive files. The newest 5 are kept.'),
+                  'app-data folder on your Drive — they don\'t show in your normal Drive files. The newest 5 are kept, '
+                  'and an unchanged library isn\'t uploaded again.'),
               const SizedBox(height: 16),
               TextField(
                 controller: cid,
@@ -68,6 +170,12 @@ class _BackupPageState extends State<BackupPage> {
                 trailing: st.account == null
                     ? FilledButton(onPressed: busy ? null : () => guard(() async { await persist(); await DriveBackup.signIn(); }), child: const Text('Sign in'))
                     : TextButton(onPressed: busy ? null : () => guard(() async { await DriveBackup.signOut(); st.enabled = false; await persist(); }), child: const Text('Sign out')),
+              ),
+              SwitchListTile(
+                title: const Text('Encrypt backups with a passphrase'),
+                subtitle: const Text('Recommended — your locked books are in every backup.'),
+                value: encrypted,
+                onChanged: busy ? null : (v) => guard(() => _toggleEncryption(v)),
               ),
               SwitchListTile(
                 title: const Text('Automatic backup'),
@@ -96,8 +204,8 @@ class _BackupPageState extends State<BackupPage> {
                 label: const Text('Back up now'),
                 onPressed: busy || st.account == null ? null : () => guard(() async {
                   await persist();
-                  await DriveBackup.run(db, interactive: true);
-                  if (mounted) snack(context, 'Backup uploaded');
+                  final r = await DriveBackup.run(db, interactive: true, force: true);
+                  if (mounted) snack(context, r == 'uploaded' ? 'Backup uploaded and verified' : 'Nothing changed since the last backup');
                 }),
               ),
               const SizedBox(height: 8),
@@ -108,27 +216,22 @@ class _BackupPageState extends State<BackupPage> {
                   final files = await DriveBackup.list();
                   if (!mounted) return;
                   if (files.isEmpty) { snack(context, 'No backups found'); return; }
-                  final pick = await showDialog(
+                  final pick = await showDialog<drive.File>(
                     context: context,
                     builder: (c) => SimpleDialog(title: const Text('Choose a backup'), children: [
                       for (final f in files)
                         SimpleDialogOption(
                           onPressed: () => Navigator.pop(c, f),
-                          child: Text('${f.name}\n${((int.tryParse(f.size ?? '0') ?? 0) / 1024).toStringAsFixed(0)} KB'),
+                          child: Text('${f.name}\n${f.createdTime == null ? '' : DateFormat.yMMMd().add_jm().format(f.createdTime!.toLocal())} · '
+                              '${((int.tryParse(f.size ?? '0') ?? 0) / 1024).toStringAsFixed(0)} KB'),
                         ),
                     ]),
                   );
                   if (pick == null || !mounted) return;
-                  final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
-                    title: const Text('Replace everything?'),
-                    content: const Text('Your current library is replaced by this backup, then the app closes.'),
-                    actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Restore'))],
-                  ));
-                  if (ok != true) return;
-                  final tmp = File('${(await getTemporaryDirectory()).path}/restore.sqlite');
+                  final tmp = File('${(await getTemporaryDirectory()).path}/pagemark-restore.download');
                   await DriveBackup.download(pick, tmp);
-                  await Exporter.restoreDb(db, tmp);
-                  exit(0);
+                  if (!mounted) return;
+                  await restoreFlow(context, tmp);
                 }),
               ),
             ]),

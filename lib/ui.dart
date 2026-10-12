@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:drift/drift.dart' show Value;
+import 'package:drift/drift.dart' show Value, BooleanExpressionOperators;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'backup_page.dart';
+import 'lock_ui.dart';
+import 'privacy.dart';
 import 'db.dart';
 import 'export.dart';
 import 'lock.dart';
@@ -26,17 +28,50 @@ class Home extends StatefulWidget {
   State<Home> createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
+class _HomeState extends State<Home> with WidgetsBindingObserver {
   int tab = 0;
   bool unlocked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    cleanTempExports();
+    db.purgeExpiredTrash();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  void _unlock() {
+    Secure.set(true); // block screenshots / blank the recents thumbnail while locked content is visible
+    setState(() => unlocked = true);
+  }
+
+  /// Close the locked library: pop its screens, wipe its cached covers and temp exports.
+  void _lock() {
+    if (unlocked) {
+      setState(() => unlocked = false);
+      wipeLockedTraces();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) _lock(); // leave FLAG_SECURE on so the recents card stays blank
+    if (state == AppLifecycleState.resumed && !unlocked) Secure.set(false);
+  }
 
   @override
   Widget build(BuildContext context) {
     final pages = [
       Library(locked: false),
-      unlocked ? Library(locked: true) : LockGate(onUnlock: () => setState(() => unlocked = true)),
+      unlocked ? Library(locked: true) : LockGate(onUnlock: _unlock),
       Stats(),
-      SettingsPage(onLockNow: () => setState(() { unlocked = false; tab = 0; })),
+      SettingsPage(onLockNow: () => setState(() { _lock(); tab = 0; })),
     ];
     return Scaffold(
       body: AnimatedSwitcher(
@@ -51,7 +86,7 @@ class _HomeState extends State<Home> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: tab,
         onDestinationSelected: (i) => setState(() {
-          if (i != 1 && tab == 1) unlocked = false; // re-lock when leaving the locked tab
+          if (i != 1 && tab == 1) _lock(); // re-lock when leaving the locked tab
           tab = i;
         }),
         destinations: const [
@@ -156,7 +191,8 @@ class Cover extends StatelessWidget {
   final String url;
   final double w;
   final Object? tag; // shared-element (Hero) tag between list and detail
-  const Cover(this.url, {super.key, this.w = 48, this.tag});
+  final bool locked; // locked-library covers use a separate cache that is wiped on relock
+  const Cover(this.url, {super.key, this.w = 48, this.tag, this.locked = false});
   @override
   Widget build(BuildContext context) {
     final ph = Container(width: w, height: w * 1.5, color: Theme.of(context).colorScheme.secondaryContainer, child: const Icon(Icons.book));
@@ -164,7 +200,7 @@ class Cover extends StatelessWidget {
         ? ph
         : ClipRRect(
             borderRadius: BorderRadius.circular(4),
-            child: CachedNetworkImage(imageUrl: url, width: w, height: w * 1.5, fit: BoxFit.cover,
+            child: CachedNetworkImage(imageUrl: url, cacheManager: locked ? lockedCache : null, memCacheWidth: (w * 3).round(), width: w, height: w * 1.5, fit: BoxFit.cover,
                 fadeInDuration: const Duration(milliseconds: 250), placeholder: (_, _) => ph, errorWidget: (_, _, _) => ph),
           );
     return tag == null ? img : Hero(tag: tag!, child: img);
@@ -180,7 +216,7 @@ class BookTile extends StatelessWidget {
     final r = row.avgRating;
     final fmts = row.reads.map((e) => formats[e.format]).toSet().join(' · ');
     return ListTile(
-      leading: Cover(b.coverUrl, tag: 'cover-${b.id}'),
+      leading: Cover(b.coverUrl, tag: 'cover-${b.id}', locked: b.locked),
       title: Text(b.title, maxLines: 2, overflow: TextOverflow.ellipsis),
       subtitle: Text([b.author, if (row.reads.isNotEmpty) statuses[row.status], if (fmts.isNotEmpty) fmts].where((s) => s != null && s.isNotEmpty).join('\n')),
       isThreeLine: true,
@@ -220,7 +256,39 @@ class _AddBookState extends State<AddBook> {
     await run(() async => [if (await Lookup.byIsbn(code) case final m?) m]);
   }
 
+  bool saving = false;
+
   Future<void> save(BookMeta m) async {
+    if (saving) return; // a double tap must not add the book twice
+    saving = true;
+    try {
+      final dup = await db.findDuplicate(title: m.title, author: m.author, isbn: m.isbn, locked: widget.locked);
+      if (dup != null && mounted) {
+        final choice = await showDialog<String>(
+          context: context,
+          builder: (c) => AlertDialog(
+            title: const Text('Already in this library'),
+            content: Text('"${dup.title}" by ${dup.author.isEmpty ? 'unknown author' : dup.author} is already here.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(c, 'cancel'), child: const Text('Cancel')),
+              TextButton(onPressed: () => Navigator.pop(c, 'open'), child: const Text('Open it')),
+              FilledButton(onPressed: () => Navigator.pop(c, 'add'), child: const Text('Add anyway')),
+            ],
+          ),
+        );
+        if (!mounted || choice == null || choice == 'cancel') return;
+        if (choice == 'open') {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => BookPage(bookId: dup.id)));
+          return;
+        }
+      }
+      await _insert(m);
+    } finally {
+      saving = false;
+    }
+  }
+
+  Future<void> _insert(BookMeta m) async {
     final id = await db.into(db.books).insert(BooksCompanion.insert(
           title: m.title,
           author: Value(m.author), isbn: Value(m.isbn), coverUrl: Value(m.coverUrl), genre: Value(m.genre),
@@ -252,7 +320,7 @@ class _AddBookState extends State<AddBook> {
             child: ListView(children: [
               for (final m in results)
                 ListTile(
-                  leading: Cover(m.coverUrl), title: Text(m.title),
+                  leading: Cover(m.coverUrl, locked: widget.locked), title: Text(m.title),
                   subtitle: Text('${m.author}${m.year != null ? ' · ${m.year}' : ''}'),
                   onTap: () => save(m),
                 ),
@@ -317,10 +385,10 @@ class BookPage extends StatelessWidget {
                 if (v == 'lock') await (db.update(db.books)..where((x) => x.id.equals(b.id))).write(BooksCompanion(locked: Value(!b.locked)));
                 if (v == 'del') {
                   final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
-                    title: const Text('Delete this book?'), content: const Text('Its reading log and thoughts are deleted too.'),
-                    actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete'))]));
+                    title: const Text('Move to Trash?'), content: const Text('Its reading log and thoughts go with it. You can restore it from Settings > Trash for 30 days.'),
+                    actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Move to Trash'))]));
                   if (ok == true) {
-                    await (db.delete(db.books)..where((x) => x.id.equals(b.id))).go();
+                    await db.softDelete(b.id);
                     if (context.mounted) Navigator.pop(context);
                   }
                 }
@@ -337,7 +405,7 @@ class BookPage extends StatelessWidget {
           ),
           body: ListView(padding: const EdgeInsets.all(16), children: [
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Cover(b.coverUrl, w: 100, tag: 'cover-${b.id}'),
+              Cover(b.coverUrl, w: 100, tag: 'cover-${b.id}', locked: b.locked),
               const SizedBox(width: 16),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(b.title, style: Theme.of(context).textTheme.titleLarge),
@@ -451,12 +519,21 @@ class _ReadEditorState extends State<ReadEditor> {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: Text(widget.read == null ? 'Log a read' : 'Edit read'), actions: [
-          if (widget.read != null) IconButton(icon: const Icon(Icons.delete_outline), onPressed: () async {
+          if (widget.read != null) IconButton(icon: const Icon(Icons.delete_outline), tooltip: 'Delete this read', onPressed: () async {
+            final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
+              title: const Text('Delete this read?'), content: const Text('Its dates, rating and thoughts will be gone for good.'),
+              actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete'))]));
+            if (ok != true) return;
             await (db.delete(db.reads)..where((r) => r.id.equals(widget.read!.id))).go();
             if (context.mounted) Navigator.pop(context);
           }),
           TextButton(onPressed: () async {
             final fin = status == 'finished' ? (finished ?? DateTime.now()) : finished;
+            DateTime day(DateTime d) => DateTime(d.year, d.month, d.day);
+            if (fin != null && started != null && day(fin).isBefore(day(started!))) {
+              snack(context, 'The finished date is before the start date');
+              return;
+            }
             final comp = ReadsCompanion(
               bookId: Value(widget.bookId), format: Value(format), status: Value(status), started: Value(started), finished: Value(fin),
               rating: Value(rating == 0 ? null : rating), thoughts: Value(thoughts.text), narrator: Value(narrator.text), minutes: Value(int.tryParse(minutes.text)),
@@ -478,7 +555,11 @@ class _ReadEditorState extends State<ReadEditor> {
           DropdownButtonFormField<String>(
             initialValue: status, decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()),
             items: [for (final e in statuses.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
-            onChanged: (v) => setState(() => status = v!),
+            onChanged: (v) => setState(() {
+              status = v!;
+              if (status == 'finished') finished ??= DateTime.now(); // visible, editable default
+              if (status == 'reading' || status == 'want') finished = null;
+            }),
           ),
           ListTile(title: const Text('Started'), subtitle: Text(started == null ? '—' : _date.format(started!)), trailing: const Icon(Icons.calendar_today),
               onTap: () async { final d = await pick(started); if (d != null) setState(() => started = d); }),
@@ -507,11 +588,12 @@ class Stats extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text('Stats')),
         body: FutureBuilder(
-          future: Future.wait([db.select(db.books).get(), db.select(db.reads).get()]),
+          future: Future.wait([(db.select(db.books)..where((b) => b.locked.equals(false) & b.deletedAt.isNull())).get(), db.select(db.reads).get()]),
           builder: (_, s) {
             if (!s.hasData) return const Center(child: CircularProgressIndicator());
             final books = s.data![0] as List<Book>;
-            final reads = (s.data![1] as List<Read>);
+            final ids = books.map((b) => b.id).toSet();
+            final reads = (s.data![1] as List<Read>).where((r) => ids.contains(r.bookId)).toList();
             final done = reads.where((r) => r.status == 'finished').toList();
             final yr = DateTime.now().year;
             final thisYear = done.where((r) => r.finished?.year == yr).length;
@@ -541,65 +623,6 @@ class Stats extends StatelessWidget {
             ]);
           },
         ),
-      );
-}
-
-// ───────────────────────── Lock gate ─────────────────────────
-class LockGate extends StatefulWidget {
-  final VoidCallback onUnlock;
-  const LockGate({super.key, required this.onUnlock});
-  @override
-  State<LockGate> createState() => _LockGateState();
-}
-
-class _LockGateState extends State<LockGate> {
-  final pin = TextEditingController();
-  bool? hasPin;
-  String? err;
-
-  @override
-  void initState() {
-    super.initState();
-    LockService.hasPin().then((v) { if (mounted) setState(() => hasPin = v); });
-  }
-
-  Future<void> tryPin() async {
-    if (await LockService.checkPin(pin.text)) {
-      widget.onUnlock();
-    } else {
-      setState(() => err = 'Wrong PIN');
-      pin.clear();
-    }
-  }
-
-  Future<void> device() async {
-    if (await LockService.deviceAuth()) widget.onUnlock();
-  }
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Locked library')),
-        body: hasPin == null
-            ? const SizedBox()
-            : Center(child: Padding(padding: const EdgeInsets.all(32), child: Column(mainAxisSize: MainAxisSize.min, children: [
-                const Icon(Icons.lock, size: 64),
-                const SizedBox(height: 16),
-                if (hasPin!) ...[
-                  TextField(controller: pin, obscureText: true, keyboardType: TextInputType.number, textAlign: TextAlign.center, onSubmitted: (_) => tryPin(),
-                      decoration: InputDecoration(labelText: 'PIN', errorText: err, border: const OutlineInputBorder())),
-                  const SizedBox(height: 12),
-                  FilledButton(onPressed: tryPin, child: const Text('Unlock')),
-                  TextButton.icon(onPressed: device, icon: const Icon(Icons.fingerprint), label: const Text('Use fingerprint / device lock')),
-                ] else ...[
-                  const Text('Choose how to protect this library.', textAlign: TextAlign.center),
-                  const SizedBox(height: 12),
-                  FilledButton(onPressed: () async {
-                    final p = await ask(context, 'New PIN (4+ digits)', '', false, true, TextInputType.number);
-                    if (p != null && p.length >= 4) { await LockService.setPin(p); widget.onUnlock(); }
-                  }, child: const Text('Set a PIN')),
-                  TextButton.icon(onPressed: device, icon: const Icon(Icons.fingerprint), label: const Text('Use device lock only')),
-                ],
-              ]))),
       );
 }
 
@@ -634,28 +657,74 @@ class SettingsPage extends StatelessWidget {
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BackupPage()))),
           const Divider(),
           const ListTile(title: Text('Database (includes locked books)', style: TextStyle(fontWeight: FontWeight.bold))),
-          ListTile(leading: const Icon(Icons.storage), title: const Text('Export database file'), subtitle: const Text('Import on another device'), onTap: () => Exporter.shareDb(db)),
+          ListTile(leading: const Icon(Icons.storage), title: const Text('Export database file'), subtitle: const Text('Includes locked books - protect it with a passphrase'), onTap: () async {
+            final pass = await ask(context, 'Passphrase to encrypt the file (leave empty for none)', '', false, true);
+            if (pass == null || !context.mounted) return;
+            if (pass.isEmpty) {
+              final go = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
+                title: const Text('Share without encryption?'), content: const Text('This file contains your locked books and private notes in plain form. Anyone who receives it can read them.'),
+                actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Share anyway'))]));
+              if (go != true) return;
+            } else if (pass.length < 8) {
+              snack(context, 'Use at least 8 characters');
+              return;
+            }
+            await Exporter.shareDb(db, passphrase: pass);
+          }),
           ListTile(leading: const Icon(Icons.restore), title: const Text('Restore from database file'), onTap: () async {
             final r = await FilePicker.pickFile();
             final path = r?.path;
             if (path == null || !context.mounted) return;
-            final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
-              title: const Text('Replace everything?'), content: const Text('This replaces your current library with the backup. The app will close.'),
-              actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Restore'))]));
-            if (ok == true) {
-              await Exporter.restoreDb(db, File(path));
-              exit(0);
-            }
+            await restoreFlow(context, File(path));
           }),
+          ListTile(leading: const Icon(Icons.delete_sweep_outlined), title: const Text('Trash'), subtitle: const Text('Deleted books are kept for 30 days'),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TrashPage()))),
           const Divider(),
           const ListTile(title: Text('Privacy', style: TextStyle(fontWeight: FontWeight.bold))),
           ListTile(leading: const Icon(Icons.lock_clock), title: const Text('Lock now'), onTap: onLockNow),
-          ListTile(leading: const Icon(Icons.pin), title: const Text('Change PIN'), onTap: () async {
-            final p = await ask(context, 'New PIN (4+ digits)', '', false, true, TextInputType.number);
-            if (p != null && p.length >= 4) { await LockService.setPin(p); if (context.mounted) snack(context, 'PIN updated'); }
+          ListTile(leading: const Icon(Icons.pin), title: const Text('Set or change PIN'), onTap: () async {
+            if (!await confirmCurrent(context) || !context.mounted) return;
+            if (await setupPin(context) && context.mounted) snack(context, 'PIN updated');
           }),
-          ListTile(leading: const Icon(Icons.no_encryption), title: const Text('Remove PIN'), onTap: () async { await LockService.clearPin(); if (context.mounted) snack(context, 'PIN removed'); }),
-          const ListTile(title: Text('Pagemark 0.1.0 · all data stays on this device'), dense: true),
+          ListTile(
+            leading: const Icon(Icons.no_encryption), title: const Text('Remove lock'),
+            subtitle: const Text('Locked books stay in the locked library; anyone can then set a new lock'),
+            onTap: () async {
+              if (!await confirmCurrent(context) || !context.mounted) return;
+              await LockService.clear();
+              if (context.mounted) snack(context, 'Lock removed');
+            },
+          ),
+          const ListTile(title: Text('Pagemark 0.2.0 · all data stays on this device'), dense: true),
         ]),
+      );
+}
+
+
+// ───────────────────────── Trash ─────────────────────────
+class TrashPage extends StatelessWidget {
+  const TrashPage({super.key});
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('Trash')),
+        body: StreamBuilder<List<Book>>(
+          stream: db.watchTrash(),
+          builder: (_, snap) {
+            final list = (snap.data ?? []).where((b) => !b.locked).toList(); // locked titles never show outside the vault
+            if (list.isEmpty) return const Center(child: Text('Trash is empty.'));
+            return ListView(children: [
+              for (final b in list)
+                ListTile(
+                  title: Text(b.title),
+                  subtitle: Text('${b.author}\nDeleted ${_date.format(b.deletedAt!)} - purged after ${AppDb.trashDays} days'),
+                  isThreeLine: true,
+                  trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                    IconButton(icon: const Icon(Icons.restore_from_trash), tooltip: 'Restore', onPressed: () => db.restoreBook(b.id)),
+                    IconButton(icon: const Icon(Icons.delete_forever), tooltip: 'Delete forever', onPressed: () => db.purgeBook(b.id)),
+                  ]),
+                ),
+            ]);
+          },
+        ),
       );
 }
