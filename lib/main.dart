@@ -7,12 +7,13 @@ import 'themes.dart';
 import 'ui.dart';
 
 final db = AppDb();
+late SharedPreferences prefs;
 final themeId = ValueNotifier<String>('light_him');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Log.installGlobalHandlers();
-  final prefs = await SharedPreferences.getInstance();
+  prefs = await SharedPreferences.getInstance();
   themeId.value = prefs.getString('theme') ?? 'light_him';
   themeId.addListener(() => prefs.setString('theme', themeId.value));
   runApp(const PagemarkApp());

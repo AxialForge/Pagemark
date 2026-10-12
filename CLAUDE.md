@@ -34,6 +34,7 @@ A **Book** is the catalog entry (metadata, tags, notes, `locked` flag). A **Read
 lib/
   main.dart         entrypoint, global db + theme notifier, prefs-backed theme
   db.dart           Drift tables (Books, Reads), AppDb, library join stream; db.g.dart is generated
+  features.dart     StarRating/GoalRing/BarChart widgets, ProgressCard, shelves UI, SeriesPage, Stats
   ui.dart           all screens: Home/tabs, Library, AddBook, BookPage, EditBook, ReadEditor, Stats, LockGate, Settings
   lookup.dart       Open Library search/ISBN/description (retry + backoff, injectable http client), cover URLs
   isbn.dart         ISBN-10/13 checksums, normalise to 13, scanner filter
@@ -73,6 +74,11 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 - **Log writes are batched** (one file open per burst). Per-line `flush: true` made 4000 lines take >30 s on Windows; only error bursts flush. Never log titles, thoughts or other book data.
 - **MobileScanner `onDetect` fires repeatedly** - guard with a `done` flag or `Navigator.pop` runs several times and pops extra routes.
 - **CI does not sign.** Signed APKs are built locally with `android/key.properties`; CI only proves analyze/test/debug-build pass.
+
+- **Drift singularises table names** (`Shelves` -> `Shelve`). Use `@DataClassName('Shelf')` or the generated row class won't match what you type.
+- **Stats is main-library only on purpose** (`watchLibrary(locked: false)`); the vault must never feed totals, goals or top lists.
+- **Prefs are a global `prefs`** (set in `main()`); the library remembers sort/filters per library under `lib_m_*` / `lib_v_*`.
+- **Widget tests caught a layout bug** (chart overflow) - keep rendering tests for custom-painted/sized widgets; tap tests need `pumpAndSettle` between taps (animated scale).
 
 ## Roadmap (unbuilt)
 

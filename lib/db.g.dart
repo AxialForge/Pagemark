@@ -82,6 +82,17 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _seriesNumberMeta = const VerificationMeta(
+    'seriesNumber',
+  );
+  @override
+  late final GeneratedColumn<double> seriesNumber = GeneratedColumn<double>(
+    'series_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _publisherMeta = const VerificationMeta(
     'publisher',
   );
@@ -187,6 +198,7 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
     coverUrl,
     genre,
     series,
+    seriesNumber,
     publisher,
     year,
     pages,
@@ -248,6 +260,15 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
       context.handle(
         _seriesMeta,
         series.isAcceptableOrUnknown(data['series']!, _seriesMeta),
+      );
+    }
+    if (data.containsKey('series_number')) {
+      context.handle(
+        _seriesNumberMeta,
+        seriesNumber.isAcceptableOrUnknown(
+          data['series_number']!,
+          _seriesNumberMeta,
+        ),
       );
     }
     if (data.containsKey('publisher')) {
@@ -344,6 +365,10 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
         DriftSqlType.string,
         data['${effectivePrefix}series'],
       )!,
+      seriesNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}series_number'],
+      ),
       publisher: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}publisher'],
@@ -397,6 +422,7 @@ class Book extends DataClass implements Insertable<Book> {
   final String coverUrl;
   final String genre;
   final String series;
+  final double? seriesNumber;
   final String publisher;
   final int? year;
   final int? pages;
@@ -414,6 +440,7 @@ class Book extends DataClass implements Insertable<Book> {
     required this.coverUrl,
     required this.genre,
     required this.series,
+    this.seriesNumber,
     required this.publisher,
     this.year,
     this.pages,
@@ -434,6 +461,9 @@ class Book extends DataClass implements Insertable<Book> {
     map['cover_url'] = Variable<String>(coverUrl);
     map['genre'] = Variable<String>(genre);
     map['series'] = Variable<String>(series);
+    if (!nullToAbsent || seriesNumber != null) {
+      map['series_number'] = Variable<double>(seriesNumber);
+    }
     map['publisher'] = Variable<String>(publisher);
     if (!nullToAbsent || year != null) {
       map['year'] = Variable<int>(year);
@@ -461,6 +491,9 @@ class Book extends DataClass implements Insertable<Book> {
       coverUrl: Value(coverUrl),
       genre: Value(genre),
       series: Value(series),
+      seriesNumber: seriesNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(seriesNumber),
       publisher: Value(publisher),
       year: year == null && nullToAbsent ? const Value.absent() : Value(year),
       pages: pages == null && nullToAbsent
@@ -490,6 +523,7 @@ class Book extends DataClass implements Insertable<Book> {
       coverUrl: serializer.fromJson<String>(json['coverUrl']),
       genre: serializer.fromJson<String>(json['genre']),
       series: serializer.fromJson<String>(json['series']),
+      seriesNumber: serializer.fromJson<double?>(json['seriesNumber']),
       publisher: serializer.fromJson<String>(json['publisher']),
       year: serializer.fromJson<int?>(json['year']),
       pages: serializer.fromJson<int?>(json['pages']),
@@ -512,6 +546,7 @@ class Book extends DataClass implements Insertable<Book> {
       'coverUrl': serializer.toJson<String>(coverUrl),
       'genre': serializer.toJson<String>(genre),
       'series': serializer.toJson<String>(series),
+      'seriesNumber': serializer.toJson<double?>(seriesNumber),
       'publisher': serializer.toJson<String>(publisher),
       'year': serializer.toJson<int?>(year),
       'pages': serializer.toJson<int?>(pages),
@@ -532,6 +567,7 @@ class Book extends DataClass implements Insertable<Book> {
     String? coverUrl,
     String? genre,
     String? series,
+    Value<double?> seriesNumber = const Value.absent(),
     String? publisher,
     Value<int?> year = const Value.absent(),
     Value<int?> pages = const Value.absent(),
@@ -549,6 +585,7 @@ class Book extends DataClass implements Insertable<Book> {
     coverUrl: coverUrl ?? this.coverUrl,
     genre: genre ?? this.genre,
     series: series ?? this.series,
+    seriesNumber: seriesNumber.present ? seriesNumber.value : this.seriesNumber,
     publisher: publisher ?? this.publisher,
     year: year.present ? year.value : this.year,
     pages: pages.present ? pages.value : this.pages,
@@ -568,6 +605,9 @@ class Book extends DataClass implements Insertable<Book> {
       coverUrl: data.coverUrl.present ? data.coverUrl.value : this.coverUrl,
       genre: data.genre.present ? data.genre.value : this.genre,
       series: data.series.present ? data.series.value : this.series,
+      seriesNumber: data.seriesNumber.present
+          ? data.seriesNumber.value
+          : this.seriesNumber,
       publisher: data.publisher.present ? data.publisher.value : this.publisher,
       year: data.year.present ? data.year.value : this.year,
       pages: data.pages.present ? data.pages.value : this.pages,
@@ -592,6 +632,7 @@ class Book extends DataClass implements Insertable<Book> {
           ..write('coverUrl: $coverUrl, ')
           ..write('genre: $genre, ')
           ..write('series: $series, ')
+          ..write('seriesNumber: $seriesNumber, ')
           ..write('publisher: $publisher, ')
           ..write('year: $year, ')
           ..write('pages: $pages, ')
@@ -614,6 +655,7 @@ class Book extends DataClass implements Insertable<Book> {
     coverUrl,
     genre,
     series,
+    seriesNumber,
     publisher,
     year,
     pages,
@@ -635,6 +677,7 @@ class Book extends DataClass implements Insertable<Book> {
           other.coverUrl == this.coverUrl &&
           other.genre == this.genre &&
           other.series == this.series &&
+          other.seriesNumber == this.seriesNumber &&
           other.publisher == this.publisher &&
           other.year == this.year &&
           other.pages == this.pages &&
@@ -654,6 +697,7 @@ class BooksCompanion extends UpdateCompanion<Book> {
   final Value<String> coverUrl;
   final Value<String> genre;
   final Value<String> series;
+  final Value<double?> seriesNumber;
   final Value<String> publisher;
   final Value<int?> year;
   final Value<int?> pages;
@@ -671,6 +715,7 @@ class BooksCompanion extends UpdateCompanion<Book> {
     this.coverUrl = const Value.absent(),
     this.genre = const Value.absent(),
     this.series = const Value.absent(),
+    this.seriesNumber = const Value.absent(),
     this.publisher = const Value.absent(),
     this.year = const Value.absent(),
     this.pages = const Value.absent(),
@@ -689,6 +734,7 @@ class BooksCompanion extends UpdateCompanion<Book> {
     this.coverUrl = const Value.absent(),
     this.genre = const Value.absent(),
     this.series = const Value.absent(),
+    this.seriesNumber = const Value.absent(),
     this.publisher = const Value.absent(),
     this.year = const Value.absent(),
     this.pages = const Value.absent(),
@@ -707,6 +753,7 @@ class BooksCompanion extends UpdateCompanion<Book> {
     Expression<String>? coverUrl,
     Expression<String>? genre,
     Expression<String>? series,
+    Expression<double>? seriesNumber,
     Expression<String>? publisher,
     Expression<int>? year,
     Expression<int>? pages,
@@ -725,6 +772,7 @@ class BooksCompanion extends UpdateCompanion<Book> {
       if (coverUrl != null) 'cover_url': coverUrl,
       if (genre != null) 'genre': genre,
       if (series != null) 'series': series,
+      if (seriesNumber != null) 'series_number': seriesNumber,
       if (publisher != null) 'publisher': publisher,
       if (year != null) 'year': year,
       if (pages != null) 'pages': pages,
@@ -745,6 +793,7 @@ class BooksCompanion extends UpdateCompanion<Book> {
     Value<String>? coverUrl,
     Value<String>? genre,
     Value<String>? series,
+    Value<double?>? seriesNumber,
     Value<String>? publisher,
     Value<int?>? year,
     Value<int?>? pages,
@@ -763,6 +812,7 @@ class BooksCompanion extends UpdateCompanion<Book> {
       coverUrl: coverUrl ?? this.coverUrl,
       genre: genre ?? this.genre,
       series: series ?? this.series,
+      seriesNumber: seriesNumber ?? this.seriesNumber,
       publisher: publisher ?? this.publisher,
       year: year ?? this.year,
       pages: pages ?? this.pages,
@@ -798,6 +848,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
     }
     if (series.present) {
       map['series'] = Variable<String>(series.value);
+    }
+    if (seriesNumber.present) {
+      map['series_number'] = Variable<double>(seriesNumber.value);
     }
     if (publisher.present) {
       map['publisher'] = Variable<String>(publisher.value);
@@ -839,6 +892,7 @@ class BooksCompanion extends UpdateCompanion<Book> {
           ..write('coverUrl: $coverUrl, ')
           ..write('genre: $genre, ')
           ..write('series: $series, ')
+          ..write('seriesNumber: $seriesNumber, ')
           ..write('publisher: $publisher, ')
           ..write('year: $year, ')
           ..write('pages: $pages, ')
@@ -969,6 +1023,17 @@ class $ReadsTable extends Reads with TableInfo<$ReadsTable, Read> {
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _currentPageMeta = const VerificationMeta(
+    'currentPage',
+  );
+  @override
+  late final GeneratedColumn<int> currentPage = GeneratedColumn<int>(
+    'current_page',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -981,6 +1046,7 @@ class $ReadsTable extends Reads with TableInfo<$ReadsTable, Read> {
     thoughts,
     narrator,
     minutes,
+    currentPage,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1053,6 +1119,15 @@ class $ReadsTable extends Reads with TableInfo<$ReadsTable, Read> {
         minutes.isAcceptableOrUnknown(data['minutes']!, _minutesMeta),
       );
     }
+    if (data.containsKey('current_page')) {
+      context.handle(
+        _currentPageMeta,
+        currentPage.isAcceptableOrUnknown(
+          data['current_page']!,
+          _currentPageMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1102,6 +1177,10 @@ class $ReadsTable extends Reads with TableInfo<$ReadsTable, Read> {
         DriftSqlType.int,
         data['${effectivePrefix}minutes'],
       ),
+      currentPage: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}current_page'],
+      ),
     );
   }
 
@@ -1122,6 +1201,7 @@ class Read extends DataClass implements Insertable<Read> {
   final String thoughts;
   final String narrator;
   final int? minutes;
+  final int? currentPage;
   const Read({
     required this.id,
     required this.bookId,
@@ -1133,6 +1213,7 @@ class Read extends DataClass implements Insertable<Read> {
     required this.thoughts,
     required this.narrator,
     this.minutes,
+    this.currentPage,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1154,6 +1235,9 @@ class Read extends DataClass implements Insertable<Read> {
     map['narrator'] = Variable<String>(narrator);
     if (!nullToAbsent || minutes != null) {
       map['minutes'] = Variable<int>(minutes);
+    }
+    if (!nullToAbsent || currentPage != null) {
+      map['current_page'] = Variable<int>(currentPage);
     }
     return map;
   }
@@ -1178,6 +1262,9 @@ class Read extends DataClass implements Insertable<Read> {
       minutes: minutes == null && nullToAbsent
           ? const Value.absent()
           : Value(minutes),
+      currentPage: currentPage == null && nullToAbsent
+          ? const Value.absent()
+          : Value(currentPage),
     );
   }
 
@@ -1197,6 +1284,7 @@ class Read extends DataClass implements Insertable<Read> {
       thoughts: serializer.fromJson<String>(json['thoughts']),
       narrator: serializer.fromJson<String>(json['narrator']),
       minutes: serializer.fromJson<int?>(json['minutes']),
+      currentPage: serializer.fromJson<int?>(json['currentPage']),
     );
   }
   @override
@@ -1213,6 +1301,7 @@ class Read extends DataClass implements Insertable<Read> {
       'thoughts': serializer.toJson<String>(thoughts),
       'narrator': serializer.toJson<String>(narrator),
       'minutes': serializer.toJson<int?>(minutes),
+      'currentPage': serializer.toJson<int?>(currentPage),
     };
   }
 
@@ -1227,6 +1316,7 @@ class Read extends DataClass implements Insertable<Read> {
     String? thoughts,
     String? narrator,
     Value<int?> minutes = const Value.absent(),
+    Value<int?> currentPage = const Value.absent(),
   }) => Read(
     id: id ?? this.id,
     bookId: bookId ?? this.bookId,
@@ -1238,6 +1328,7 @@ class Read extends DataClass implements Insertable<Read> {
     thoughts: thoughts ?? this.thoughts,
     narrator: narrator ?? this.narrator,
     minutes: minutes.present ? minutes.value : this.minutes,
+    currentPage: currentPage.present ? currentPage.value : this.currentPage,
   );
   Read copyWithCompanion(ReadsCompanion data) {
     return Read(
@@ -1251,6 +1342,9 @@ class Read extends DataClass implements Insertable<Read> {
       thoughts: data.thoughts.present ? data.thoughts.value : this.thoughts,
       narrator: data.narrator.present ? data.narrator.value : this.narrator,
       minutes: data.minutes.present ? data.minutes.value : this.minutes,
+      currentPage: data.currentPage.present
+          ? data.currentPage.value
+          : this.currentPage,
     );
   }
 
@@ -1266,7 +1360,8 @@ class Read extends DataClass implements Insertable<Read> {
           ..write('rating: $rating, ')
           ..write('thoughts: $thoughts, ')
           ..write('narrator: $narrator, ')
-          ..write('minutes: $minutes')
+          ..write('minutes: $minutes, ')
+          ..write('currentPage: $currentPage')
           ..write(')'))
         .toString();
   }
@@ -1283,6 +1378,7 @@ class Read extends DataClass implements Insertable<Read> {
     thoughts,
     narrator,
     minutes,
+    currentPage,
   );
   @override
   bool operator ==(Object other) =>
@@ -1297,7 +1393,8 @@ class Read extends DataClass implements Insertable<Read> {
           other.rating == this.rating &&
           other.thoughts == this.thoughts &&
           other.narrator == this.narrator &&
-          other.minutes == this.minutes);
+          other.minutes == this.minutes &&
+          other.currentPage == this.currentPage);
 }
 
 class ReadsCompanion extends UpdateCompanion<Read> {
@@ -1311,6 +1408,7 @@ class ReadsCompanion extends UpdateCompanion<Read> {
   final Value<String> thoughts;
   final Value<String> narrator;
   final Value<int?> minutes;
+  final Value<int?> currentPage;
   const ReadsCompanion({
     this.id = const Value.absent(),
     this.bookId = const Value.absent(),
@@ -1322,6 +1420,7 @@ class ReadsCompanion extends UpdateCompanion<Read> {
     this.thoughts = const Value.absent(),
     this.narrator = const Value.absent(),
     this.minutes = const Value.absent(),
+    this.currentPage = const Value.absent(),
   });
   ReadsCompanion.insert({
     this.id = const Value.absent(),
@@ -1334,6 +1433,7 @@ class ReadsCompanion extends UpdateCompanion<Read> {
     this.thoughts = const Value.absent(),
     this.narrator = const Value.absent(),
     this.minutes = const Value.absent(),
+    this.currentPage = const Value.absent(),
   }) : bookId = Value(bookId);
   static Insertable<Read> custom({
     Expression<int>? id,
@@ -1346,6 +1446,7 @@ class ReadsCompanion extends UpdateCompanion<Read> {
     Expression<String>? thoughts,
     Expression<String>? narrator,
     Expression<int>? minutes,
+    Expression<int>? currentPage,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1358,6 +1459,7 @@ class ReadsCompanion extends UpdateCompanion<Read> {
       if (thoughts != null) 'thoughts': thoughts,
       if (narrator != null) 'narrator': narrator,
       if (minutes != null) 'minutes': minutes,
+      if (currentPage != null) 'current_page': currentPage,
     });
   }
 
@@ -1372,6 +1474,7 @@ class ReadsCompanion extends UpdateCompanion<Read> {
     Value<String>? thoughts,
     Value<String>? narrator,
     Value<int?>? minutes,
+    Value<int?>? currentPage,
   }) {
     return ReadsCompanion(
       id: id ?? this.id,
@@ -1384,6 +1487,7 @@ class ReadsCompanion extends UpdateCompanion<Read> {
       thoughts: thoughts ?? this.thoughts,
       narrator: narrator ?? this.narrator,
       minutes: minutes ?? this.minutes,
+      currentPage: currentPage ?? this.currentPage,
     );
   }
 
@@ -1420,6 +1524,9 @@ class ReadsCompanion extends UpdateCompanion<Read> {
     if (minutes.present) {
       map['minutes'] = Variable<int>(minutes.value);
     }
+    if (currentPage.present) {
+      map['current_page'] = Variable<int>(currentPage.value);
+    }
     return map;
   }
 
@@ -1435,7 +1542,413 @@ class ReadsCompanion extends UpdateCompanion<Read> {
           ..write('rating: $rating, ')
           ..write('thoughts: $thoughts, ')
           ..write('narrator: $narrator, ')
-          ..write('minutes: $minutes')
+          ..write('minutes: $minutes, ')
+          ..write('currentPage: $currentPage')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ShelvesTable extends Shelves with TableInfo<$ShelvesTable, Shelf> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ShelvesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'shelves';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Shelf> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Shelf map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Shelf(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+    );
+  }
+
+  @override
+  $ShelvesTable createAlias(String alias) {
+    return $ShelvesTable(attachedDatabase, alias);
+  }
+}
+
+class Shelf extends DataClass implements Insertable<Shelf> {
+  final int id;
+  final String name;
+  const Shelf({required this.id, required this.name});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    return map;
+  }
+
+  ShelvesCompanion toCompanion(bool nullToAbsent) {
+    return ShelvesCompanion(id: Value(id), name: Value(name));
+  }
+
+  factory Shelf.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Shelf(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+    };
+  }
+
+  Shelf copyWith({int? id, String? name}) =>
+      Shelf(id: id ?? this.id, name: name ?? this.name);
+  Shelf copyWithCompanion(ShelvesCompanion data) {
+    return Shelf(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Shelf(')
+          ..write('id: $id, ')
+          ..write('name: $name')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Shelf && other.id == this.id && other.name == this.name);
+}
+
+class ShelvesCompanion extends UpdateCompanion<Shelf> {
+  final Value<int> id;
+  final Value<String> name;
+  const ShelvesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+  });
+  ShelvesCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+  }) : name = Value(name);
+  static Insertable<Shelf> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+    });
+  }
+
+  ShelvesCompanion copyWith({Value<int>? id, Value<String>? name}) {
+    return ShelvesCompanion(id: id ?? this.id, name: name ?? this.name);
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShelvesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $BookShelvesTable extends BookShelves
+    with TableInfo<$BookShelvesTable, BookShelf> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BookShelvesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _bookIdMeta = const VerificationMeta('bookId');
+  @override
+  late final GeneratedColumn<int> bookId = GeneratedColumn<int>(
+    'book_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES books (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _shelfIdMeta = const VerificationMeta(
+    'shelfId',
+  );
+  @override
+  late final GeneratedColumn<int> shelfId = GeneratedColumn<int>(
+    'shelf_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES shelves (id) ON DELETE CASCADE',
+    ),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [bookId, shelfId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'book_shelves';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<BookShelf> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('book_id')) {
+      context.handle(
+        _bookIdMeta,
+        bookId.isAcceptableOrUnknown(data['book_id']!, _bookIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bookIdMeta);
+    }
+    if (data.containsKey('shelf_id')) {
+      context.handle(
+        _shelfIdMeta,
+        shelfId.isAcceptableOrUnknown(data['shelf_id']!, _shelfIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_shelfIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {bookId, shelfId};
+  @override
+  BookShelf map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BookShelf(
+      bookId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}book_id'],
+      )!,
+      shelfId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}shelf_id'],
+      )!,
+    );
+  }
+
+  @override
+  $BookShelvesTable createAlias(String alias) {
+    return $BookShelvesTable(attachedDatabase, alias);
+  }
+}
+
+class BookShelf extends DataClass implements Insertable<BookShelf> {
+  final int bookId;
+  final int shelfId;
+  const BookShelf({required this.bookId, required this.shelfId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['book_id'] = Variable<int>(bookId);
+    map['shelf_id'] = Variable<int>(shelfId);
+    return map;
+  }
+
+  BookShelvesCompanion toCompanion(bool nullToAbsent) {
+    return BookShelvesCompanion(bookId: Value(bookId), shelfId: Value(shelfId));
+  }
+
+  factory BookShelf.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BookShelf(
+      bookId: serializer.fromJson<int>(json['bookId']),
+      shelfId: serializer.fromJson<int>(json['shelfId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'bookId': serializer.toJson<int>(bookId),
+      'shelfId': serializer.toJson<int>(shelfId),
+    };
+  }
+
+  BookShelf copyWith({int? bookId, int? shelfId}) => BookShelf(
+    bookId: bookId ?? this.bookId,
+    shelfId: shelfId ?? this.shelfId,
+  );
+  BookShelf copyWithCompanion(BookShelvesCompanion data) {
+    return BookShelf(
+      bookId: data.bookId.present ? data.bookId.value : this.bookId,
+      shelfId: data.shelfId.present ? data.shelfId.value : this.shelfId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BookShelf(')
+          ..write('bookId: $bookId, ')
+          ..write('shelfId: $shelfId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(bookId, shelfId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BookShelf &&
+          other.bookId == this.bookId &&
+          other.shelfId == this.shelfId);
+}
+
+class BookShelvesCompanion extends UpdateCompanion<BookShelf> {
+  final Value<int> bookId;
+  final Value<int> shelfId;
+  final Value<int> rowid;
+  const BookShelvesCompanion({
+    this.bookId = const Value.absent(),
+    this.shelfId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  BookShelvesCompanion.insert({
+    required int bookId,
+    required int shelfId,
+    this.rowid = const Value.absent(),
+  }) : bookId = Value(bookId),
+       shelfId = Value(shelfId);
+  static Insertable<BookShelf> custom({
+    Expression<int>? bookId,
+    Expression<int>? shelfId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (bookId != null) 'book_id': bookId,
+      if (shelfId != null) 'shelf_id': shelfId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  BookShelvesCompanion copyWith({
+    Value<int>? bookId,
+    Value<int>? shelfId,
+    Value<int>? rowid,
+  }) {
+    return BookShelvesCompanion(
+      bookId: bookId ?? this.bookId,
+      shelfId: shelfId ?? this.shelfId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (bookId.present) {
+      map['book_id'] = Variable<int>(bookId.value);
+    }
+    if (shelfId.present) {
+      map['shelf_id'] = Variable<int>(shelfId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BookShelvesCompanion(')
+          ..write('bookId: $bookId, ')
+          ..write('shelfId: $shelfId, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -1446,6 +1959,8 @@ abstract class _$AppDb extends GeneratedDatabase {
   $AppDbManager get managers => $AppDbManager(this);
   late final $BooksTable books = $BooksTable(this);
   late final $ReadsTable reads = $ReadsTable(this);
+  late final $ShelvesTable shelves = $ShelvesTable(this);
+  late final $BookShelvesTable bookShelves = $BookShelvesTable(this);
   late final Index booksLocked = Index(
     'books_locked',
     'CREATE INDEX books_locked ON books (locked)',
@@ -1465,6 +1980,8 @@ abstract class _$AppDb extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     books,
     reads,
+    shelves,
+    bookShelves,
     booksLocked,
     booksTitle,
     readsBook,
@@ -1478,6 +1995,20 @@ abstract class _$AppDb extends GeneratedDatabase {
       ),
       result: [TableUpdate('reads', kind: UpdateKind.delete)],
     ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'books',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('book_shelves', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'shelves',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('book_shelves', kind: UpdateKind.delete)],
+    ),
   ]);
 }
 
@@ -1489,6 +2020,7 @@ typedef $$BooksTableCreateCompanionBuilder = BooksCompanion Function({
   Value<String> coverUrl,
   Value<String> genre,
   Value<String> series,
+  Value<double?> seriesNumber,
   Value<String> publisher,
   Value<int?> year,
   Value<int?> pages,
@@ -1507,6 +2039,7 @@ typedef $$BooksTableUpdateCompanionBuilder = BooksCompanion Function({
   Value<String> coverUrl,
   Value<String> genre,
   Value<String> series,
+  Value<double?> seriesNumber,
   Value<String> publisher,
   Value<int?> year,
   Value<int?> pages,
@@ -1536,6 +2069,24 @@ final class $$BooksTableReferences
     ).filter((f) => f.bookId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_readsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$BookShelvesTable, List<BookShelf>>
+  _bookShelvesRefsTable(_$AppDb db) => MultiTypedResultKey.fromTable(
+    db.bookShelves,
+    aliasName: 'books__id__book_shelves__book_id',
+  );
+
+  $$BookShelvesTableProcessedTableManager get bookShelvesRefs {
+    final manager = $$BookShelvesTableTableManager(
+      $_db,
+      $_db.bookShelves,
+    ).filter((f) => f.bookId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_bookShelvesRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -1582,6 +2133,11 @@ class $$BooksTableFilterComposer extends Composer<_$AppDb, $BooksTable> {
 
   ColumnFilters<String> get series => $composableBuilder(
     column: $table.series,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get seriesNumber => $composableBuilder(
+    column: $table.seriesNumber,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1654,6 +2210,31 @@ class $$BooksTableFilterComposer extends Composer<_$AppDb, $BooksTable> {
     );
     return f(composer);
   }
+
+  Expression<bool> bookShelvesRefs(
+    Expression<bool> Function($$BookShelvesTableFilterComposer f) f,
+  ) {
+    final $$BookShelvesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.bookShelves,
+      getReferencedColumn: (t) => t.bookId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BookShelvesTableFilterComposer(
+            $db: $db,
+            $table: $db.bookShelves,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$BooksTableOrderingComposer extends Composer<_$AppDb, $BooksTable> {
@@ -1696,6 +2277,11 @@ class $$BooksTableOrderingComposer extends Composer<_$AppDb, $BooksTable> {
 
   ColumnOrderings<String> get series => $composableBuilder(
     column: $table.series,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get seriesNumber => $composableBuilder(
+    column: $table.seriesNumber,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -1774,6 +2360,11 @@ class $$BooksTableAnnotationComposer extends Composer<_$AppDb, $BooksTable> {
   GeneratedColumn<String> get series =>
       $composableBuilder(column: $table.series, builder: (column) => column);
 
+  GeneratedColumn<double> get seriesNumber => $composableBuilder(
+    column: $table.seriesNumber,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get publisher =>
       $composableBuilder(column: $table.publisher, builder: (column) => column);
 
@@ -1827,6 +2418,31 @@ class $$BooksTableAnnotationComposer extends Composer<_$AppDb, $BooksTable> {
     );
     return f(composer);
   }
+
+  Expression<T> bookShelvesRefs<T extends Object>(
+    Expression<T> Function($$BookShelvesTableAnnotationComposer a) f,
+  ) {
+    final $$BookShelvesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.bookShelves,
+      getReferencedColumn: (t) => t.bookId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BookShelvesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.bookShelves,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$BooksTableTableManager
@@ -1842,7 +2458,7 @@ class $$BooksTableTableManager
           $$BooksTableUpdateCompanionBuilder,
           (Book, $$BooksTableReferences),
           Book,
-          PrefetchHooks Function({bool readsRefs})
+          PrefetchHooks Function({bool readsRefs, bool bookShelvesRefs})
         > {
   $$BooksTableTableManager(_$AppDb db, $BooksTable table)
     : super(
@@ -1864,6 +2480,7 @@ class $$BooksTableTableManager
                 Value<String> coverUrl = const Value.absent(),
                 Value<String> genre = const Value.absent(),
                 Value<String> series = const Value.absent(),
+                Value<double?> seriesNumber = const Value.absent(),
                 Value<String> publisher = const Value.absent(),
                 Value<int?> year = const Value.absent(),
                 Value<int?> pages = const Value.absent(),
@@ -1881,6 +2498,7 @@ class $$BooksTableTableManager
                 coverUrl: coverUrl,
                 genre: genre,
                 series: series,
+                seriesNumber: seriesNumber,
                 publisher: publisher,
                 year: year,
                 pages: pages,
@@ -1900,6 +2518,7 @@ class $$BooksTableTableManager
                 Value<String> coverUrl = const Value.absent(),
                 Value<String> genre = const Value.absent(),
                 Value<String> series = const Value.absent(),
+                Value<double?> seriesNumber = const Value.absent(),
                 Value<String> publisher = const Value.absent(),
                 Value<int?> year = const Value.absent(),
                 Value<int?> pages = const Value.absent(),
@@ -1917,6 +2536,7 @@ class $$BooksTableTableManager
                 coverUrl: coverUrl,
                 genre: genre,
                 series: series,
+                seriesNumber: seriesNumber,
                 publisher: publisher,
                 year: year,
                 pages: pages,
@@ -1935,29 +2555,51 @@ class $$BooksTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({readsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [if (readsRefs) db.reads],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (readsRefs)
-                    await $_getPrefetchedData<Book, $BooksTable, Read>(
-                      currentTable: table,
-                      referencedTable: $$BooksTableReferences._readsRefsTable(
-                        db,
-                      ),
-                      managerFromTypedResult: (p0) =>
-                          $$BooksTableReferences(db, table, p0).readsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.bookId == item.id),
-                      typedResults: items,
-                    ),
-                ];
+          prefetchHooksCallback:
+              ({readsRefs = false, bookShelvesRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (readsRefs) db.reads,
+                    if (bookShelvesRefs) db.bookShelves,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (readsRefs)
+                        await $_getPrefetchedData<Book, $BooksTable, Read>(
+                          currentTable: table,
+                          referencedTable: $$BooksTableReferences
+                              ._readsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BooksTableReferences(db, table, p0).readsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.bookId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (bookShelvesRefs)
+                        await $_getPrefetchedData<Book, $BooksTable, BookShelf>(
+                          currentTable: table,
+                          referencedTable: $$BooksTableReferences
+                              ._bookShelvesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BooksTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).bookShelvesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.bookId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -1974,7 +2616,7 @@ typedef $$BooksTableProcessedTableManager =
       $$BooksTableUpdateCompanionBuilder,
       (Book, $$BooksTableReferences),
       Book,
-      PrefetchHooks Function({bool readsRefs})
+      PrefetchHooks Function({bool readsRefs, bool bookShelvesRefs})
     >;
 typedef $$ReadsTableCreateCompanionBuilder = ReadsCompanion Function({
   Value<int> id,
@@ -1987,6 +2629,7 @@ typedef $$ReadsTableCreateCompanionBuilder = ReadsCompanion Function({
   Value<String> thoughts,
   Value<String> narrator,
   Value<int?> minutes,
+  Value<int?> currentPage,
 });
 typedef $$ReadsTableUpdateCompanionBuilder = ReadsCompanion Function({
   Value<int> id,
@@ -1999,6 +2642,7 @@ typedef $$ReadsTableUpdateCompanionBuilder = ReadsCompanion Function({
   Value<String> thoughts,
   Value<String> narrator,
   Value<int?> minutes,
+  Value<int?> currentPage,
 });
 
 final class $$ReadsTableReferences
@@ -2073,6 +2717,11 @@ class $$ReadsTableFilterComposer extends Composer<_$AppDb, $ReadsTable> {
 
   ColumnFilters<int> get minutes => $composableBuilder(
     column: $table.minutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get currentPage => $composableBuilder(
+    column: $table.currentPage,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2153,6 +2802,11 @@ class $$ReadsTableOrderingComposer extends Composer<_$AppDb, $ReadsTable> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get currentPage => $composableBuilder(
+    column: $table.currentPage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$BooksTableOrderingComposer get bookId {
     final $$BooksTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -2211,6 +2865,11 @@ class $$ReadsTableAnnotationComposer extends Composer<_$AppDb, $ReadsTable> {
 
   GeneratedColumn<int> get minutes =>
       $composableBuilder(column: $table.minutes, builder: (column) => column);
+
+  GeneratedColumn<int> get currentPage => $composableBuilder(
+    column: $table.currentPage,
+    builder: (column) => column,
+  );
 
   $$BooksTableAnnotationComposer get bookId {
     final $$BooksTableAnnotationComposer composer = $composerBuilder(
@@ -2274,6 +2933,7 @@ class $$ReadsTableTableManager
                 Value<String> thoughts = const Value.absent(),
                 Value<String> narrator = const Value.absent(),
                 Value<int?> minutes = const Value.absent(),
+                Value<int?> currentPage = const Value.absent(),
               }) => ReadsCompanion(
                 id: id,
                 bookId: bookId,
@@ -2285,6 +2945,7 @@ class $$ReadsTableTableManager
                 thoughts: thoughts,
                 narrator: narrator,
                 minutes: minutes,
+                currentPage: currentPage,
               ),
           createCompanionCallback:
               ({
@@ -2298,6 +2959,7 @@ class $$ReadsTableTableManager
                 Value<String> thoughts = const Value.absent(),
                 Value<String> narrator = const Value.absent(),
                 Value<int?> minutes = const Value.absent(),
+                Value<int?> currentPage = const Value.absent(),
               }) => ReadsCompanion.insert(
                 id: id,
                 bookId: bookId,
@@ -2309,6 +2971,7 @@ class $$ReadsTableTableManager
                 thoughts: thoughts,
                 narrator: narrator,
                 minutes: minutes,
+                currentPage: currentPage,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -2376,6 +3039,569 @@ typedef $$ReadsTableProcessedTableManager =
       Read,
       PrefetchHooks Function({bool bookId})
     >;
+typedef $$ShelvesTableCreateCompanionBuilder = ShelvesCompanion Function({
+  Value<int> id,
+  required String name,
+});
+typedef $$ShelvesTableUpdateCompanionBuilder = ShelvesCompanion Function({
+  Value<int> id,
+  Value<String> name,
+});
+
+final class $$ShelvesTableReferences
+    extends BaseReferences<_$AppDb, $ShelvesTable, Shelf> {
+  $$ShelvesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$BookShelvesTable, List<BookShelf>>
+  _bookShelvesRefsTable(_$AppDb db) => MultiTypedResultKey.fromTable(
+    db.bookShelves,
+    aliasName: 'shelves__id__book_shelves__shelf_id',
+  );
+
+  $$BookShelvesTableProcessedTableManager get bookShelvesRefs {
+    final manager = $$BookShelvesTableTableManager(
+      $_db,
+      $_db.bookShelves,
+    ).filter((f) => f.shelfId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_bookShelvesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$ShelvesTableFilterComposer extends Composer<_$AppDb, $ShelvesTable> {
+  $$ShelvesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> bookShelvesRefs(
+    Expression<bool> Function($$BookShelvesTableFilterComposer f) f,
+  ) {
+    final $$BookShelvesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.bookShelves,
+      getReferencedColumn: (t) => t.shelfId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BookShelvesTableFilterComposer(
+            $db: $db,
+            $table: $db.bookShelves,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$ShelvesTableOrderingComposer extends Composer<_$AppDb, $ShelvesTable> {
+  $$ShelvesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ShelvesTableAnnotationComposer
+    extends Composer<_$AppDb, $ShelvesTable> {
+  $$ShelvesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  Expression<T> bookShelvesRefs<T extends Object>(
+    Expression<T> Function($$BookShelvesTableAnnotationComposer a) f,
+  ) {
+    final $$BookShelvesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.bookShelves,
+      getReferencedColumn: (t) => t.shelfId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BookShelvesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.bookShelves,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$ShelvesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDb,
+          $ShelvesTable,
+          Shelf,
+          $$ShelvesTableFilterComposer,
+          $$ShelvesTableOrderingComposer,
+          $$ShelvesTableAnnotationComposer,
+          $$ShelvesTableCreateCompanionBuilder,
+          $$ShelvesTableUpdateCompanionBuilder,
+          (Shelf, $$ShelvesTableReferences),
+          Shelf,
+          PrefetchHooks Function({bool bookShelvesRefs})
+        > {
+  $$ShelvesTableTableManager(_$AppDb db, $ShelvesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ShelvesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ShelvesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ShelvesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+          }) => ShelvesCompanion(id: id, name: name),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String name,
+          }) => ShelvesCompanion.insert(id: id, name: name),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ShelvesTable, Shelf>(table),
+                  $$ShelvesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({bookShelvesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (bookShelvesRefs) db.bookShelves],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (bookShelvesRefs)
+                    await $_getPrefetchedData<Shelf, $ShelvesTable, BookShelf>(
+                      currentTable: table,
+                      referencedTable: $$ShelvesTableReferences
+                          ._bookShelvesRefsTable(db),
+                      managerFromTypedResult: (p0) => $$ShelvesTableReferences(
+                        db,
+                        table,
+                        p0,
+                      ).bookShelvesRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.shelfId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ShelvesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDb,
+      $ShelvesTable,
+      Shelf,
+      $$ShelvesTableFilterComposer,
+      $$ShelvesTableOrderingComposer,
+      $$ShelvesTableAnnotationComposer,
+      $$ShelvesTableCreateCompanionBuilder,
+      $$ShelvesTableUpdateCompanionBuilder,
+      (Shelf, $$ShelvesTableReferences),
+      Shelf,
+      PrefetchHooks Function({bool bookShelvesRefs})
+    >;
+typedef $$BookShelvesTableCreateCompanionBuilder =
+    BookShelvesCompanion Function({
+      required int bookId,
+      required int shelfId,
+      Value<int> rowid,
+    });
+typedef $$BookShelvesTableUpdateCompanionBuilder =
+    BookShelvesCompanion Function({
+      Value<int> bookId,
+      Value<int> shelfId,
+      Value<int> rowid,
+    });
+
+final class $$BookShelvesTableReferences
+    extends BaseReferences<_$AppDb, $BookShelvesTable, BookShelf> {
+  $$BookShelvesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $BooksTable _bookIdTable(_$AppDb db) =>
+      db.books.createAlias('book_shelves__book_id__books__id');
+
+  $$BooksTableProcessedTableManager get bookId {
+    final $_column = $_itemColumn<int>('book_id')!;
+
+    final manager = $$BooksTableTableManager(
+      $_db,
+      $_db.books,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_bookIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $ShelvesTable _shelfIdTable(_$AppDb db) =>
+      db.shelves.createAlias('book_shelves__shelf_id__shelves__id');
+
+  $$ShelvesTableProcessedTableManager get shelfId {
+    final $_column = $_itemColumn<int>('shelf_id')!;
+
+    final manager = $$ShelvesTableTableManager(
+      $_db,
+      $_db.shelves,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_shelfIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$BookShelvesTableFilterComposer
+    extends Composer<_$AppDb, $BookShelvesTable> {
+  $$BookShelvesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  $$BooksTableFilterComposer get bookId {
+    final $$BooksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.bookId,
+      referencedTable: $db.books,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BooksTableFilterComposer(
+            $db: $db,
+            $table: $db.books,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ShelvesTableFilterComposer get shelfId {
+    final $$ShelvesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.shelfId,
+      referencedTable: $db.shelves,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShelvesTableFilterComposer(
+            $db: $db,
+            $table: $db.shelves,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BookShelvesTableOrderingComposer
+    extends Composer<_$AppDb, $BookShelvesTable> {
+  $$BookShelvesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  $$BooksTableOrderingComposer get bookId {
+    final $$BooksTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.bookId,
+      referencedTable: $db.books,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BooksTableOrderingComposer(
+            $db: $db,
+            $table: $db.books,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ShelvesTableOrderingComposer get shelfId {
+    final $$ShelvesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.shelfId,
+      referencedTable: $db.shelves,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShelvesTableOrderingComposer(
+            $db: $db,
+            $table: $db.shelves,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BookShelvesTableAnnotationComposer
+    extends Composer<_$AppDb, $BookShelvesTable> {
+  $$BookShelvesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  $$BooksTableAnnotationComposer get bookId {
+    final $$BooksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.bookId,
+      referencedTable: $db.books,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BooksTableAnnotationComposer(
+            $db: $db,
+            $table: $db.books,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ShelvesTableAnnotationComposer get shelfId {
+    final $$ShelvesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.shelfId,
+      referencedTable: $db.shelves,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShelvesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.shelves,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BookShelvesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDb,
+          $BookShelvesTable,
+          BookShelf,
+          $$BookShelvesTableFilterComposer,
+          $$BookShelvesTableOrderingComposer,
+          $$BookShelvesTableAnnotationComposer,
+          $$BookShelvesTableCreateCompanionBuilder,
+          $$BookShelvesTableUpdateCompanionBuilder,
+          (BookShelf, $$BookShelvesTableReferences),
+          BookShelf,
+          PrefetchHooks Function({bool bookId, bool shelfId})
+        > {
+  $$BookShelvesTableTableManager(_$AppDb db, $BookShelvesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BookShelvesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BookShelvesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BookShelvesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> bookId = const Value.absent(),
+                Value<int> shelfId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => BookShelvesCompanion(
+                bookId: bookId,
+                shelfId: shelfId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int bookId,
+                required int shelfId,
+                Value<int> rowid = const Value.absent(),
+              }) => BookShelvesCompanion.insert(
+                bookId: bookId,
+                shelfId: shelfId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$BookShelvesTable, BookShelf>(table),
+                  $$BookShelvesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({bookId = false, shelfId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (bookId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.bookId,
+                        referencedTable: $$BookShelvesTableReferences
+                            ._bookIdTable(db),
+                        referencedColumn: $$BookShelvesTableReferences
+                            ._bookIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+                    if (shelfId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.shelfId,
+                        referencedTable: $$BookShelvesTableReferences
+                            ._shelfIdTable(db),
+                        referencedColumn: $$BookShelvesTableReferences
+                            ._shelfIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$BookShelvesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDb,
+      $BookShelvesTable,
+      BookShelf,
+      $$BookShelvesTableFilterComposer,
+      $$BookShelvesTableOrderingComposer,
+      $$BookShelvesTableAnnotationComposer,
+      $$BookShelvesTableCreateCompanionBuilder,
+      $$BookShelvesTableUpdateCompanionBuilder,
+      (BookShelf, $$BookShelvesTableReferences),
+      BookShelf,
+      PrefetchHooks Function({bool bookId, bool shelfId})
+    >;
 
 class $AppDbManager {
   final _$AppDb _db;
@@ -2384,4 +3610,8 @@ class $AppDbManager {
       $$BooksTableTableManager(_db, _db.books);
   $$ReadsTableTableManager get reads =>
       $$ReadsTableTableManager(_db, _db.reads);
+  $$ShelvesTableTableManager get shelves =>
+      $$ShelvesTableTableManager(_db, _db.shelves);
+  $$BookShelvesTableTableManager get bookShelves =>
+      $$BookShelvesTableTableManager(_db, _db.bookShelves);
 }

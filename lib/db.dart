@@ -16,6 +16,7 @@ class Books extends Table {
   TextColumn get coverUrl => text().withDefault(const Constant(''))();
   TextColumn get genre => text().withDefault(const Constant(''))();
   TextColumn get series => text().withDefault(const Constant(''))();
+  RealColumn get seriesNumber => real().nullable()(); // 1, 2, 2.5 ...
   TextColumn get publisher => text().withDefault(const Constant(''))();
   IntColumn get year => integer().nullable()();
   IntColumn get pages => integer().nullable()();
@@ -40,14 +41,30 @@ class Reads extends Table {
   TextColumn get thoughts => text().withDefault(const Constant(''))();
   TextColumn get narrator => text().withDefault(const Constant(''))();
   IntColumn get minutes => integer().nullable()(); // audio length or time spent
+  IntColumn get currentPage => integer().nullable()(); // reading progress (page or %)
 }
 
-@DriftDatabase(tables: [Books, Reads])
+@DataClassName('Shelf')
+class Shelves extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().unique()();
+}
+
+/// A book can sit on many shelves.
+@DataClassName('BookShelf')
+class BookShelves extends Table {
+  IntColumn get bookId => integer().references(Books, #id, onDelete: KeyAction.cascade)();
+  IntColumn get shelfId => integer().references(Shelves, #id, onDelete: KeyAction.cascade)();
+  @override
+  Set<Column> get primaryKey => {bookId, shelfId};
+}
+
+@DriftDatabase(tables: [Books, Reads, Shelves, BookShelves])
 class AppDb extends _$AppDb {
   AppDb() : super(_open());
   AppDb.forFile(File f) : super(NativeDatabase(f, setup: _pragmas));
   AppDb.memory() : super(NativeDatabase.memory());
-  static const currentSchema = 2;
+  static const currentSchema = 3;
   @override
   int get schemaVersion => currentSchema;
 
@@ -61,6 +78,12 @@ class AppDb extends _$AppDb {
             await m.createIndex(booksTitle);
             await m.createIndex(readsBook);
           }
+          if (from < 3) {
+            await m.addColumn(books, books.seriesNumber);
+            await m.addColumn(reads, reads.currentPage);
+            await m.createTable(shelves);
+            await m.createTable(bookShelves);
+          }
         },
         beforeOpen: (details) async {
           // Without this SQLite ignores ON DELETE CASCADE and leaves orphaned reads.
@@ -69,6 +92,30 @@ class AppDb extends _$AppDb {
       );
 
   static const trashDays = 30;
+
+  // ── shelves ──
+  Stream<List<Shelf>> watchShelves() => (select(shelves)..orderBy([(s) => OrderingTerm.asc(s.name)])).watch();
+  Stream<List<BookShelf>> watchShelfLinks() => select(bookShelves).watch();
+
+  Future<int> addShelf(String name) async {
+    final n = name.trim();
+    final existing = await (select(shelves)..where((s) => s.name.equals(n))).getSingleOrNull();
+    if (existing != null) return existing.id;
+    return into(shelves).insert(ShelvesCompanion.insert(name: n));
+  }
+
+  Future<void> renameShelf(int id, String name) =>
+      (update(shelves)..where((s) => s.id.equals(id))).write(ShelvesCompanion(name: Value(name.trim())));
+  Future<void> deleteShelf(int id) => (delete(shelves)..where((s) => s.id.equals(id))).go();
+
+  Future<void> setOnShelf(int bookId, int shelfId, bool on) async {
+    if (on) {
+      await into(bookShelves).insert(BookShelvesCompanion.insert(bookId: bookId, shelfId: shelfId), mode: InsertMode.insertOrIgnore);
+    } else {
+      await (delete(bookShelves)..where((l) => l.bookId.equals(bookId) & l.shelfId.equals(shelfId))).go();
+    }
+  }
+
 
   Future<void> softDelete(int id) =>
       (update(books)..where((b) => b.id.equals(id))).write(BooksCompanion(deletedAt: Value(DateTime.now())));
@@ -139,6 +186,14 @@ class BookRow {
   }
 
   String get status => primary?.status ?? 'none';
+
+  /// 0..1 progress of the active read, when both a current page and the book's page count are known.
+  double? get progress {
+    final r = primary;
+    final total = book.pages;
+    if (r == null || r.status != 'reading' || r.currentPage == null || total == null || total <= 0) return null;
+    return (r.currentPage! / total).clamp(0.0, 1.0);
+  }
 }
 
 void _pragmas(dynamic db) {

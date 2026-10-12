@@ -12,6 +12,35 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+## [0.4.0] - 2026-10-12
+
+Day-to-day reading features.
+
+### Added
+
+- Reading progress: "Update progress" on the book page stores your current page; a progress bar shows on the list and the
+  "Currently reading" strip, with pages/day and an estimated days-left; reaching the last page offers to mark it finished.
+- Yearly reading goal with an animated progress ring and an on-pace forecast (Stats).
+- Stats dashboard: finished per month, rating spread, totals (pages, hours, average days to finish), top genres and authors.
+  Locked books never count.
+- Shelves: any number per book; filter the library by shelf; manage them from the menu (deleting a shelf keeps the books).
+- Series: a series number per book (decimals allowed, e.g. 2.5), series badge on rows, and a Series screen that groups books,
+  counts what you've read and shows what is next.
+- "Currently reading" strip at the top of the library.
+- Tap-to-rate stars (left half = half star) replace the rating slider; quick "started today/yesterday" chips.
+- Sort order and filters (status, format, shelf) are remembered per library.
+- Schema 3 (migration from v1/v2 tested): series number, current page, shelves.
+
+### Changed
+
+- Ratings show as stars (4.5 = ★★★★½) in the theme's accent colour instead of a fixed amber.
+- The list leaves room under the last row so the Add button never covers it.
+- Stats now update live as you log books.
+
+### Fixed
+
+- Bar charts overflowed their box by 1.5 px (caught by the new widget tests).
+
 ## [0.3.0] - 2026-10-12
 
 Reliability and book-lookup release.

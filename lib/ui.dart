@@ -1,12 +1,14 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:drift/drift.dart' show Value, BooleanExpressionOperators;
+import 'package:drift/drift.dart' show Value;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'backup_page.dart';
+import 'features.dart';
 import 'lock_ui.dart';
 import 'privacy.dart';
 import 'db.dart';
@@ -114,14 +116,64 @@ class Library extends StatefulWidget {
 
 class _LibraryState extends State<Library> {
   String q = '', status = 'all', format = 'all', sort = 'added';
+  int? shelf;
+  List<Shelf> shelves = [];
+  Map<int, Set<int>> shelfBooks = {}; // shelf id -> book ids
+  StreamSubscription<List<Shelf>>? _shelfSub;
+  StreamSubscription<List<BookShelf>>? _linkSub;
+
+  String get _pk => 'lib_${widget.locked ? 'v' : 'm'}'; // sort/filters are remembered per library
+
+  @override
+  void initState() {
+    super.initState();
+    sort = prefs.getString('${_pk}_sort') ?? 'added';
+    status = prefs.getString('${_pk}_status') ?? 'all';
+    format = prefs.getString('${_pk}_format') ?? 'all';
+    shelf = prefs.getInt('${_pk}_shelf');
+    _shelfSub = db.watchShelves().listen((v) {
+      if (!mounted) return;
+      setState(() {
+        shelves = v;
+        if (shelf != null && !v.any((x) => x.id == shelf)) shelf = null; // the shelf was deleted
+      });
+    });
+    _linkSub = db.watchShelfLinks().listen((v) {
+      final m = <int, Set<int>>{};
+      for (final l in v) { (m[l.shelfId] ??= {}).add(l.bookId); }
+      if (mounted) setState(() => shelfBooks = m);
+    });
+  }
+
+  @override
+  void dispose() {
+    _shelfSub?.cancel();
+    _linkSub?.cancel();
+    super.dispose();
+  }
+
+  void _save() {
+    prefs.setString('${_pk}_sort', sort);
+    prefs.setString('${_pk}_status', status);
+    prefs.setString('${_pk}_format', format);
+    shelf == null ? prefs.remove('${_pk}_shelf') : prefs.setInt('${_pk}_shelf', shelf!);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.locked ? 'Locked library' : 'Library'), actions: [
         PopupMenuButton<String>(
+          tooltip: 'More',
+          onSelected: (v) => Navigator.push(context, MaterialPageRoute(builder: (_) => v == 'series' ? SeriesPage(locked: widget.locked) : const ShelvesPage())),
+          itemBuilder: (_) => const [
+            PopupMenuItem(value: 'series', child: ListTile(leading: Icon(Icons.layers_outlined), title: Text('Series'))),
+            PopupMenuItem(value: 'shelves', child: ListTile(leading: Icon(Icons.collections_bookmark_outlined), title: Text('Manage shelves'))),
+          ],
+        ),
+        PopupMenuButton<String>(
           icon: const Icon(Icons.sort),
-          onSelected: (v) => setState(() => sort = v),
+          onSelected: (v) { setState(() => sort = v); _save(); },
           itemBuilder: (_) => const [
             PopupMenuItem(value: 'added', child: Text('Recently added')),
             PopupMenuItem(value: 'title', child: Text('Title')),
@@ -146,10 +198,19 @@ class _LibraryState extends State<Library> {
           height: 48,
           child: ListView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 8), children: [
             for (final e in {'all': 'All', ...statuses}.entries)
-              Padding(padding: const EdgeInsets.all(4), child: ChoiceChip(label: Text(e.value), selected: status == e.key, onSelected: (_) => setState(() => status = e.key))),
+              Padding(padding: const EdgeInsets.all(4), child: ChoiceChip(label: Text(e.value), selected: status == e.key, onSelected: (_) { setState(() => status = e.key); _save(); })),
             const VerticalDivider(),
             for (final e in {'all': 'Any format', ...formats}.entries)
-              Padding(padding: const EdgeInsets.all(4), child: ChoiceChip(label: Text(e.value), selected: format == e.key, onSelected: (_) => setState(() => format = e.key))),
+              Padding(padding: const EdgeInsets.all(4), child: ChoiceChip(label: Text(e.value), selected: format == e.key, onSelected: (_) { setState(() => format = e.key); _save(); })),
+            if (shelves.isNotEmpty) ...[
+              const VerticalDivider(),
+              for (final s in shelves)
+                Padding(padding: const EdgeInsets.all(4), child: ChoiceChip(
+                  avatar: const Icon(Icons.collections_bookmark_outlined, size: 16),
+                  label: Text(s.name), selected: shelf == s.id,
+                  onSelected: (_) { setState(() => shelf = shelf == s.id ? null : s.id); _save(); },
+                )),
+            ],
           ]),
         ),
         Expanded(
@@ -161,6 +222,7 @@ class _LibraryState extends State<Library> {
                 if (q.isNotEmpty && !'${b.title} ${b.author} ${b.tags} ${b.genre} ${b.series}'.toLowerCase().contains(q)) return false;
                 if (status != 'all' && !r.reads.any((e) => e.status == status)) return false;
                 if (format != 'all' && !r.reads.any((e) => e.format == format)) return false;
+                if (shelf != null && !(shelfBooks[shelf]?.contains(b.id) ?? false)) return false;
                 return true;
               }).toList();
               rows.sort((a, b) {
@@ -172,7 +234,8 @@ class _LibraryState extends State<Library> {
                 }
               });
               if (rows.isEmpty) return Center(child: Text(snap.data?.isEmpty ?? true ? 'No books yet — tap Add book.' : 'No matches.'));
-              return ListView.builder(
+              final list = ListView.builder(
+                padding: const EdgeInsets.only(bottom: 88), // clear of the Add button
                 itemCount: rows.length,
                 itemBuilder: (_, i) => TweenAnimationBuilder<double>(
                   key: ValueKey(rows[i].book.id),
@@ -183,6 +246,31 @@ class _LibraryState extends State<Library> {
                   child: BookTile(row: rows[i]),
                 ),
               );
+              final reading = (snap.data ?? []).where((r) => r.status == 'reading').toList();
+              final unfiltered = q.isEmpty && status == 'all' && format == 'all' && shelf == null;
+              if (!unfiltered || reading.isEmpty) return list;
+              return Column(children: [
+                Align(alignment: Alignment.centerLeft, child: Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 4), child: Text('Currently reading', style: Theme.of(context).textTheme.titleSmall))),
+                SizedBox(
+                  height: 148,
+                  child: ListView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 12), children: [
+                    for (final r in reading)
+                      GestureDetector(
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: r.book.id))),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: SizedBox(width: 72, child: Column(children: [
+                            Cover(r.book.coverUrl, w: 72, locked: r.book.locked),
+                            const SizedBox(height: 6),
+                            r.progress != null ? SlimProgress(r.progress!) : Text(r.book.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.labelSmall),
+                          ])),
+                        ),
+                      ),
+                  ]),
+                ),
+                const Divider(height: 1),
+                Expanded(child: list),
+              ]);
             },
           ),
         ),
@@ -223,9 +311,16 @@ class BookTile extends StatelessWidget {
     return ListTile(
       leading: Cover(b.coverUrl, tag: 'cover-${b.id}', locked: b.locked),
       title: Text(b.title, maxLines: 2, overflow: TextOverflow.ellipsis),
-      subtitle: Text([b.author, if (row.reads.isNotEmpty) statuses[row.status], if (fmts.isNotEmpty) fmts].where((s) => s != null && s.isNotEmpty).join('\n')),
-      isThreeLine: true,
-      trailing: r == null ? null : Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.star, size: 18, color: Colors.amber), Text(r.toStringAsFixed(1))]),
+      subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text([
+          b.author,
+          if (b.series.isNotEmpty) '${b.series}${b.seriesNumber == null ? '' : ' #${SeriesPage.fmtNum(b.seriesNumber)}'}',
+          if (row.reads.isNotEmpty) statuses[row.status],
+          if (fmts.isNotEmpty) fmts,
+        ].where((s) => s != null && s.isNotEmpty).join('\n')),
+        if (row.progress != null) Padding(padding: const EdgeInsets.only(top: 6, right: 8), child: SlimProgress(row.progress!)),
+      ]),
+      trailing: r == null ? null : Semantics(label: 'Rated ${r.toStringAsFixed(1)} of 5', child: Text(starsText(r), style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 15))),
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: b.id))),
     );
   }
@@ -463,11 +558,13 @@ class BookPage extends StatelessWidget {
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(b.title, style: Theme.of(context).textTheme.titleLarge),
                 if (b.author.isNotEmpty) Text(b.author),
-                if (b.series.isNotEmpty) Text('Series: ${b.series}'),
+                if (b.series.isNotEmpty) Text('Series: ${b.series}${b.seriesNumber == null ? '' : ' #${SeriesPage.fmtNum(b.seriesNumber)}'}'),
                 if (b.genre.isNotEmpty) Text(b.genre),
                 Text([if (b.year != null) '${b.year}', if (b.pages != null) '${b.pages} pages', if (b.publisher.isNotEmpty) b.publisher].join(' · ')),
                 if (b.isbn.isNotEmpty) Text('ISBN ${b.isbn}'),
                 if (b.tags.isNotEmpty) Wrap(spacing: 4, children: [for (final t in b.tags.split(',').where((t) => t.trim().isNotEmpty)) Chip(label: Text(t.trim()))]),
+                const SizedBox(height: 6),
+                ShelfChips(bookId: b.id),
               ])),
             ]),
             if (b.description.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 12), child: Text(b.description)),
@@ -479,7 +576,9 @@ class BookPage extends StatelessWidget {
               builder: (_, rs) {
                 final list = rs.data ?? [];
                 if (list.isEmpty) return const Padding(padding: EdgeInsets.all(8), child: Text('Nothing logged yet.'));
+                final active = list.where((r) => r.status == 'reading').firstOrNull;
                 return Column(children: [
+                  if (active != null) ProgressCard(book: b, read: active),
                   for (final r in list)
                     Card(child: ListTile(
                       leading: Icon(r.format == 'audio' ? Icons.headphones : r.format == 'ebook' ? Icons.tablet_android : Icons.menu_book),
@@ -491,7 +590,7 @@ class BookPage extends StatelessWidget {
                         if (r.thoughts.isNotEmpty) r.thoughts,
                       ].join('\n')),
                       isThreeLine: true,
-                      trailing: r.rating == null ? null : Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.star, color: Colors.amber), Text('${r.rating}')]),
+                      trailing: r.rating == null ? null : Text(starsText(r.rating!), style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 16)),
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ReadEditor(bookId: b.id, read: r))),
                     )),
                 ]);
@@ -515,7 +614,7 @@ class EditBook extends StatefulWidget {
 class _EditBookState extends State<EditBook> {
   late final Map<String, TextEditingController> c = {
     for (final e in {
-      'title': widget.book.title, 'author': widget.book.author, 'series': widget.book.series, 'genre': widget.book.genre,
+      'title': widget.book.title, 'author': widget.book.author, 'series': widget.book.series, 'seriesNumber': SeriesPage.fmtNum(widget.book.seriesNumber), 'genre': widget.book.genre,
       'tags': widget.book.tags, 'publisher': widget.book.publisher, 'isbn': widget.book.isbn, 'coverUrl': widget.book.coverUrl,
       'year': '${widget.book.year ?? ''}', 'pages': '${widget.book.pages ?? ''}', 'description': widget.book.description, 'notes': widget.book.notes,
     }.entries) e.key: TextEditingController(text: e.value)
@@ -531,7 +630,7 @@ class _EditBookState extends State<EditBook> {
         appBar: AppBar(title: const Text('Edit book'), actions: [
           TextButton(onPressed: () async {
             await (db.update(db.books)..where((x) => x.id.equals(widget.book.id))).write(BooksCompanion(
-              title: Value(c['title']!.text), author: Value(c['author']!.text), series: Value(c['series']!.text), genre: Value(c['genre']!.text),
+              title: Value(c['title']!.text), author: Value(c['author']!.text), series: Value(c['series']!.text), seriesNumber: Value(double.tryParse(c['seriesNumber']!.text.trim())), genre: Value(c['genre']!.text),
               tags: Value(c['tags']!.text), publisher: Value(c['publisher']!.text), isbn: Value(c['isbn']!.text), coverUrl: Value(c['coverUrl']!.text),
               year: Value(int.tryParse(c['year']!.text)), pages: Value(int.tryParse(c['pages']!.text)),
               description: Value(c['description']!.text), notes: Value(c['notes']!.text),
@@ -540,7 +639,7 @@ class _EditBookState extends State<EditBook> {
           }, child: const Text('Save')),
         ]),
         body: ListView(padding: const EdgeInsets.all(16), children: [
-          f('title', 'Title'), f('author', 'Author'), f('series', 'Series'), f('genre', 'Genre (fantasy, romance, science…)'),
+          f('title', 'Title'), f('author', 'Author'), f('series', 'Series'), f('seriesNumber', 'Number in series (e.g. 2 or 2.5)', num: true), f('genre', 'Genre (fantasy, romance, science…)'),
           f('tags', 'Tags (comma separated)'), f('publisher', 'Publisher'), f('isbn', 'ISBN'), f('coverUrl', 'Cover image URL'),
           f('year', 'Year', num: true), f('pages', 'Pages', num: true), f('description', 'Description', lines: 4), f('notes', 'Private notes', lines: 4),
         ]),
@@ -565,6 +664,7 @@ class _ReadEditorState extends State<ReadEditor> {
   late final thoughts = TextEditingController(text: widget.read?.thoughts);
   late final narrator = TextEditingController(text: widget.read?.narrator);
   late final minutes = TextEditingController(text: '${widget.read?.minutes ?? ''}');
+  late final page = TextEditingController(text: '${widget.read?.currentPage ?? ''}');
 
   Future<DateTime?> pick(DateTime? init) =>
       showDatePicker(context: context, initialDate: init ?? DateTime.now(), firstDate: DateTime(1950), lastDate: DateTime(2100));
@@ -589,7 +689,7 @@ class _ReadEditorState extends State<ReadEditor> {
             }
             final comp = ReadsCompanion(
               bookId: Value(widget.bookId), format: Value(format), status: Value(status), started: Value(started), finished: Value(fin),
-              rating: Value(rating == 0 ? null : rating), thoughts: Value(thoughts.text), narrator: Value(narrator.text), minutes: Value(int.tryParse(minutes.text)),
+              rating: Value(rating == 0 ? null : rating), thoughts: Value(thoughts.text), narrator: Value(narrator.text), minutes: Value(int.tryParse(minutes.text)), currentPage: Value(int.tryParse(page.text)),
             );
             if (widget.read == null) {
               await db.into(db.reads).insert(comp);
@@ -614,14 +714,21 @@ class _ReadEditorState extends State<ReadEditor> {
               if (status == 'reading' || status == 'want') finished = null;
             }),
           ),
+          if (status == 'reading') Padding(padding: const EdgeInsets.only(top: 12), child: TextField(controller: page, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Current page', border: OutlineInputBorder()))),
           ListTile(title: const Text('Started'), subtitle: Text(started == null ? '—' : _date.format(started!)), trailing: const Icon(Icons.calendar_today),
               onTap: () async { final d = await pick(started); if (d != null) setState(() => started = d); }),
+          Wrap(spacing: 8, children: [
+            ActionChip(label: const Text('Started today'), onPressed: () => setState(() => started = DateTime.now())),
+            ActionChip(label: const Text('Started yesterday'), onPressed: () => setState(() => started = DateTime.now().subtract(const Duration(days: 1)))),
+          ]),
           ListTile(title: const Text('Finished'), subtitle: Text(finished == null ? '—' : _date.format(finished!)), trailing: const Icon(Icons.calendar_today),
               onTap: () async { final d = await pick(finished); if (d != null) setState(() => finished = d); }),
+          const SizedBox(height: 8),
           const Text('Rating'),
           Row(children: [
-            Expanded(child: Slider(value: rating, min: 0, max: 5, divisions: 10, label: rating == 0 ? 'unrated' : '$rating', onChanged: (v) => setState(() => rating = v))),
-            Text(rating == 0 ? '—' : '$rating ★'),
+            StarRating(value: rating, onChanged: (v) => setState(() => rating = v)),
+            const SizedBox(width: 8),
+            Text(rating == 0 ? 'tap a star' : '$rating'),
           ]),
           if (format == 'audio') ...[
             TextField(controller: narrator, decoration: const InputDecoration(labelText: 'Narrator', border: OutlineInputBorder())),
@@ -631,51 +738,6 @@ class _ReadEditorState extends State<ReadEditor> {
           const SizedBox(height: 12),
           TextField(controller: thoughts, minLines: 5, maxLines: 14, decoration: const InputDecoration(labelText: 'Your thoughts', alignLabelWithHint: true, border: OutlineInputBorder())),
         ]),
-      );
-}
-
-// ───────────────────────── Stats ─────────────────────────
-class Stats extends StatelessWidget {
-  const Stats({super.key});
-  @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Stats')),
-        body: FutureBuilder(
-          future: Future.wait([(db.select(db.books)..where((b) => b.locked.equals(false) & b.deletedAt.isNull())).get(), db.select(db.reads).get()]),
-          builder: (_, s) {
-            if (!s.hasData) return const Center(child: CircularProgressIndicator());
-            final books = s.data![0] as List<Book>;
-            final ids = books.map((b) => b.id).toSet();
-            final reads = (s.data![1] as List<Read>).where((r) => ids.contains(r.bookId)).toList();
-            final done = reads.where((r) => r.status == 'finished').toList();
-            final yr = DateTime.now().year;
-            final thisYear = done.where((r) => r.finished?.year == yr).length;
-            final rated = reads.where((r) => r.rating != null).map((r) => r.rating!).toList();
-            final byFmt = <String, int>{};
-            for (final r in done) { byFmt[r.format] = (byFmt[r.format] ?? 0) + 1; }
-            final mins = done.fold<int>(0, (a, r) => a + (r.minutes ?? 0));
-            Widget t(String k, String v) {
-              final n = int.tryParse(v); // integer stats count up
-              final style = Theme.of(context).textTheme.titleLarge;
-              return Card(
-                child: ListTile(
-                  title: Text(k),
-                  trailing: n == null
-                      ? Text(v, style: style)
-                      : TweenAnimationBuilder<int>(tween: IntTween(begin: 0, end: n), duration: const Duration(milliseconds: 700), curve: Curves.easeOutCubic, builder: (_, x, _) => Text('$x', style: style)),
-                ),
-              );
-            }
-            return ListView(padding: const EdgeInsets.all(12), children: [
-              t('Books tracked', '${books.length}'),
-              t('Finished', '${done.length}'),
-              t('Finished in $yr', '$thisYear'),
-              t('Average rating', rated.isEmpty ? '—' : (rated.reduce((a, b) => a + b) / rated.length).toStringAsFixed(2)),
-              for (final e in byFmt.entries) t('Finished · ${formats[e.key]}', '${e.value}'),
-              if (mins > 0) t('Logged time', '${(mins / 60).toStringAsFixed(1)} h'),
-            ]);
-          },
-        ),
       );
 }
 
@@ -766,7 +828,7 @@ class SettingsPage extends StatelessWidget {
           ),
           ListTile(leading: const Icon(Icons.bug_report_outlined), title: const Text('Diagnostics'), subtitle: const Text('Event log for troubleshooting (no book data)'),
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DiagnosticsPage()))),
-          const ListTile(title: Text('Pagemark 0.3.0 · all data stays on this device'), dense: true),
+          const ListTile(title: Text('Pagemark 0.4.0 · all data stays on this device'), dense: true),
         ]),
       );
 }

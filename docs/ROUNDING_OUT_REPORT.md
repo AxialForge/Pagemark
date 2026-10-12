@@ -14,6 +14,8 @@ Written 2026-10-11 from a read-through of the 0.1.0 source (`lib/*.dart`, Androi
 
 **Fixed in 0.3.0:** IB-34, 41, 53, 54, 55, 56, 57, 58, 60 (dedupe), 61, 62, 69, 72, 73, 74, 76; IM-33 (torch + feedback), IM-38, IM-39; FM-19 (pasted ISBN), FM-29 (backup status), FS-01 (checksum), FS-53 (diagnostics log).
 
+**Added in 0.4.0:** FB-01, FB-08, FB-11, FB-12 (series number + Series screen; no series entity yet), FB-57 (stats dashboard), FB-59/60 (pages, hours, days-to-finish), FM-07, FM-11, FM-12 (started chips), FM-14, FM-15, FM-16; FS-07, FS-08, FS-29, FS-30; IM-05, IM-18, IM-35; UI-12, UI-13, UI-24, UI-27, UI-38, UI-41.
+
 **Animations (done in this pass, not in the lists below):** page transitions (fade-forwards on Android, Cupertino on iOS), cover Hero between list and detail, animated tab switching, staggered list entrance, cover fade-in, count-up on Stats numbers. Further motion ideas are UI-33…UI-42.
 
 ---
