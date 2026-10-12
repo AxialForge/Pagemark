@@ -57,6 +57,6 @@ No accounts, analytics or ads. The network is used for book lookup (Open Library
 
 ## Development
 
-Architecture, conventions and every hard-won gotcha are in [CLAUDE.md](CLAUDE.md). Planned work is in [docs/ROUNDING_OUT_REPORT.md](docs/ROUNDING_OUT_REPORT.md).
+Architecture, conventions and every hard-won gotcha are in [CLAUDE.md](CLAUDE.md). Planned releases are in [docs/ROADMAP.md](docs/ROADMAP.md); the full 330-item backlog is in [docs/ROUNDING_OUT_REPORT.md](docs/ROUNDING_OUT_REPORT.md).
 
 Book data and covers: [Open Library](https://openlibrary.org).

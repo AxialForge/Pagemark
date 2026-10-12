@@ -93,6 +93,8 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 
 ## Roadmap (unbuilt)
 
+**Start here: [docs/ROADMAP.md](docs/ROADMAP.md)** - the planned releases 0.4.2 → 1.0 with self-contained task specs, how to work away from home, and a prompt to paste into a fresh Claude Code session. The list below is the older, shorter version.
+
 - Encrypted database at rest (SQLCipher), auto-lock timeout setting, whole-app lock.
 - A Flutter CI workflow (the template has none for Flutter). Release signing is local: `android/key.properties` (gitignored) points at `~/.android/pagemark-release.jks` — back that keystore up; losing it means users can't upgrade in place.
 - Reading goals/streaks, series grouping, CSV/Goodreads import, iOS build (needs a Mac).
