@@ -22,3 +22,7 @@ Notes
 - Android runs the schedule via WorkManager: "daily/weekly" is approximate and may be delayed by battery saver.
 - Backups include locked books and are not encrypted by Pagemark; they sit in your private Drive app folder.
 - Restore: **Restore from Drive…** replaces the whole library, then the app closes.
+
+## Release key
+
+The release APK is signed with `~/.android/pagemark-release.jks`. Add a **second Android OAuth client** for it with SHA-1 `39:04:59:AD:24:0F:35:99:4B:CD:A5:86:81:AF:9C:21:8C:FD:27:F7` (package `com.axialforge.pagemark`), or Drive sign-in fails in the release app.

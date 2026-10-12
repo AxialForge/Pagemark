@@ -60,7 +60,7 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 ## Roadmap (unbuilt)
 
 - Encrypted Drive backups (passphrase) and `FLAG_SECURE` on the locked tab.
-- Release signing + a Flutter CI workflow (the template has none for Flutter).
+- A Flutter CI workflow (the template has none for Flutter). Release signing is local: `android/key.properties` (gitignored) points at `~/.android/pagemark-release.jks` — back that keystore up; losing it means users can't upgrade in place.
 - Reading goals/streaks, series grouping, CSV/Goodreads import, iOS build (needs a Mac).
 
 ## Release
