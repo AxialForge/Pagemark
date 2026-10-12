@@ -521,3 +521,13 @@ Written 2026-10-11 from a read-through of the 0.1.0 source (`lib/*.dart`, Androi
 - **UI-48** TalkBack labels for covers, stars and status, with 48 dp tap targets.
 - **UI-49** Respect large font and display scale; test with 200% text.
 - **UI-50** Larger numeric PIN keypad with show/hide, dot indicators and haptic feedback.
+
+---
+
+## Found while writing the documentation (0.4.1)
+
+Not part of the numbered lists above:
+
+- **Vault Trash gap:** books deleted from the locked library are soft-deleted but the Trash screen hides locked titles, so they cannot be restored from the app (they purge after 30 days). Needs a Trash section inside the unlocked vault.
+- **Permission bloat:** plugins add `READ_MEDIA_IMAGES/VIDEO/AUDIO`, `READ_EXTERNAL_STORAGE`, `POST_NOTIFICATIONS`, `FOREGROUND_SERVICE*` and `RECEIVE_BOOT_COMPLETED` to the merged manifest. Pagemark does not use storage/media access; remove them with `tools:node="remove"` entries.
+- **PIN is not in backups** (by design) - after restoring on a new phone the vault needs a new PIN; the UI could say so at restore time.
