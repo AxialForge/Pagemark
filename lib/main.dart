@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cryptography_flutter/cryptography_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'log.dart';
 import 'privacy.dart';
 import 'db.dart';
 import 'themes.dart';
@@ -11,7 +11,7 @@ final themeId = ValueNotifier<String>('light_him');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  FlutterCryptography.enable(); // native AES/PBKDF2 instead of slow pure-Dart
+  Log.installGlobalHandlers();
   final prefs = await SharedPreferences.getInstance();
   themeId.value = prefs.getString('theme') ?? 'light_him';
   themeId.addListener(() => prefs.setString('theme', themeId.value));

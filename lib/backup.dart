@@ -3,6 +3,7 @@ import 'package:crypto/crypto.dart' as hash;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'crypto_backup.dart';
+import 'log.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
@@ -32,11 +33,14 @@ class _Auth extends http.BaseClient {
 @pragma('vm:entry-point')
 void backupDispatcher() {
   Workmanager().executeTask((task, input) async {
+    Log.i('backup', 'scheduled backup started');
     final db = AppDb();
     try {
-      await DriveBackup.run(db, interactive: false);
+      final r = await DriveBackup.run(db, interactive: false);
+      Log.i('backup', 'scheduled backup finished: $r');
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      Log.e('backup', e, st);
       return false; // retried with backoff; error is stored in prefs
     } finally {
       await db.close();
@@ -74,14 +78,19 @@ class BackupSettings {
 
 class DriveBackup {
   static bool _init = false;
+  static String? _initId;
 
   static Future<void> _ensureInit() async {
-    if (_init) return;
     final p = await SharedPreferences.getInstance();
     final cid = p.getString('bk_cid') ?? '';
     if (cid.isEmpty) throw 'Enter your Google Web client ID first.';
+    if (_init) {
+      if (_initId != cid) throw 'The client ID changed. Close and reopen Pagemark to apply it.';
+      return;
+    }
     await GoogleSignIn.instance.initialize(serverClientId: cid);
     _init = true;
+    _initId = cid;
   }
 
   /// Interactive sign-in + one-time Drive permission grant.

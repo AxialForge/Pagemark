@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:drift/drift.dart' show Value, BooleanExpressionOperators;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'backup_page.dart';
@@ -11,7 +12,10 @@ import 'privacy.dart';
 import 'db.dart';
 import 'export.dart';
 import 'lock.dart';
+import 'isbn.dart';
+import 'log.dart';
 import 'lookup.dart';
+import 'backup.dart';
 import 'main.dart';
 import 'themes.dart';
 
@@ -196,11 +200,12 @@ class Cover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ph = Container(width: w, height: w * 1.5, color: Theme.of(context).colorScheme.secondaryContainer, child: const Icon(Icons.book));
+    final small = w <= 64 ? url.replaceFirst('-L.jpg', '-M.jpg') : url; // list thumbnails: don't download full-size covers
     final img = url.isEmpty
         ? ph
         : ClipRRect(
             borderRadius: BorderRadius.circular(4),
-            child: CachedNetworkImage(imageUrl: url, cacheManager: locked ? lockedCache : null, memCacheWidth: (w * 3).round(), width: w, height: w * 1.5, fit: BoxFit.cover,
+            child: CachedNetworkImage(imageUrl: small, cacheManager: locked ? lockedCache : null, memCacheWidth: (w * 3).round(), width: w, height: w * 1.5, fit: BoxFit.cover,
                 fadeInDuration: const Duration(milliseconds: 250), placeholder: (_, _) => ph, errorWidget: (_, _, _) => ph),
           );
     return tag == null ? img : Hero(tag: tag!, child: img);
@@ -244,16 +249,26 @@ class _AddBookState extends State<AddBook> {
     try {
       results = await f();
     } catch (e) {
-      if (mounted) snack(context, 'Lookup failed (offline?) — add manually below.');
+      Log.w('addbook', 'lookup failed: $e');
+      if (mounted) snack(context, e is LookupException ? '$e You can still add the book manually below.' : 'Lookup failed — you can add the book manually below.');
     }
     if (mounted) setState(() => busy = false);
   }
+
+  /// A valid ISBN (typed, pasted or scanned) is looked up directly; anything else is a text search.
+  Future<void> go(String q) => run(() async {
+        if (Isbn.looksLikeBookCode(q)) {
+          final m = await Lookup.byIsbn(q);
+          return [if (m != null) m];
+        }
+        return Lookup.search(q);
+      });
 
   Future<void> scan() async {
     final code = await Navigator.push<String>(context, MaterialPageRoute(builder: (_) => const ScanPage()));
     if (code == null) return;
     qc.text = code;
-    await run(() async => [if (await Lookup.byIsbn(code) case final m?) m]);
+    await go(code);
   }
 
   bool saving = false;
@@ -295,6 +310,11 @@ class _AddBookState extends State<AddBook> {
           publisher: Value(m.publisher), year: Value(m.year), pages: Value(m.pages),
           series: Value(m.series), description: Value(m.description), locked: Value(widget.locked),
         ));
+    if (m.description.isEmpty && m.workKey.isNotEmpty) {
+      Lookup.description(m.workKey).then((d) {
+        if (d.isNotEmpty) (db.update(db.books)..where((b) => b.id.equals(id))).write(BooksCompanion(description: Value(d)));
+      });
+    }
     if (!mounted) return;
     Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => BookPage(bookId: id)));
   }
@@ -310,9 +330,9 @@ class _AddBookState extends State<AddBook> {
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
                 hintText: 'Search Open Library (title, author, ISBN)', border: const OutlineInputBorder(),
-                suffixIcon: IconButton(icon: const Icon(Icons.search), onPressed: () => run(() => Lookup.search(qc.text))),
+                suffixIcon: IconButton(icon: const Icon(Icons.search), onPressed: () => go(qc.text)),
               ),
-              onSubmitted: (v) => run(() => Lookup.search(v)),
+              onSubmitted: go,
             ),
           ),
           if (busy) const LinearProgressIndicator(),
@@ -353,15 +373,48 @@ Future<String?> ask(BuildContext c, String label, [String initial = '', bool mul
   );
 }
 
-class ScanPage extends StatelessWidget {
+class ScanPage extends StatefulWidget {
   const ScanPage({super.key});
   @override
+  State<ScanPage> createState() => _ScanPageState();
+}
+
+class _ScanPageState extends State<ScanPage> {
+  final controller = MobileScannerController();
+  bool done = false; // onDetect fires repeatedly; pop exactly once
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Scan barcode')),
-        body: MobileScanner(onDetect: (cap) {
-          final v = cap.barcodes.firstOrNull?.rawValue;
-          if (v != null) Navigator.pop(context, v);
-        }),
+        appBar: AppBar(title: const Text('Scan a book barcode'), actions: [
+          IconButton(icon: const Icon(Icons.flashlight_on_outlined), tooltip: 'Torch', onPressed: controller.toggleTorch),
+        ]),
+        body: Stack(children: [
+          MobileScanner(
+            controller: controller,
+            onDetect: (cap) {
+              if (done) return;
+              for (final b in cap.barcodes) {
+                final v = b.rawValue;
+                if (v != null && Isbn.looksLikeBookCode(v)) { // ignore QR codes / price labels
+                  done = true;
+                  HapticFeedback.mediumImpact();
+                  Navigator.pop(context, Isbn.to13(v));
+                  return;
+                }
+              }
+            },
+          ),
+          const Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(padding: EdgeInsets.all(24), child: Text('Point at the ISBN barcode on the back cover', style: TextStyle(color: Colors.white, shadows: [Shadow(blurRadius: 6)]))),
+          ),
+        ]),
       );
 }
 
@@ -653,8 +706,24 @@ class SettingsPage extends StatelessWidget {
           ListTile(leading: const Icon(Icons.table_chart), title: const Text('Library log as CSV'), onTap: () => Exporter.shareCsv(db)),
           ListTile(leading: const Icon(Icons.data_object), title: const Text('Library log as JSON'), onTap: () => Exporter.shareJson(db)),
           const Divider(),
-          ListTile(leading: const Icon(Icons.cloud_sync), title: const Text('Google Drive backup'), subtitle: const Text('Scheduled automatic backups'),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BackupPage()))),
+          FutureBuilder<BackupSettings>(
+            future: BackupSettings.load(),
+            builder: (_, snap) {
+              final st = snap.data;
+              final sub = st == null
+                  ? 'Scheduled automatic backups'
+                  : st.lastError != null
+                      ? 'Last backup FAILED - tap for details'
+                      : st.lastOk != null
+                          ? 'Last backup ${_date.format(DateTime.parse(st.lastOk!))}${st.enabled ? ' - automatic ${st.frequency}' : ''}'
+                          : st.account == null ? 'Not set up' : 'No backup yet';
+              return ListTile(
+                leading: Icon(Icons.cloud_sync, color: st?.lastError != null ? Theme.of(context).colorScheme.error : null),
+                title: const Text('Google Drive backup'), subtitle: Text(sub),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BackupPage())),
+              );
+            },
+          ),
           const Divider(),
           const ListTile(title: Text('Database (includes locked books)', style: TextStyle(fontWeight: FontWeight.bold))),
           ListTile(leading: const Icon(Icons.storage), title: const Text('Export database file'), subtitle: const Text('Includes locked books - protect it with a passphrase'), onTap: () async {
@@ -695,7 +764,9 @@ class SettingsPage extends StatelessWidget {
               if (context.mounted) snack(context, 'Lock removed');
             },
           ),
-          const ListTile(title: Text('Pagemark 0.2.0 · all data stays on this device'), dense: true),
+          ListTile(leading: const Icon(Icons.bug_report_outlined), title: const Text('Diagnostics'), subtitle: const Text('Event log for troubleshooting (no book data)'),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DiagnosticsPage()))),
+          const ListTile(title: Text('Pagemark 0.3.0 · all data stays on this device'), dense: true),
         ]),
       );
 }
@@ -723,6 +794,33 @@ class TrashPage extends StatelessWidget {
                     IconButton(icon: const Icon(Icons.delete_forever), tooltip: 'Delete forever', onPressed: () => db.purgeBook(b.id)),
                   ]),
                 ),
+            ]);
+          },
+        ),
+      );
+}
+
+
+// ───────────────────────── Diagnostics ─────────────────────────
+class DiagnosticsPage extends StatelessWidget {
+  const DiagnosticsPage({super.key});
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('Diagnostics')),
+        body: FutureBuilder<String>(
+          future: Log.read(),
+          builder: (_, snap) {
+            final text = snap.data ?? '';
+            return Column(children: [
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Row(children: [
+                  OutlinedButton.icon(icon: const Icon(Icons.copy), label: const Text('Copy'), onPressed: text.isEmpty ? null : () { Clipboard.setData(ClipboardData(text: text)); snack(context, 'Log copied'); }),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(icon: const Icon(Icons.delete_outline), label: const Text('Clear'), onPressed: () async { await Log.clear(); if (context.mounted) Navigator.pop(context); }),
+                ]),
+              ),
+              Expanded(child: SingleChildScrollView(padding: const EdgeInsets.all(12), child: SelectableText(text.isEmpty ? 'Nothing logged.' : text, style: const TextStyle(fontFamily: 'monospace', fontSize: 11)))),
             ]);
           },
         ),

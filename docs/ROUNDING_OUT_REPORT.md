@@ -12,6 +12,8 @@ Written 2026-10-11 from a read-through of the 0.1.0 source (`lib/*.dart`, Androi
 
 **Fixed in 0.2.0:** IB-01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 12, 13 (opt-in encryption), 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 32, 33, 35, 36, 43, 44, 47, 71, 75 (partly), 82; IM-02, 07, 08, 09, 29, 30, 34; IS-50, 51; features FB-37, FB-45, FB-50 (on background), FB-52, FB-56, FM-02 (duplicate warning).
 
+**Fixed in 0.3.0:** IB-34, 41, 53, 54, 55, 56, 57, 58, 60 (dedupe), 61, 62, 69, 72, 73, 74, 76; IM-33 (torch + feedback), IM-38, IM-39; FM-19 (pasted ISBN), FM-29 (backup status), FS-01 (checksum), FS-53 (diagnostics log).
+
 **Animations (done in this pass, not in the lists below):** page transitions (fade-forwards on Android, Cupertino on iOS), cover Hero between list and detail, animated tab switching, staggered list entrance, cover fade-in, count-up on Stats numbers. Further motion ideas are UI-33…UI-42.
 
 ---

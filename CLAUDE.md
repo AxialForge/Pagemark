@@ -35,7 +35,9 @@ lib/
   main.dart         entrypoint, global db + theme notifier, prefs-backed theme
   db.dart           Drift tables (Books, Reads), AppDb, library join stream; db.g.dart is generated
   ui.dart           all screens: Home/tabs, Library, AddBook, BookPage, EditBook, ReadEditor, Stats, LockGate, Settings
-  lookup.dart       Open Library search + ISBN lookup, cover URLs (covers.openlibrary.org)
+  lookup.dart       Open Library search/ISBN/description (retry + backoff, injectable http client), cover URLs
+  isbn.dart         ISBN-10/13 checksums, normalise to 13, scanner filter
+  log.dart          rolling event log (batched writes, 200 KB cap) + global error handlers
   themes.dart       4 themes: light/dark × him (blue) / her (rose/plum)
   lock.dart         PIN (PBKDF2, attempt limiting, recovery code) + device auth; lock_ui.dart = gate, setup, confirm-current
   privacy.dart      FLAG_SECURE channel, locked-cover cache, temp-export cleanup, navigator key
@@ -66,6 +68,11 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 - **Restore swaps the file under a closed connection.** `Exporter.restoreDb` validates, snapshots the current DB to `pre-restore-*.sqlite` (newest 3), closes the DB, deletes `-wal/-shm`, then renames a staged copy; the app must be restarted afterwards (the UI exits).
 - **Backup passphrase lives in secure storage** (`bk_pass`) so the background isolate can encrypt unattended. A new phone needs the passphrase typed again to restore.
 - **Tests use `AppDb.memory()`** and `FlutterSecureStorage.setMockInitialValues`; PBKDF2 at 150k iterations makes lock tests take a few seconds.
+
+- **Lookup tests inject `Lookup.client`** (a `MockClient`) and set `Lookup.retryDelay = Duration.zero`. Don't add a real network call to tests. Await each `expectLater` that uses the shared client - two unawaited expects race on it.
+- **Log writes are batched** (one file open per burst). Per-line `flush: true` made 4000 lines take >30 s on Windows; only error bursts flush. Never log titles, thoughts or other book data.
+- **MobileScanner `onDetect` fires repeatedly** - guard with a `done` flag or `Navigator.pop` runs several times and pops extra routes.
+- **CI does not sign.** Signed APKs are built locally with `android/key.properties`; CI only proves analyze/test/debug-build pass.
 
 ## Roadmap (unbuilt)
 

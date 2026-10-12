@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - name: Generated code is committed and current
+        run: git diff --exit-code -- lib/db.g.dart
+      - run: flutter analyze --no-fatal-infos
+      - run: flutter test
+      # Debug-signed build proves the Android project compiles. Signed release APKs are built locally
+      # (the keystore never leaves the owner's machine) and attached to the GitHub Release by hand.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: flutter build apk --debug

@@ -59,7 +59,7 @@ class Exporter {
   }
 
   static Future<void> _share(File f, String mime) async {
-    await Share.shareXFiles([XFile(f.path, mimeType: mime)]);
+    await SharePlus.instance.share(ShareParams(files: [XFile(f.path, mimeType: mime)]));
   }
 
   static Future<void> shareCsv(AppDb db) async {
@@ -114,7 +114,7 @@ class Exporter {
     } catch (e) {
       return const RestoreCheck.fail('This file is not a readable Pagemark database.');
     } finally {
-      d?.dispose();
+      d?.close();
     }
   }
 

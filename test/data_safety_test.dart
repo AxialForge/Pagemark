@@ -86,7 +86,7 @@ void main() {
         INSERT INTO reads (book_id, status, rating) VALUES (1, 'finished', 5.0);
         PRAGMA user_version = 1;
       ''');
-      raw.dispose();
+      raw.close();
 
       final db = AppDb.forFile(f);
       final lib = await db.watchLibrary(locked: false).first;
@@ -112,7 +112,7 @@ void main() {
         d.execute('CREATE TABLE $t (id INTEGER PRIMARY KEY)');
       }
       d.execute('PRAGMA user_version = $version');
-      d.dispose();
+      d.close();
       return f;
     }
 

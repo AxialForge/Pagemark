@@ -12,6 +12,32 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+## [0.3.0] - 2026-10-12
+
+Reliability and book-lookup release.
+
+### Added
+
+- Diagnostics page (Settings): a small rolling event log (no book titles or thoughts), with Copy and Clear.
+  Uncaught Flutter/async errors and background-backup runs are logged instead of vanishing.
+- Typing, pasting or scanning a valid ISBN looks the book up directly; invalid ISBNs are explained instead of searched.
+- Book descriptions are now fetched from the Open Library work record (best effort, after the book is saved).
+- Barcode scanner: only real book barcodes (valid ISBN, 978/979) are accepted, it returns once, has a torch button,
+  and a hint line. QR codes and price labels are ignored.
+- Settings shows backup health (last backup time, or "FAILED") on the Drive backup row.
+- GitHub Actions CI: analyze, tests, generated-code check and a debug build on every push.
+- 10 more automated tests (lookup parsing, retries, ISBN checksums, log) - 26 total.
+
+### Changed
+
+- Lookup is sturdier: identifies itself to Open Library, retries busy/slow responses with backoff, gives readable
+  errors (offline / busy / slow), skips one malformed record instead of failing the whole list, dedupes repeated
+  works, hides non-genre subjects ("Accessible book", "Protected DAISY"), and falls back to searching by ISBN.
+- Lists load small cover thumbnails and decode them at display size (less data and memory).
+- ISBNs are stored as ISBN-13.
+- Changing the Google Web client ID after sign-in now says to restart instead of silently using the old one.
+- Replaced deprecated share/sqlite/crypto calls.
+
 ## [0.2.0] - 2026-10-12
 
 Lock and data-safety release.
