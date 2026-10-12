@@ -57,6 +57,26 @@ void main() {
     }
   });
 
+  test('spine and blank-cover text is readable (WCAG AA 4.5:1) on every colour in every theme', () {
+    for (final theme in themes) {
+      final cs = theme.data.colorScheme;
+      for (var i = 0; i < 2000; i++) {
+        final title = 'Title number $i about ${i * 7919 % 977}';
+        final bg = bookColorFor(title, cs), fg = onBookColor(bg);
+        final lb = bg.computeLuminance(), lf = fg.computeLuminance();
+        final ratio = (lb > lf ? lb + 0.05 : lf + 0.05) / (lb > lf ? lf + 0.05 : lb + 0.05);
+        expect(ratio, greaterThanOrEqualTo(4.5), reason: '${theme.id}: "$title" ratio $ratio');
+      }
+    }
+  });
+
+  test('spine colours differ between themes (they follow the theme) but are stable within one', () {
+    final a = bookColorFor('Dune', themes[0].data.colorScheme), a2 = bookColorFor('Dune', themes[0].data.colorScheme);
+    final b = bookColorFor('Dune', themes[2].data.colorScheme);
+    expect(a, a2);
+    expect(a, isNot(b));
+  });
+
   test('skin ids round-trip and unknown ids fall back to classic', () {
     for (final s in LibrarySkin.values) {
       expect(skinById(s.name), s);

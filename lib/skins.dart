@@ -70,13 +70,28 @@ void _open(BuildContext context, BookRow r) => Navigator.push(context, MaterialP
 
 int _hash(String s) => s.codeUnits.fold(7, (a, c) => (a * 31 + c) & 0x7fffffff);
 
-Color _bookColor(BuildContext context, String title) {
-  final dark = Theme.of(context).brightness == Brightness.dark;
+/// A stable colour per title, nudged 16% toward the theme's primary so spines and blank covers feel at home in
+/// every theme (blue for "Him", rose/plum for "Her") while staying distinguishable from each other.
+Color bookColorFor(String title, ColorScheme cs) {
+  final dark = cs.brightness == Brightness.dark;
   final h = _hash(title);
-  return HSLColor.fromAHSL(1, (h % 360).toDouble(), 0.42 + (h % 5) * 0.04, dark ? 0.30 : 0.42).toColor();
+  final base = HSLColor.fromAHSL(1, (h % 360).toDouble(), 0.42 + (h % 5) * 0.04, dark ? 0.30 : 0.42).toColor();
+  return Color.lerp(base, cs.primary, 0.16)!;
 }
 
-Color _onColor(Color c) => c.computeLuminance() > 0.45 ? Colors.black87 : Colors.white;
+double _contrast(Color a, Color b) {
+  final la = a.computeLuminance(), lb = b.computeLuminance();
+  return (math.max(la, lb) + 0.05) / (math.min(la, lb) + 0.05);
+}
+
+/// Text colour with the better WCAG contrast against [c] (black or white): always at least ~4.6:1.
+Color onBookColor(Color c) => _contrast(c, Colors.white) >= _contrast(c, Colors.black87) ? Colors.white : Colors.black87;
+
+Color _bookColor(BuildContext context, String title) => bookColorFor(title, Theme.of(context).colorScheme);
+Color _onColor(Color c) => onBookColor(c);
+
+/// The back of the bookcase: a faint theme-tinted panel behind the books.
+Color _wall(ColorScheme cs) => Color.alphaBlend(cs.primary.withValues(alpha: 0.07), cs.surfaceContainer);
 
 // ───────────────────────── Classic ─────────────────────────
 class ClassicList extends StatelessWidget {
@@ -191,7 +206,7 @@ class CoverGrid extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                           decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8)),
-                          child: Text(starsText(rating), style: TextStyle(color: tertiary == Colors.black ? Colors.white : Colors.amber.shade300, fontSize: 11)),
+                          child: Text(starsText(rating), style: TextStyle(color: Color.lerp(tertiary, Colors.white, 0.45), fontSize: 11)),
                         ),
                       ),
                     if (r.progress != null) Positioned(left: 0, right: 0, bottom: 0, child: SlimProgress(r.progress!)),
@@ -262,7 +277,7 @@ class BookshelfView extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 18),
             child: Column(children: [
               Container(
-                color: cs.surfaceContainerLow,
+                color: _wall(cs),
                 padding: const EdgeInsets.fromLTRB(side, 10, side, 0),
                 child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
                   for (final i in packed[ri])
@@ -328,7 +343,7 @@ class SpinesView extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 18),
             child: Column(children: [
               Container(
-                color: cs.surfaceContainerLow,
+                color: _wall(cs),
                 padding: const EdgeInsets.fromLTRB(side, 10, side, 0),
                 child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
                   for (final i in packed[ri])
