@@ -24,6 +24,7 @@ A private, fully local book tracker for Android (iOS planned): log what you read
 | [Install Manual](docs/release-package/INSTALL_MANUAL.md) | Download, install, update, build from source ([PDF](docs/release-package/Pagemark-Install-Manual.pdf)) |
 | [Release Notes](docs/release-package/RELEASE_NOTES.md) | What changed in each version ([PDF](docs/release-package/Pagemark-Release-Notes.pdf)) |
 | [Package Overview](docs/release-package/PACKAGE_OVERVIEW.md) | Simple / medium / advanced description ([PDF](docs/release-package/Pagemark-Package-Overview.pdf)) |
+| [Complete documentation (one PDF)](docs/release-package/Pagemark-Documentation.pdf) | All four documents below with a cover and contents |
 | [Drive backup setup](docs/DRIVE_SETUP.md) | One-time free Google Cloud setup |
 
 ## Install
