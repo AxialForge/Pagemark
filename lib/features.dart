@@ -116,7 +116,7 @@ class BarChart extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final small = Theme.of(context).textTheme.labelSmall;
     return SizedBox(
-      height: height + 44, // bar + value label above + axis label below
+      height: height + 44 * math.max(1.0, MediaQuery.textScalerOf(context).scale(11) / 11), // bar + value label above + axis label below (grow with the font)
       child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
         for (var i = 0; i < values.length; i++)
           Expanded(
@@ -377,7 +377,7 @@ class SeriesPage extends StatelessWidget {
       children: [
         for (final r in rows)
           ListTile(
-            leading: Cover(r.book.coverUrl, locked: r.book.locked),
+            leading: Cover(r.book.coverUrl, locked: r.book.locked, title: r.book.title),
             title: Text('${r.book.seriesNumber == null ? '' : '#${fmtNum(r.book.seriesNumber)}  '}${r.book.title}'),
             subtitle: Text(r.reads.isEmpty ? 'Not logged' : statuses[r.status] ?? ''),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: r.book.id))),
@@ -395,6 +395,7 @@ class Stats extends StatefulWidget {
 }
 
 class _StatsState extends State<Stats> {
+  late final Stream<List<BookRow>> _stream = db.watchLibrary(locked: false).distinct();
 
   static const _months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 
@@ -413,7 +414,7 @@ class _StatsState extends State<Stats> {
       appBar: AppBar(title: const Text('Stats')),
       body: StreamBuilder<List<BookRow>>(
         // The vault never feeds the stats: only the main library is counted.
-        stream: db.watchLibrary(locked: false),
+        stream: _stream,
         builder: (_, snap) {
           if (!snap.hasData) return const Center(child: CircularProgressIndicator());
           final rows = snap.data!;

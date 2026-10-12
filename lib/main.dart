@@ -9,6 +9,8 @@ import 'ui.dart';
 final db = AppDb();
 late SharedPreferences prefs;
 final themeId = ValueNotifier<String>('light_him');
+/// Stealth: hide the Locked tab (the vault is then opened by long-pressing the Library title).
+final hideLockedTab = ValueNotifier<bool>(false);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +18,8 @@ Future<void> main() async {
   prefs = await SharedPreferences.getInstance();
   themeId.value = prefs.getString('theme') ?? 'light_him';
   themeId.addListener(() => prefs.setString('theme', themeId.value));
+  hideLockedTab.value = prefs.getBool('hide_locked') ?? false;
+  hideLockedTab.addListener(() => prefs.setBool('hide_locked', hideLockedTab.value));
   runApp(const PagemarkApp());
 }
 

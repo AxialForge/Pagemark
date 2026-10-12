@@ -61,6 +61,9 @@ dependencies:
   package_info_plus: ^10.2.2
   device_info_plus: ^13.3.0
   open_filex: ^4.7.0
+  android_intent_plus: ^6.1.0
+  flutter_local_notifications: ^22.3.2
+  archive: ^4.5.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

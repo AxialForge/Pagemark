@@ -2,8 +2,10 @@ import 'dart:io';
 import 'package:crypto/crypto.dart' as hash;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path_provider/path_provider.dart';
+import 'backup_errors.dart';
 import 'crypto_backup.dart';
 import 'log.dart';
+import 'notifier.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
@@ -41,7 +43,12 @@ void backupDispatcher() {
       return true;
     } catch (e, st) {
       Log.e('backup', e, st);
-      return false; // retried with backoff; error is stored in prefs
+      // Count consecutive failures; tell the user when it needs their attention (sign-in expired) or keeps failing.
+      final p = await SharedPreferences.getInstance();
+      final streak = (p.getInt('bk_fail') ?? 0) + 1;
+      await p.setInt('bk_fail', streak);
+      if (shouldNotifyBackupFailure(streak, authProblem: isAuthProblem(e))) await Notifier.backupProblem(friendlyBackupError(e));
+      return false; // retried with backoff; the error is also stored in prefs for the Settings row
     } finally {
       await db.close();
     }
@@ -76,6 +83,15 @@ class BackupSettings {
   }
 }
 
+/// What a backup run did.
+class BackupResult {
+  final bool uploaded;
+  final int bytes;
+  const BackupResult(this.uploaded, this.bytes);
+  @override
+  String toString() => uploaded ? 'uploaded $bytes bytes' : 'unchanged';
+}
+
 class DriveBackup {
   static bool _init = false;
   static String? _initId;
@@ -83,7 +99,7 @@ class DriveBackup {
   static Future<void> _ensureInit() async {
     final p = await SharedPreferences.getInstance();
     final cid = p.getString('bk_cid') ?? '';
-    if (cid.isEmpty) throw 'Enter your Google Web client ID first.';
+    if (cid.isEmpty) throw const BackupAuthException('Enter your Google Web client ID first.');
     if (_init) {
       if (_initId != cid) throw 'The client ID changed. Close and reopen Pagemark to apply it.';
       return;
@@ -115,10 +131,10 @@ class DriveBackup {
     // Lightweight (silent) auth works from the background isolate after the first grant.
     var acct = await GoogleSignIn.instance.attemptLightweightAuthentication();
     if (acct == null && interactive) acct = await GoogleSignIn.instance.authenticate();
-    if (acct == null) throw 'Signed out of Google — open Pagemark > Backup and sign in again.';
+    if (acct == null) throw const BackupAuthException('Signed out of Google. Open Pagemark, go to Settings, Google Drive backup, and sign in again.');
     var auth = await acct.authorizationClient.authorizationForScopes([_scope]);
     if (auth == null && interactive) auth = await acct.authorizationClient.authorizeScopes([_scope]);
-    if (auth == null) throw 'Drive permission missing — open Pagemark > Backup and sign in again.';
+    if (auth == null) throw const BackupAuthException('Drive permission is missing or was revoked. Open Pagemark, go to Settings, Google Drive backup, and sign in again.');
     return drive.DriveApi(_Auth(auth.accessToken));
   }
 
@@ -130,8 +146,7 @@ class DriveBackup {
 
   /// Upload a fresh database snapshot (encrypted when a passphrase is set), skipping the upload
   /// when nothing changed. Old copies are pruned only after the new one is verified on Drive.
-  /// Returns 'uploaded' or 'unchanged'.
-  static Future<String> run(AppDb db, {required bool interactive, bool force = false}) async {
+  static Future<BackupResult> run(AppDb db, {required bool interactive, bool force = false}) async {
     final p = await SharedPreferences.getInstance();
     try {
       final api = await _api(interactive: interactive);
@@ -143,7 +158,8 @@ class DriveBackup {
         await snap.delete();
         await p.setString('bk_ok', DateTime.now().toIso8601String());
         await p.remove('bk_err');
-        return 'unchanged';
+        await p.setInt('bk_fail', 0);
+        return const BackupResult(false, 0);
       }
       var upload = snap;
       var ext = 'sqlite';
@@ -157,11 +173,12 @@ class DriveBackup {
       final made = await api.files.create(
         drive.File(name: name, parents: ['appDataFolder']),
         uploadMedia: drive.Media(upload.openRead(), size),
+        uploadOptions: drive.ResumableUploadOptions(), // survives a flaky connection instead of restarting from zero
         $fields: 'id,size',
       );
       if (int.tryParse(made.size ?? '') != size) {
         if (made.id != null) await api.files.delete(made.id!);
-        throw 'Upload verification failed (Drive reports ${made.size} bytes, expected $size). Nothing was pruned.';
+        throw 'Drive did not store the whole backup (it reports ${made.size} bytes, expected $size). Nothing was removed; try Back up now again.';
       }
       for (final f in (await list(api: api)).skip(keepBackups)) {
         await api.files.delete(f.id!);
@@ -172,9 +189,12 @@ class DriveBackup {
       await p.setString('bk_hash', sig);
       await p.setString('bk_ok', DateTime.now().toIso8601String());
       await p.remove('bk_err');
-      return 'uploaded';
+      await p.setInt('bk_fail', 0);
+      await Notifier.clearBackupProblem();
+      return BackupResult(true, size);
     } catch (e) {
-      await p.setString('bk_err', '${DateTime.now().toIso8601String()}  $e');
+      Log.w('backup', 'run failed: $e');
+      await p.setString('bk_err', '${DateTime.now().toIso8601String()}  ${friendlyBackupError(e)}');
       rethrow;
     }
   }

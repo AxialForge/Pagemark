@@ -1,9 +1,15 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemNavigator;
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'backup.dart';
+import 'backup_errors.dart';
+import 'log.dart';
+import 'notifier.dart';
+import 'text_utils.dart';
+import 'widgets.dart';
 import 'crypto_backup.dart';
 import 'export.dart';
 import 'main.dart';
@@ -59,7 +65,7 @@ Future<void> restoreFlow(BuildContext context, File picked) async {
       content: Text('Pagemark will now close. Open it again to see your restored library.'
           '${check.lockedBooks > 0 ? '\n\nYour ${check.lockedBooks} locked book${check.lockedBooks == 1 ? '' : 's'} came back too, but your PIN is not part of backups. '
               'Open the Locked tab and set a new PIN to reach ${check.lockedBooks == 1 ? 'it' : 'them'}.' : ''}'),
-      actions: [FilledButton(onPressed: () => exit(0), child: const Text('Close app'))],
+      actions: [FilledButton(onPressed: () => SystemNavigator.pop(), child: const Text('Close Pagemark'))], // a graceful exit, not exit(0)
     ),
   );
 }
@@ -85,7 +91,7 @@ class _BackupPageState extends State<BackupPage> {
   Future<void> _reload() async {
     final v = await BackupSettings.load();
     final pass = await DriveBackup.passphrase();
-    if (!mounted) return;
+    if (!context.mounted) return;
     setState(() {
       s = v;
       encrypted = pass != null && pass.isNotEmpty;
@@ -104,14 +110,18 @@ class _BackupPageState extends State<BackupPage> {
     try {
       await f();
     } catch (e) {
-      if (mounted) snack(context, '$e');
+      Log.w('backup-ui', 'action failed: $e');
+      if (mounted) snack(context, friendlyBackupError(e));
     }
     await _reload();
     if (mounted) setState(() => busy = false);
   }
 
   Future<void> persist() async {
-    s!.serverClientId = cid.text;
+    if (cid.text.trim().isNotEmpty && !looksLikeGoogleClientId(cid.text)) {
+      throw 'The Web client ID does not look right. It should end with .apps.googleusercontent.com (copy it from Google Cloud, Credentials, Web application).';
+    }
+    s!.serverClientId = cid.text.trim();
     await s!.save();
     await DriveBackup.applySchedule(s!);
   }
@@ -161,8 +171,14 @@ class _BackupPageState extends State<BackupPage> {
               const SizedBox(height: 16),
               TextField(
                 controller: cid,
-                decoration: const InputDecoration(labelText: 'Google Web client ID', helperText: 'From your Google Cloud project (see setup guide)', border: OutlineInputBorder()),
-                onChanged: (_) => st.serverClientId = cid.text,
+                autocorrect: false,
+                decoration: InputDecoration(
+                  labelText: 'Google Web client ID',
+                  helperText: 'From your Google Cloud project (see setup guide)',
+                  errorText: cid.text.trim().isNotEmpty && !looksLikeGoogleClientId(cid.text) ? 'Should end with .apps.googleusercontent.com' : null,
+                  border: const OutlineInputBorder(),
+                ),
+                onChanged: (_) => setState(() => st.serverClientId = cid.text),
               ),
               const SizedBox(height: 12),
               ListTile(
@@ -182,7 +198,11 @@ class _BackupPageState extends State<BackupPage> {
               SwitchListTile(
                 title: const Text('Automatic backup'),
                 value: st.enabled,
-                onChanged: st.account == null ? null : (v) => guard(() async { st.enabled = v; await persist(); }),
+                onChanged: st.account == null ? null : (v) => guard(() async {
+                  if (v) await Notifier.requestPermission(); // so a failing backup can tell you (Android 13+ asks once)
+                  st.enabled = v;
+                  await persist();
+                }),
               ),
               ListTile(
                 title: const Text('Frequency'),
@@ -198,6 +218,23 @@ class _BackupPageState extends State<BackupPage> {
                 onChanged: (v) => guard(() async { st.wifiOnly = v; await persist(); }),
               ),
               const Divider(),
+              Card(
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('Backups not running on schedule?', style: Theme.of(context).textTheme.titleSmall),
+                    const SizedBox(height: 4),
+                    const Text('Some phones (Xiaomi, Huawei, Samsung, OnePlus and others) stop background apps to save battery. '
+                        'Allow Pagemark to run in the background and set its battery use to "Unrestricted" so the daily or weekly backup can happen.'),
+                    const SizedBox(height: 8),
+                    Wrap(spacing: 8, children: [
+                      OutlinedButton(onPressed: openAppSettings, child: const Text('App settings')),
+                      OutlinedButton(onPressed: openBatterySettings, child: const Text('Battery optimisation')),
+                    ]),
+                  ]),
+                ),
+              ),
               ListTile(title: const Text('Last successful backup'), subtitle: Text(fmt(st.lastOk))),
               if (st.lastError != null) ListTile(title: const Text('Last error'), subtitle: Text(st.lastError!), textColor: Theme.of(context).colorScheme.error),
               const SizedBox(height: 8),
@@ -207,7 +244,7 @@ class _BackupPageState extends State<BackupPage> {
                 onPressed: busy || st.account == null ? null : () => guard(() async {
                   await persist();
                   final r = await DriveBackup.run(db, interactive: true, force: true);
-                  if (mounted) snack(context, r == 'uploaded' ? 'Backup uploaded and verified' : 'Nothing changed since the last backup');
+                  if (context.mounted) snack(context, r.uploaded ? 'Backup uploaded and verified (${humanBytes(r.bytes)})' : 'Nothing changed since the last backup');
                 }),
               ),
               const SizedBox(height: 8),
@@ -216,7 +253,7 @@ class _BackupPageState extends State<BackupPage> {
                 label: const Text('Restore from Drive…'),
                 onPressed: busy || st.account == null ? null : () => guard(() async {
                   final files = await DriveBackup.list();
-                  if (!mounted) return;
+                  if (!context.mounted) return;
                   if (files.isEmpty) { snack(context, 'No backups found'); return; }
                   final pick = await showDialog<drive.File>(
                     context: context,
@@ -229,10 +266,10 @@ class _BackupPageState extends State<BackupPage> {
                         ),
                     ]),
                   );
-                  if (pick == null || !mounted) return;
+                  if (pick == null || !context.mounted) return;
                   final tmp = File('${(await getTemporaryDirectory()).path}/pagemark-restore.download');
                   await DriveBackup.download(pick, tmp);
-                  if (!mounted) return;
+                  if (!context.mounted) return;
                   await restoreFlow(context, tmp);
                 }),
               ),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'lock.dart';
+import 'widgets.dart';
 
 void _snack(BuildContext c, String m) => ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text(m)));
 
@@ -34,13 +35,17 @@ Future<bool> confirmCurrent(BuildContext c, {String title = 'Enter your current 
   if (!c.mounted) return false;
   final pin = await _pinDialog(c, title);
   if (pin == null || !c.mounted) return false;
-  switch (await LockService.checkPin(pin)) {
+  final result = await LockService.checkPin(pin);
+  if (!c.mounted) return false;
+  switch (result) {
     case PinResult.ok:
       return true;
     case PinResult.wrong:
       _snack(c, 'Wrong PIN');
     case PinResult.lockedOut:
-      _snack(c, 'Too many attempts — try again in ${_fmt(await LockService.lockoutRemaining())}');
+      final left = await LockService.lockoutRemaining();
+      if (!c.mounted) return false;
+      _snack(c, 'Too many attempts — try again in ${_fmt(left)}');
   }
   return false;
 }
@@ -213,6 +218,22 @@ class _LockGateState extends State<LockGate> {
                       onPressed: !deviceOk
                           ? null
                           : () async {
+                              if (!await LockService.strongBiometricAvailable()) {
+                                if (!mounted) return;
+                                final go = await showDialog<bool>(
+                                  context: context,
+                                  builder: (c) => AlertDialog(
+                                    title: const Text('No fingerprint on this phone'),
+                                    content: const Text('Without a strong biometric, "device lock" means your screen-lock PIN or pattern, or a weaker face unlock. '
+                                        'A Pagemark PIN is stronger. Use the device lock anyway?'),
+                                    actions: [
+                                      TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Use a PIN instead')),
+                                      FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Use device lock')),
+                                    ],
+                                  ),
+                                );
+                                if (go != true || !mounted) return;
+                              }
                               if (await LockService.deviceAuth('Confirm to use your device lock') && mounted) {
                                 await LockService.setDeviceOnly();
                                 widget.onUnlock();
@@ -222,7 +243,17 @@ class _LockGateState extends State<LockGate> {
                       label: Text(deviceOk ? 'Use fingerprint / device lock only' : 'Device lock unavailable (set a screen lock first)'),
                     ),
                   ] else if (mode == 'device') ...[
-                    FilledButton.icon(onPressed: _device, icon: const Icon(Icons.fingerprint), label: const Text('Unlock')),
+                    if (!deviceOk) ...[
+                      const Text(
+                        'This phone no longer has a screen lock or fingerprint set up, so the locked library cannot be opened. '
+                        'Set a screen lock again in Android Settings, then come back.',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      FilledButton(onPressed: openSecuritySettings, child: const Text('Open security settings')),
+                      TextButton(onPressed: _load, child: const Text('Try again')),
+                    ] else
+                      FilledButton.icon(onPressed: _device, icon: const Icon(Icons.fingerprint), label: const Text('Unlock')),
                   ] else ...[
                     if (locked) Padding(padding: const EdgeInsets.only(bottom: 12), child: Text('Too many attempts. Try again in ${_fmt(wait)}.', textAlign: TextAlign.center)),
                     TextField(

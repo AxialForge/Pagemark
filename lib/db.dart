@@ -174,6 +174,18 @@ class BookRow {
   final Book book;
   final List<Read> reads;
   BookRow(this.book, this.reads);
+
+  @override
+  bool operator ==(Object other) {
+    if (other is! BookRow || other.book != book || other.reads.length != reads.length) return false;
+    for (var i = 0; i < reads.length; i++) {
+      if (other.reads[i] != reads[i]) return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode => Object.hash(book, reads.length);
   /// Average of finished reads' ratings only (want/reading/DNF don't count).
   double? get avgRating {
     final r = reads.where((e) => e.rating != null && e.status == 'finished').map((e) => e.rating!).toList();

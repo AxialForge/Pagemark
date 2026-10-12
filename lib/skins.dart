@@ -189,7 +189,7 @@ class CompactList extends StatelessWidget {
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: _bottomPad),
       itemCount: rows.length,
-      itemExtent: 52,
+      itemExtent: 52 * math.max(1.0, MediaQuery.textScalerOf(context).scale(14) / 14 * 0.92), // grows with large accessibility fonts
       itemBuilder: (_, i) {
         final r = rows[i], b = r.book, rating = r.avgRating;
         return InkWell(
@@ -197,7 +197,7 @@ class CompactList extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
             child: Row(children: [
-              Cover(b.coverUrl, w: 30, locked: b.locked),
+              Cover(b.coverUrl, w: 30, locked: b.locked, title: b.title),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -247,7 +247,7 @@ class CoverGrid extends StatelessWidget {
         const pad = 14.0, gap = 12.0;
         final cols = math.max(2, ((box.maxWidth - pad * 2) / 120).floor());
         final w = (box.maxWidth - pad * 2 - gap * (cols - 1)) / cols;
-        const textH = 52.0;
+        final textH = 52.0 * math.max(1.0, MediaQuery.textScalerOf(context).scale(14) / 14); // title + author lines grow with the font size
         return GridView.builder(
           padding: const EdgeInsets.fromLTRB(pad, 10, pad, _bottomPad),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: cols, crossAxisSpacing: gap, mainAxisSpacing: 14, childAspectRatio: w / (w * 1.5 + textH)),

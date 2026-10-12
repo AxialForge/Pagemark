@@ -12,7 +12,7 @@ Map<String, Object?> rel(String tag, {String body = 'notes', bool draft = false,
     };
 
 Map<String, Object?> apk(String name, {int size = 10, String? digest}) =>
-    {'name': name, 'size': size, 'browser_download_url': 'https://github.com/x/$name', if (digest != null) 'digest': digest};
+    {'name': name, 'size': size, 'browser_download_url': 'https://github.com/x/$name', 'digest': ?digest};
 
 http.Response json(Object o, [int code = 200]) => http.Response.bytes(utf8.encode(jsonEncode(o)), code);
 

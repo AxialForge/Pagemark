@@ -15,6 +15,8 @@ import 'features.dart';
 import 'lock_ui.dart';
 import 'privacy.dart';
 import 'skins.dart';
+import 'text_utils.dart';
+import 'widgets.dart';
 import 'db.dart';
 import 'export.dart';
 import 'lock.dart';
@@ -29,7 +31,9 @@ const formats = {'print': 'Print', 'ebook': 'E-book', 'audio': 'Audiobook'};
 const statuses = {'want': 'Want to read', 'reading': 'Reading', 'finished': 'Finished', 'dnf': 'Did not finish'};
 final _date = DateFormat.yMMMd();
 
-void snack(BuildContext c, String m) => ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text(m)));
+void snack(BuildContext c, String m) => ScaffoldMessenger.of(c)
+  ..clearSnackBars() // a new message replaces the old one instead of queueing
+  ..showSnackBar(SnackBar(content: Text(m)));
 
 // ───────────────────────── Home ─────────────────────────
 class Home extends StatefulWidget {
@@ -38,8 +42,10 @@ class Home extends StatefulWidget {
   State<Home> createState() => _HomeState();
 }
 
+enum _Tab { library, locked, stats, settings }
+
 class _HomeState extends State<Home> with WidgetsBindingObserver {
-  int tab = 0;
+  _Tab cur = _Tab.library;
   bool unlocked = false;
 
   @override
@@ -78,42 +84,95 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final pages = [
-      Library(locked: false),
-      unlocked ? Library(locked: true) : LockGate(onUnlock: _unlock),
-      Stats(),
-      SettingsPage(onLockNow: () => setState(() { _lock(); tab = 0; })),
-    ];
-    return Scaffold(
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 250),
-        switchInCurve: Curves.easeOutCubic,
-        transitionBuilder: (child, anim) => FadeTransition(
-          opacity: anim,
-          child: SlideTransition(position: Tween(begin: const Offset(0, 0.02), end: Offset.zero).animate(anim), child: child),
-        ),
-        child: KeyedSubtree(key: ValueKey(tab), child: pages[tab]),
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: tab,
-        onDestinationSelected: (i) => setState(() {
-          if (i != 1 && tab == 1) _lock(); // re-lock when leaving the locked tab
-          tab = i;
-        }),
-        destinations: [
-          const NavigationDestination(icon: Icon(Icons.menu_book_outlined), label: 'Library'),
-          const NavigationDestination(icon: Icon(Icons.lock_outline), label: 'Locked'),
-          const NavigationDestination(icon: Icon(Icons.bar_chart), label: 'Stats'),
-          NavigationDestination(
-            icon: ValueListenableBuilder<UpdateInfo?>(valueListenable: updateAvailable, builder: (_, u, _) => Badge(isLabelVisible: u != null, child: const Icon(Icons.settings_outlined))),
-            label: 'Settings',
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => ValueListenableBuilder<bool>(
+        valueListenable: hideLockedTab,
+        builder: (context, hidden, _) {
+          final visible = [_Tab.library, if (!hidden) _Tab.locked, _Tab.stats, _Tab.settings];
+          final shown = visible.contains(cur) ? cur : _Tab.library; // the Locked tab may have just been hidden
+          if (shown != cur) WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) { _lock(); setState(() => cur = _Tab.library); } });
+          final page = switch (shown) {
+            _Tab.library => const Library(locked: false),
+            _Tab.locked => unlocked ? const Library(locked: true) : LockGate(onUnlock: _unlock),
+            _Tab.stats => const Stats(),
+            _Tab.settings => SettingsPage(onLockNow: () => setState(() { _lock(); cur = _Tab.library; })),
+          };
+          return Scaffold(
+            body: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              switchInCurve: Curves.easeOutCubic,
+              transitionBuilder: (child, anim) => FadeTransition(
+                opacity: anim,
+                child: SlideTransition(position: Tween(begin: const Offset(0, 0.02), end: Offset.zero).animate(anim), child: child),
+              ),
+              child: KeyedSubtree(key: ValueKey(shown), child: page),
+            ),
+            bottomNavigationBar: NavigationBar(
+              selectedIndex: visible.indexOf(shown),
+              onDestinationSelected: (i) => setState(() {
+                final next = visible[i];
+                if (shown == _Tab.locked && next != _Tab.locked) _lock(); // re-lock when leaving the locked tab
+                cur = next;
+              }),
+              destinations: [
+                for (final t in visible)
+                  switch (t) {
+                    _Tab.library => const NavigationDestination(icon: Icon(Icons.menu_book_outlined), label: 'Library'),
+                    _Tab.locked => const NavigationDestination(icon: Icon(Icons.lock_outline), label: 'Locked'),
+                    _Tab.stats => const NavigationDestination(icon: Icon(Icons.bar_chart), label: 'Stats'),
+                    _Tab.settings => NavigationDestination(
+                        icon: ValueListenableBuilder<UpdateInfo?>(valueListenable: updateAvailable, builder: (_, u, _) => Badge(isLabelVisible: u != null, child: const Icon(Icons.settings_outlined))),
+                        label: 'Settings',
+                      ),
+                  },
+              ],
+            ),
+          );
+        },
+      );
 }
+
+/// The locked library as its own screen: used when the Locked tab is hidden (long-press the Library title).
+class VaultPage extends StatefulWidget {
+  const VaultPage({super.key});
+  @override
+  State<VaultPage> createState() => _VaultPageState();
+}
+
+class _VaultPageState extends State<VaultPage> with WidgetsBindingObserver {
+  bool unlocked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    if (unlocked) {
+      lockedCache.emptyCache(); // leaving the vault: its covers and temp exports go with it
+      cleanTempExports();
+      Secure.set(false);
+    }
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused && unlocked) wipeLockedTraces(); // pops back to the main library
+  }
+
+  @override
+  Widget build(BuildContext context) => unlocked
+      ? const Library(locked: true)
+      : LockGate(onUnlock: () {
+          Secure.set(true);
+          setState(() => unlocked = true);
+        });
+}
+
+void openVault(BuildContext context) => Navigator.push(context, MaterialPageRoute(builder: (_) => const VaultPage()));
 
 // ───────────────────────── Library ─────────────────────────
 class Library extends StatefulWidget {
@@ -127,6 +186,8 @@ class _LibraryState extends State<Library> {
   String q = '', status = 'all', format = 'all', sort = 'added';
   int? shelf;
   LibrarySkin skin = LibrarySkin.classic;
+  late final Stream<List<BookRow>> _rowsStream = db.watchLibrary(locked: widget.locked).distinct(); // one subscription; identical re-emissions are skipped
+  final _searchCtl = TextEditingController();
   bool groupShelves = false; // Bookshelf/Spines: one named wooden shelf per user shelf
   List<Shelf> shelves = [];
   Map<int, Set<int>> shelfBooks = {}; // shelf id -> book ids
@@ -160,6 +221,7 @@ class _LibraryState extends State<Library> {
 
   @override
   void dispose() {
+    _searchCtl.dispose();
     _shelfSub?.cancel();
     _linkSub?.cancel();
     super.dispose();
@@ -177,7 +239,13 @@ class _LibraryState extends State<Library> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.locked ? 'Locked library' : 'Library'), actions: [
+      appBar: AppBar(
+        title: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onLongPress: !widget.locked && hideLockedTab.value ? () => openVault(context) : null, // stealth entrance when the tab is hidden
+          child: Text(widget.locked ? 'Locked library' : 'Library'),
+        ),
+        actions: [
         IconButton(
           icon: Icon(skin.icon), tooltip: 'Library style: ${skin.label}',
           onPressed: () async {
@@ -218,7 +286,14 @@ class _LibraryState extends State<Library> {
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
           child: TextField(
-            decoration: const InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Search title, author, tag, genre', border: OutlineInputBorder()),
+            controller: _searchCtl,
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.search),
+              hintText: 'Search books, notes and thoughts',
+              border: const OutlineInputBorder(),
+              suffixIcon: q.isEmpty ? null : IconButton(icon: const Icon(Icons.clear), tooltip: 'Clear search', onPressed: () { _searchCtl.clear(); setState(() => q = ''); }),
+            ),
             onChanged: (v) => setState(() => q = v.toLowerCase()),
           ),
         ),
@@ -243,11 +318,11 @@ class _LibraryState extends State<Library> {
         ),
         Expanded(
           child: StreamBuilder<List<BookRow>>(
-            stream: db.watchLibrary(locked: widget.locked),
+            stream: _rowsStream,
             builder: (_, snap) {
               var rows = (snap.data ?? []).where((r) {
                 final b = r.book;
-                if (q.isNotEmpty && !'${b.title} ${b.author} ${b.tags} ${b.genre} ${b.series}'.toLowerCase().contains(q)) return false;
+                if (q.isNotEmpty && !'${b.title} ${b.author} ${b.tags} ${b.genre} ${b.series} ${b.notes} ${r.reads.map((e) => e.thoughts).join(' ')}'.toLowerCase().contains(q)) return false;
                 if (status != 'all' && !r.reads.any((e) => e.status == status)) return false;
                 if (format != 'all' && !r.reads.any((e) => e.format == format)) return false;
                 if (shelf != null && !(shelfBooks[shelf]?.contains(b.id) ?? false)) return false;
@@ -257,7 +332,9 @@ class _LibraryState extends State<Library> {
                 switch (sort) {
                   case 'title': return a.book.title.toLowerCase().compareTo(b.book.title.toLowerCase());
                   case 'author': return a.book.author.toLowerCase().compareTo(b.book.author.toLowerCase());
-                  case 'rating': return (b.avgRating ?? -1).compareTo(a.avgRating ?? -1);
+                  case 'rating':
+                    final c = (b.avgRating ?? -1).compareTo(a.avgRating ?? -1);
+                    return c != 0 ? c : a.book.title.toLowerCase().compareTo(b.book.title.toLowerCase()); // stable ties
                   default: return b.book.added.compareTo(a.book.added);
                 }
               });
@@ -286,7 +363,7 @@ class _LibraryState extends State<Library> {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: SizedBox(width: 72, child: Column(children: [
-                            Cover(r.book.coverUrl, w: 72, locked: r.book.locked),
+                            Cover(r.book.coverUrl, w: 72, locked: r.book.locked, title: r.book.title),
                             const SizedBox(height: 6),
                             r.progress != null ? SlimProgress(r.progress!) : Text(r.book.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.labelSmall),
                           ])),
@@ -310,10 +387,22 @@ class Cover extends StatelessWidget {
   final double w;
   final Object? tag; // shared-element (Hero) tag between list and detail
   final bool locked; // locked-library covers use a separate cache that is wiped on relock
-  const Cover(this.url, {super.key, this.w = 48, this.tag, this.locked = false});
+  final String title; // when there is no cover image, a binding-coloured tile with the title's initial is drawn
+  const Cover(this.url, {super.key, this.w = 48, this.tag, this.locked = false, this.title = ''});
   @override
   Widget build(BuildContext context) {
-    final ph = Container(width: w, height: w * 1.5, color: Theme.of(context).colorScheme.secondaryContainer, child: const Icon(Icons.book));
+    final cs = Theme.of(context).colorScheme;
+    final trimmed = title.trim();
+    final ph = trimmed.isEmpty
+        ? Container(width: w, height: w * 1.5, color: cs.secondaryContainer, child: const Icon(Icons.book))
+        : Builder(builder: (_) {
+            final bg = bookColorFor(trimmed, cs);
+            return Container(
+              width: w, height: w * 1.5, alignment: Alignment.center,
+              decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(4)),
+              child: Text(trimmed.substring(0, 1).toUpperCase(), style: TextStyle(color: onBookColor(bg), fontFamily: 'serif', fontWeight: FontWeight.w700, fontSize: w * 0.5)),
+            );
+          });
     final small = w <= 64 ? url.replaceFirst('-L.jpg', '-M.jpg') : url; // list thumbnails: don't download full-size covers
     final img = url.isEmpty
         ? ph
@@ -335,7 +424,7 @@ class BookTile extends StatelessWidget {
     final r = row.avgRating;
     final fmts = row.reads.map((e) => formats[e.format]).toSet().join(' · ');
     return ListTile(
-      leading: Cover(b.coverUrl, tag: 'cover-${b.id}', locked: b.locked),
+      leading: Cover(b.coverUrl, tag: 'cover-${b.id}', locked: b.locked, title: b.title),
       title: Text(b.title, maxLines: 2, overflow: TextOverflow.ellipsis),
       subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text([
@@ -392,10 +481,38 @@ class _AddBookState extends State<AddBook> {
   }
 
   /// A valid ISBN (typed, pasted or scanned) is looked up directly; anything else is a text search.
-  Future<void> go(String q) => run(() async {
+  /// First lookup from the locked library warns once that the text is sent to Open Library.
+  Future<void> go(String q) async {
+    if (widget.locked && !(prefs.getBool('vault_lookup_ok') ?? false)) {
+      final choice = await showDialog<String>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('Search sends text to Open Library'),
+          content: const Text('Looking up a book sends what you typed to openlibrary.org. For a title you want to keep completely offline, add it manually instead.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(c, 'manual'), child: const Text('Add manually')),
+            FilledButton(onPressed: () => Navigator.pop(c, 'search'), child: const Text('Search anyway')),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      if (choice == 'manual') { await manual(); return; }
+      if (choice != 'search') return;
+      await prefs.setBool('vault_lookup_ok', true);
+    }
+    await _search(q);
+  }
+
+  Future<void> manual() async {
+    final r = await _manualDialog(context, qc.text);
+    if (r != null) await save(BookMeta(title: r.$1, author: r.$2));
+  }
+
+  Future<void> _search(String q) => run(() async {
         if (Isbn.looksLikeBookCode(q)) {
           final m = await Lookup.byIsbn(q);
-          return [if (m != null) m];
+          return [?m];
         }
         return Lookup.search(q);
       });
@@ -452,7 +569,7 @@ class _AddBookState extends State<AddBook> {
       });
     }
     if (!mounted) return;
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => BookPage(bookId: id)));
+    Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: id))); // Back returns to your search results
   }
 
   @override
@@ -476,7 +593,7 @@ class _AddBookState extends State<AddBook> {
             child: ListView(children: [
               for (final m in _visible)
                 ListTile(
-                  leading: Cover(m.coverUrl, locked: widget.locked), title: Text(m.title),
+                  leading: Cover(m.coverUrl, locked: widget.locked, title: m.title), title: Text(m.title),
                   subtitle: Text('${m.author}${m.year != null ? ' · ${m.year}' : ''}'),
                   onTap: () => save(m),
                 ),
@@ -489,15 +606,30 @@ class _AddBookState extends State<AddBook> {
               ListTile(
                 leading: const Icon(Icons.edit_note), title: const Text('Add manually'),
                 subtitle: const Text('Not found? Enter the details yourself.'),
-                onTap: () async {
-                  final t = await ask(context, 'Title', qc.text);
-                  if (t != null && t.trim().isNotEmpty) await save(BookMeta(title: t.trim()));
-                },
+                onTap: manual,
               ),
             ]),
           ),
         ]),
       );
+}
+
+Future<(String, String)?> _manualDialog(BuildContext c, String title) {
+  final t = TextEditingController(text: title), a = TextEditingController();
+  return showDialog<(String, String)>(
+    context: c,
+    builder: (_) => AlertDialog(
+      title: const Text('Add a book by hand'),
+      content: Column(mainAxisSize: MainAxisSize.min, children: [
+        TextField(controller: t, autofocus: true, textCapitalization: TextCapitalization.words, decoration: const InputDecoration(labelText: 'Title')),
+        TextField(controller: a, textCapitalization: TextCapitalization.words, decoration: const InputDecoration(labelText: 'Author (optional)')),
+      ]),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+        FilledButton(onPressed: () { if (t.text.trim().isNotEmpty) Navigator.pop(c, (t.text.trim(), a.text.trim())); }, child: const Text('Add')),
+      ],
+    ),
+  );
 }
 
 Future<String?> ask(BuildContext c, String label, [String initial = '', bool multiline = false, bool obscure = false, TextInputType? kb]) {
@@ -539,6 +671,27 @@ class _ScanPageState extends State<ScanPage> {
         body: Stack(children: [
           MobileScanner(
             controller: controller,
+            errorBuilder: (context, error) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(28),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  const Icon(Icons.no_photography_outlined, size: 56),
+                  const SizedBox(height: 16),
+                  Text(
+                    error.errorCode == MobileScannerErrorCode.permissionDenied
+                        ? 'Pagemark needs camera access to scan barcodes. Allow it in Android Settings, or type the ISBN instead.'
+                        : 'The camera is not available right now. You can type the ISBN instead.',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  if (error.errorCode == MobileScannerErrorCode.permissionDenied) ...[
+                    FilledButton.tonal(onPressed: openAppSettings, child: const Text('Open app settings')),
+                    const SizedBox(height: 8),
+                  ],
+                  FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Type the ISBN instead')),
+                ]),
+              ),
+            ),
             onDetect: (cap) {
               if (done) return;
               for (final b in cap.barcodes) {
@@ -571,7 +724,20 @@ class BookPage extends StatelessWidget {
       stream: (db.select(db.books)..where((b) => b.id.equals(bookId))).watchSingleOrNull(),
       builder: (_, snap) {
         final b = snap.data;
-        if (b == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        if (b == null) {
+          return Scaffold(
+            appBar: AppBar(),
+            body: snap.connectionState == ConnectionState.waiting
+                ? const Center(child: CircularProgressIndicator())
+                : Center(
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      const Text('This book is no longer in your library.'),
+                      const SizedBox(height: 12),
+                      FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Back')),
+                    ]),
+                  ),
+          );
+        }
         return Scaffold(
           appBar: AppBar(title: Text(b.title, overflow: TextOverflow.ellipsis), actions: [
             IconButton(icon: const Icon(Icons.edit), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EditBook(book: b)))),
@@ -579,6 +745,7 @@ class BookPage extends StatelessWidget {
               onSelected: (v) async {
                 if (v == 'lock') await (db.update(db.books)..where((x) => x.id.equals(b.id))).write(BooksCompanion(locked: Value(!b.locked)));
                 if (v == 'del') {
+                  if (!context.mounted) return;
                   final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
                     title: const Text('Move to Trash?'), content: const Text('Its reading log and thoughts go with it. You can restore it from Settings > Trash for 30 days.'),
                     actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Move to Trash'))]));
@@ -600,7 +767,7 @@ class BookPage extends StatelessWidget {
           ),
           body: ListView(padding: const EdgeInsets.all(16), children: [
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Cover(b.coverUrl, w: 100, tag: 'cover-${b.id}', locked: b.locked),
+              Cover(b.coverUrl, w: 100, tag: 'cover-${b.id}', locked: b.locked, title: b.title),
               const SizedBox(width: 16),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(b.title, style: Theme.of(context).textTheme.titleLarge),
@@ -614,7 +781,7 @@ class BookPage extends StatelessWidget {
                 ShelfChips(bookId: b.id),
               ])),
             ]),
-            if (b.description.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 12), child: Text(b.description)),
+            if (b.description.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 12), child: ExpandableText(b.description)),
             if (b.notes.isNotEmpty) Card(margin: const EdgeInsets.only(top: 12), child: Padding(padding: const EdgeInsets.all(12), child: Text(b.notes))),
             const Divider(height: 32),
             Text('Reading log', style: Theme.of(context).textTheme.titleMedium),
@@ -667,6 +834,23 @@ class _EditBookState extends State<EditBook> {
     }.entries) e.key: TextEditingController(text: e.value)
   };
 
+  late final Map<String, String> _initial = {for (final e in c.entries) e.key: e.value.text};
+  bool _saved = false;
+  bool get _dirty => !_saved && c.entries.any((e) => e.value.text != _initial[e.key]);
+
+  @override
+  void initState() {
+    super.initState();
+    _initial; // snapshot before any typing
+    for (final ctl in c.values) {
+      ctl.addListener(_onChange);
+    }
+  }
+
+  void _onChange() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
     for (final ctl in c.values) {
@@ -675,29 +859,47 @@ class _EditBookState extends State<EditBook> {
     super.dispose();
   }
 
-  Widget f(String k, String label, {int lines = 1, bool num = false}) => Padding(
+  Widget f(String k, String label, {int lines = 1, bool num = false, bool decimal = false, TextCapitalization cap = TextCapitalization.none}) => Padding(
         padding: const EdgeInsets.only(bottom: 12),
-        child: TextField(controller: c[k], maxLines: lines, keyboardType: num ? TextInputType.number : null, decoration: InputDecoration(labelText: label, border: const OutlineInputBorder())),
+        child: TextField(
+          controller: c[k], maxLines: lines, textCapitalization: cap,
+          keyboardType: num ? TextInputType.numberWithOptions(decimal: decimal) : null,
+          inputFormatters: num ? [FilteringTextInputFormatter.allow(RegExp(decimal ? r'[0-9.]' : r'[0-9]'))] : null,
+          decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+        ),
       );
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => PopScope(
+        canPop: !_dirty,
+        onPopInvokedWithResult: (didPop, _) async {
+          if (didPop) return;
+          if (await confirmDiscard(context) && context.mounted) {
+            _saved = true; // user chose to discard
+            Navigator.pop(context);
+          }
+        },
+        child: Scaffold(
         appBar: AppBar(title: const Text('Edit book'), actions: [
           TextButton(onPressed: () async {
+            _saved = true;
             await (db.update(db.books)..where((x) => x.id.equals(widget.book.id))).write(BooksCompanion(
               title: Value(c['title']!.text), author: Value(c['author']!.text), series: Value(c['series']!.text), seriesNumber: Value(double.tryParse(c['seriesNumber']!.text.trim())), genre: Value(c['genre']!.text),
-              tags: Value(c['tags']!.text), publisher: Value(c['publisher']!.text), isbn: Value(c['isbn']!.text), coverUrl: Value(c['coverUrl']!.text),
+              tags: Value(normalizeTags(c['tags']!.text)), publisher: Value(c['publisher']!.text), isbn: Value(c['isbn']!.text), coverUrl: Value(c['coverUrl']!.text),
               year: Value(int.tryParse(c['year']!.text)), pages: Value(int.tryParse(c['pages']!.text)),
               description: Value(c['description']!.text), notes: Value(c['notes']!.text),
             ));
             if (context.mounted) Navigator.pop(context);
           }, child: const Text('Save')),
         ]),
-        body: ListView(padding: const EdgeInsets.all(16), children: [
-          f('title', 'Title'), f('author', 'Author'), f('series', 'Series'), f('seriesNumber', 'Number in series (e.g. 2 or 2.5)', num: true), f('genre', 'Genre (fantasy, romance, science…)'),
-          f('tags', 'Tags (comma separated)'), f('publisher', 'Publisher'), f('isbn', 'ISBN'), f('coverUrl', 'Cover image URL'),
-          f('year', 'Year', num: true), f('pages', 'Pages', num: true), f('description', 'Description', lines: 4), f('notes', 'Private notes', lines: 4),
+        body: ListView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: const EdgeInsets.all(16), children: [
+          f('title', 'Title', cap: TextCapitalization.words), f('author', 'Author', cap: TextCapitalization.words), f('series', 'Series', cap: TextCapitalization.words),
+          f('seriesNumber', 'Number in series (e.g. 2 or 2.5)', num: true, decimal: true), f('genre', 'Genre (fantasy, romance, science…)', cap: TextCapitalization.words),
+          f('tags', 'Tags (comma separated)'), f('publisher', 'Publisher', cap: TextCapitalization.words), f('isbn', 'ISBN'), f('coverUrl', 'Cover image URL'),
+          f('year', 'Year', num: true), f('pages', 'Pages', num: true),
+          f('description', 'Description', lines: 4, cap: TextCapitalization.sentences), f('notes', 'Private notes', lines: 4, cap: TextCapitalization.sentences),
         ]),
+        ),
       );
 }
 
@@ -721,6 +923,24 @@ class _ReadEditorState extends State<ReadEditor> {
   late final minutes = TextEditingController(text: '${widget.read?.minutes ?? ''}');
   late final page = TextEditingController(text: '${widget.read?.currentPage ?? ''}');
 
+  String _state() => [format, status, started?.toIso8601String(), finished?.toIso8601String(), rating, thoughts.text, narrator.text, minutes.text, page.text].join('|');
+  late final String _snap = _state();
+  bool _saved = false;
+  bool get _dirty => !_saved && _state() != _snap;
+
+  @override
+  void initState() {
+    super.initState();
+    _snap; // snapshot before any editing
+    for (final ctl in [thoughts, narrator, minutes, page]) {
+      ctl.addListener(_onChange);
+    }
+  }
+
+  void _onChange() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
     thoughts.dispose();
@@ -730,18 +950,41 @@ class _ReadEditorState extends State<ReadEditor> {
     super.dispose();
   }
 
-  Future<DateTime?> pick(DateTime? init) =>
-      showDatePicker(context: context, initialDate: init ?? DateTime.now(), firstDate: DateTime(1950), lastDate: DateTime(2100));
+  /// Dates can't be in the future (you can't have read it tomorrow).
+  Future<DateTime?> pick(DateTime? init) {
+    final now = DateTime.now();
+    final start = init == null || init.isAfter(now) ? now : init;
+    return showDatePicker(context: context, initialDate: start, firstDate: DateTime(1900), lastDate: now);
+  }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => PopScope(
+        canPop: !_dirty,
+        onPopInvokedWithResult: (didPop, _) async {
+          if (didPop) return;
+          if (await confirmDiscard(context) && context.mounted) {
+            _saved = true;
+            Navigator.pop(context);
+          }
+        },
+        child: Scaffold(
         appBar: AppBar(title: Text(widget.read == null ? 'Log a read' : 'Edit read'), actions: [
           if (widget.read != null) IconButton(icon: const Icon(Icons.delete_outline), tooltip: 'Delete this read', onPressed: () async {
             final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
               title: const Text('Delete this read?'), content: const Text('Its dates, rating and thoughts will be gone for good.'),
               actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Delete'))]));
-            if (ok != true) return;
-            await (db.delete(db.reads)..where((r) => r.id.equals(widget.read!.id))).go();
+            if (ok != true || !context.mounted) return;
+            final old = widget.read!;
+            final messenger = ScaffoldMessenger.of(context);
+            await (db.delete(db.reads)..where((r) => r.id.equals(old.id))).go();
+            messenger
+              ..clearSnackBars()
+              ..showSnackBar(SnackBar(
+                content: const Text('Read deleted'),
+                duration: const Duration(seconds: 8),
+                action: SnackBarAction(label: 'Undo', onPressed: () => db.into(db.reads).insert(old)), // same row, same id
+              ));
+            _saved = true;
             if (context.mounted) Navigator.pop(context);
           }),
           TextButton(onPressed: () async {
@@ -755,6 +998,7 @@ class _ReadEditorState extends State<ReadEditor> {
               bookId: Value(widget.bookId), format: Value(format), status: Value(status), started: Value(started), finished: Value(fin),
               rating: Value(rating == 0 ? null : rating), thoughts: Value(thoughts.text), narrator: Value(narrator.text), minutes: Value(int.tryParse(minutes.text)), currentPage: Value(int.tryParse(page.text)),
             );
+            _saved = true;
             if (widget.read == null) {
               await db.into(db.reads).insert(comp);
             } else {
@@ -763,7 +1007,7 @@ class _ReadEditorState extends State<ReadEditor> {
             if (context.mounted) Navigator.pop(context);
           }, child: const Text('Save')),
         ]),
-        body: ListView(padding: const EdgeInsets.all(16), children: [
+        body: ListView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: const EdgeInsets.all(16), children: [
           SegmentedButton<String>(
             segments: [for (final e in formats.entries) ButtonSegment(value: e.key, label: Text(e.value))],
             selected: {format}, onSelectionChanged: (s) => setState(() => format = s.first),
@@ -800,8 +1044,9 @@ class _ReadEditorState extends State<ReadEditor> {
           ],
           TextField(controller: minutes, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: format == 'audio' ? 'Listening time (minutes)' : 'Time spent (minutes)', border: const OutlineInputBorder())),
           const SizedBox(height: 12),
-          TextField(controller: thoughts, minLines: 5, maxLines: 14, decoration: const InputDecoration(labelText: 'Your thoughts', alignLabelWithHint: true, border: OutlineInputBorder())),
+          TextField(controller: thoughts, minLines: 5, maxLines: 14, textCapitalization: TextCapitalization.sentences, decoration: const InputDecoration(labelText: 'Your thoughts', alignLabelWithHint: true, border: OutlineInputBorder())),
         ]),
+        ),
       );
 }
 
@@ -821,7 +1066,7 @@ class SettingsPage extends StatelessWidget {
           const ListTile(title: Text('Theme', style: TextStyle(fontWeight: FontWeight.bold))),
           ValueListenableBuilder<String>(
             valueListenable: themeId,
-            builder: (_, id, __) => Column(children: [
+            builder: (_, id, _) => Column(children: [
               for (final t in themes)
                 ListTile(
                   leading: CircleAvatar(backgroundColor: t.seed, radius: 12),
@@ -834,8 +1079,8 @@ class SettingsPage extends StatelessWidget {
           ),
           const Divider(),
           const ListTile(title: Text('Export (main library only)', style: TextStyle(fontWeight: FontWeight.bold))),
-          ListTile(leading: const Icon(Icons.table_chart), title: const Text('Library log as CSV'), onTap: () => Exporter.shareCsv(db)),
-          ListTile(leading: const Icon(Icons.data_object), title: const Text('Library log as JSON'), onTap: () => Exporter.shareJson(db)),
+          ListTile(leading: const Icon(Icons.table_chart), title: const Text('Library log as CSV'), subtitle: const Text('Includes your notes and thoughts'), onTap: () => Exporter.shareCsv(db)),
+          ListTile(leading: const Icon(Icons.data_object), title: const Text('Library log as JSON'), subtitle: const Text('Includes your notes and thoughts'), onTap: () => Exporter.shareJson(db)),
           const Divider(),
           FutureBuilder<BackupSettings>(
             future: BackupSettings.load(),
@@ -882,6 +1127,19 @@ class SettingsPage extends StatelessWidget {
           const Divider(),
           const ListTile(title: Text('Privacy', style: TextStyle(fontWeight: FontWeight.bold))),
           ListTile(leading: const Icon(Icons.lock_clock), title: const Text('Lock now'), onTap: onLockNow),
+          ValueListenableBuilder<bool>(
+            valueListenable: hideLockedTab,
+            builder: (context, hidden, _) => SwitchListTile(
+              secondary: const Icon(Icons.visibility_off_outlined),
+              title: const Text('Hide the Locked tab'),
+              subtitle: const Text('Nothing shows that a private library exists. To open it, long-press the word "Library" at the top of the Library screen.'),
+              value: hidden,
+              onChanged: (v) {
+                hideLockedTab.value = v;
+                if (v) snack(context, 'Locked tab hidden. Long-press "Library" at the top to open it.');
+              },
+            ),
+          ),
           ListTile(leading: const Icon(Icons.pin), title: const Text('Set or change PIN'), onTap: () async {
             if (!await confirmCurrent(context) || !context.mounted) return;
             if (await setupPin(context) && context.mounted) snack(context, 'PIN updated');
@@ -897,7 +1155,7 @@ class SettingsPage extends StatelessWidget {
           ),
           ListTile(leading: const Icon(Icons.bug_report_outlined), title: const Text('Diagnostics'), subtitle: const Text('Event log for troubleshooting (no book data)'),
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DiagnosticsPage()))),
-          const ListTile(title: Text('Pagemark 0.4.0 · all data stays on this device'), dense: true),
+          const ListTile(title: Text('All data stays on this device unless you export or back it up.'), dense: true),
         ]),
       );
 }

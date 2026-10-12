@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart' as c;
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:local_auth/local_auth.dart';
 
 enum PinResult { ok, wrong, lockedOut }
@@ -149,7 +150,12 @@ class LockService {
     return d == 0;
   }
 
+  /// Tests set this to bypass the biometric plugin (which has no implementation on the test VM).
+  @visibleForTesting
+  static bool? debugDeviceSupported;
+
   static Future<bool> deviceAvailable() async {
+    if (debugDeviceSupported != null) return debugDeviceSupported!;
     try {
       return await _auth.isDeviceSupported();
     } catch (_) {
@@ -157,7 +163,18 @@ class LockService {
     }
   }
 
+  /// Does the phone offer a *strong* biometric (fingerprint)? Face unlock on many phones is only "weak".
+  static Future<bool> strongBiometricAvailable() async {
+    if (debugDeviceSupported != null) return debugDeviceSupported!;
+    try {
+      return (await _auth.getAvailableBiometrics()).contains(BiometricType.strong);
+    } catch (_) {
+      return false;
+    }
+  }
+
   static Future<bool> deviceAuth([String reason = 'Unlock your private library']) async {
+    if (debugDeviceSupported != null) return debugDeviceSupported!;
     try {
       if (!await _auth.isDeviceSupported()) return false;
       return await _auth.authenticate(localizedReason: reason);

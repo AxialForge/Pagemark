@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// Tiny rolling log (~200 KB) in app storage, shared by the UI and the background backup task.

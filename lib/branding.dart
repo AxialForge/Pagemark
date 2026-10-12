@@ -36,7 +36,11 @@ class EmptyState extends StatelessWidget {
   const EmptyState({super.key, required this.message, this.actionLabel, this.onAction});
 
   @override
-  Widget build(BuildContext context) => Center(
+  Widget build(BuildContext context) => LayoutBuilder(
+        builder: (context, box) => SingleChildScrollView( // scrolls instead of overflowing on short screens / large fonts
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: box.maxHeight.isFinite ? box.maxHeight : 0),
+            child: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -48,6 +52,9 @@ class EmptyState extends StatelessWidget {
               FilledButton.icon(onPressed: onAction, icon: const Icon(Icons.add), label: Text(actionLabel!)),
             ],
           ]),
+        ),
+            ),
+          ),
         ),
       );
 }
