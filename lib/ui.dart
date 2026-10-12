@@ -8,6 +8,8 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'backup_page.dart';
+import 'updater.dart';
+import 'updater_ui.dart';
 import 'features.dart';
 import 'lock_ui.dart';
 import 'privacy.dart';
@@ -44,6 +46,8 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     cleanTempExports();
     db.purgeExpiredTrash();
+    autoCheckUpdates();
+    WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) announceNewVersion(context); });
   }
 
   @override
@@ -95,11 +99,14 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
           if (i != 1 && tab == 1) _lock(); // re-lock when leaving the locked tab
           tab = i;
         }),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.menu_book_outlined), label: 'Library'),
-          NavigationDestination(icon: Icon(Icons.lock_outline), label: 'Locked'),
-          NavigationDestination(icon: Icon(Icons.bar_chart), label: 'Stats'),
-          NavigationDestination(icon: Icon(Icons.settings_outlined), label: 'Settings'),
+        destinations: [
+          const NavigationDestination(icon: Icon(Icons.menu_book_outlined), label: 'Library'),
+          const NavigationDestination(icon: Icon(Icons.lock_outline), label: 'Locked'),
+          const NavigationDestination(icon: Icon(Icons.bar_chart), label: 'Stats'),
+          NavigationDestination(
+            icon: ValueListenableBuilder<UpdateInfo?>(valueListenable: updateAvailable, builder: (_, u, _) => Badge(isLabelVisible: u != null, child: const Icon(Icons.settings_outlined))),
+            label: 'Settings',
+          ),
         ],
       ),
     );
@@ -750,6 +757,8 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text('Settings')),
         body: ListView(children: [
+          const UpdateTile(),
+          const Divider(),
           const ListTile(title: Text('Theme', style: TextStyle(fontWeight: FontWeight.bold))),
           ValueListenableBuilder<String>(
             valueListenable: themeId,

@@ -4,7 +4,7 @@ Pagemark is a fully local book tracker for Android (iOS later): a log of what yo
 
 ## Non-negotiables (don't regress these)
 
-- **Local-first.** The only network calls are Open Library lookups/covers and the user-initiated or scheduled Drive backup. No analytics, no telemetry, no backend.
+- **Local-first.** The only network calls are Open Library lookups/covers, the user-initiated or scheduled Drive backup, and the update check against GitHub Releases (a plain release-list request; switchable off). No analytics, no telemetry, no backend.
 - **No paid services.** Open Library (no key) and Drive's free `appDataFolder` only. Don't add paid APIs or require code-signing certs.
 - **Locked library never leaks.** CSV/JSON exports exclude locked books; the locked tab re-locks when you leave it. The full database export and Drive backup *do* include them (documented in the UI).
 - **No secrets in source.** The Google Web client ID is typed into the app (SharedPreferences), never committed. PIN is PBKDF2-HMAC-SHA256 with a random salt in `flutter_secure_storage`.
@@ -34,6 +34,7 @@ A **Book** is the catalog entry (metadata, tags, notes, `locked` flag). A **Read
 lib/
   main.dart         entrypoint, global db + theme notifier, prefs-backed theme
   db.dart           Drift tables (Books, Reads), AppDb, library join stream; db.g.dart is generated
+  updater.dart      GitHub release check, APK pick/download/verify/install; updater_ui.dart = Updates page, badge, changelog
   features.dart     StarRating/GoalRing/BarChart widgets, ProgressCard, shelves UI, SeriesPage, Stats
   ui.dart           all screens: Home/tabs, Library, AddBook, BookPage, EditBook, ReadEditor, Stats, LockGate, Settings
   lookup.dart       Open Library search/ISBN/description (retry + backoff, injectable http client), cover URLs
@@ -79,6 +80,10 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 - **Stats is main-library only on purpose** (`watchLibrary(locked: false)`); the vault must never feed totals, goals or top lists.
 - **Prefs are a global `prefs`** (set in `main()`); the library remembers sort/filters per library under `lib_m_*` / `lib_v_*`.
 - **Widget tests caught a layout bug** (chart overflow) - keep rendering tests for custom-painted/sized widgets; tap tests need `pumpAndSettle` between taps (animated scale).
+
+- **Updates only work for a public repo.** `Updater.check` calls the unauthenticated GitHub releases API; a private repo answers 404 and the app says so. Never embed a token to work around it. Release assets must keep `arm64`/`armv7` in their names (`Updater.pickAsset`) and be signed with the same key as the installed app, or Android refuses the in-place upgrade.
+- **`CHANGELOG.md` is a Flutter asset** (shown offline in Version history); keep its `## [x.y.z]` / `### Section` / `- bullet` shape - the in-app renderer depends on it.
+- The install step can't be unit-tested (needs a device); download/verify/selection/version logic is.
 
 ## Roadmap (unbuilt)
 

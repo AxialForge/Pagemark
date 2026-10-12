@@ -31,6 +31,12 @@ Day-to-day reading features.
 - Sort order and filters (status, format, shelf) are remembered per library.
 - Schema 3 (migration from v1/v2 tested): series number, current page, shelves.
 
+- In-app updates (Settings > Updates): checks the project's GitHub Releases, shows how many releases you're behind and what
+  changed in each, downloads the APK for your phone type (arm64 / 32-bit ARM), verifies size and SHA-256, and hands it to
+  Android's installer. It installs over the current app, so your library and settings are kept. A quiet check runs at most
+  once a day (switch it off on the Updates page); Settings shows a dot when an update is waiting.
+- "What's new" after an update, and a Version history page - the changelog ships inside the app, so it works offline.
+
 ### Changed
 
 - Ratings show as stars (4.5 = ★★★★½) in the theme's accent colour instead of a fixed amber.

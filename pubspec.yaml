@@ -58,6 +58,9 @@ dependencies:
   cryptography_flutter: ^2.3.4
   sqlite3: ^3.7.0
   flutter_cache_manager: ^3.4.5
+  package_info_plus: ^10.2.2
+  device_info_plus: ^13.3.0
+  open_filex: ^4.7.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -81,6 +84,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - CHANGELOG.md
 
   # To add assets to your application, add an assets section, like this:
   # assets:
