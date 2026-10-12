@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -108,7 +109,29 @@ class _UpdatePageState extends State<UpdatePage> {
     final i = info;
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Updates')),
+      appBar: AppBar(title: const Text('Updates'), actions: [
+        if (kDebugMode) // preview the "update available" state without publishing a release (debug builds only)
+          PopupMenuButton<String>(
+            tooltip: 'Debug',
+            onSelected: (_) => setState(() {
+              error = null;
+              checking = false;
+              info = UpdateInfo(
+                current: version ?? '0.0.0',
+                latest: '9.9.9',
+                notes: [
+                  ReleaseNote('9.9.9', 'Pagemark 9.9.9', 'Preview release: a faster library, import from Goodreads, and a few fixes.', DateTime.now()),
+                  ReleaseNote('9.9.8', 'Pagemark 9.9.8', 'Preview release: small fixes.', DateTime.now().subtract(const Duration(days: 9))),
+                ],
+                assetName: 'Pagemark-9.9.9-arm64.apk',
+                assetUrl: 'https://example.invalid/preview.apk',
+                assetBytes: 30 * 1048576,
+                sha256: 'preview',
+              );
+            }),
+            itemBuilder: (_) => const [PopupMenuItem(value: 'x', child: Text('Preview "update available"'))],
+          ),
+      ]),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Card(
           child: ListTile(
@@ -197,7 +220,7 @@ class ChangelogPage extends StatelessWidget {
           builder: (_, snap) {
             if (!snap.hasData) return const Center(child: CircularProgressIndicator());
             return ListView(padding: const EdgeInsets.all(16), children: [
-              for (final line in snap.data!.replaceAll(RegExp(r'\n {2,}(?=\S)'), ' ').split('\n').skipWhile((l) => !l.startsWith('## [')))
+              for (final line in snap.data!.replaceAll(RegExp(r'\n {2,}(?=\S)'), ' ').split('\n').skipWhile((l) => !RegExp(r'^## \[\d').hasMatch(l)))
                 if (line.startsWith('## ['))
                   Padding(padding: const EdgeInsets.only(top: 20, bottom: 4), child: Text(line.substring(3).replaceAll(RegExp(r'[\[\]]'), ''), style: Theme.of(context).textTheme.titleLarge))
                 else if (line.startsWith('### '))

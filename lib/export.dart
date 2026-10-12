@@ -10,9 +10,9 @@ import 'db.dart';
 class RestoreCheck {
   final bool ok;
   final String message;
-  final int books, reads;
-  const RestoreCheck.fail(this.message) : ok = false, books = 0, reads = 0;
-  const RestoreCheck.pass(this.books, this.reads) : ok = true, message = 'ok';
+  final int books, reads, lockedBooks;
+  const RestoreCheck.fail(this.message) : ok = false, books = 0, reads = 0, lockedBooks = 0;
+  const RestoreCheck.pass(this.books, this.reads, {this.lockedBooks = 0}) : ok = true, message = 'ok';
 }
 
 class Exporter {
@@ -110,7 +110,11 @@ class Exporter {
       }
       final b = d.select('SELECT COUNT(*) c FROM books').first['c'] as int;
       final r = d.select('SELECT COUNT(*) c FROM reads').first['c'] as int;
-      return RestoreCheck.pass(b, r);
+      var l = 0;
+      try {
+        l = d.select('SELECT COUNT(*) c FROM books WHERE locked = 1').first['c'] as int;
+      } catch (_) {/* very old/odd file without the column: just don't mention the vault */}
+      return RestoreCheck.pass(b, r, lockedBooks: l);
     } catch (e) {
       return const RestoreCheck.fail('This file is not a readable Pagemark database.');
     } finally {

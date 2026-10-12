@@ -85,6 +85,10 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 - **`CHANGELOG.md` is a Flutter asset** (shown offline in Version history); keep its `## [x.y.z]` / `### Section` / `- bullet` shape - the in-app renderer depends on it.
 - The install step can't be unit-tested (needs a device); download/verify/selection/version logic is.
 
+- **Merged-manifest permissions:** plugins add permissions you didn't ask for (media/storage/notifications came from file/open plugins). `AndroidManifest.xml` removes them with `tools:node="remove"`; after adding a plugin, run `aapt2 dump badging <apk> | grep uses-permission` and strip anything Pagemark doesn't use.
+- **Two Trashes:** `AppDb.watchTrash(locked:)` is per library; the vault's Trash is a route opened from the unlocked vault (so `wipeLockedTraces()` closes it).
+- **Search results are ranked and filtered client-side** (`Lookup.rank`, `Lookup.isJunk`); fixtures in `test/v042_test.dart`. Don't filter in `Lookup.search` itself beyond ordering - the UI decides what to hide.
+
 ## Docs & screenshots
 
 - Documentation lives in `docs/release-package/*.md`; `python docs/_tools/build_docs.py` builds the four PDFs plus the combined `Pagemark-Documentation.pdf` (needs Python `markdown` and Edge). Figures are inline HTML (`<div class="shots">`) pointing at `../screenshots/*.jpg`.

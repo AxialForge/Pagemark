@@ -173,10 +173,15 @@ class _LibraryState extends State<Library> {
       appBar: AppBar(title: Text(widget.locked ? 'Locked library' : 'Library'), actions: [
         PopupMenuButton<String>(
           tooltip: 'More',
-          onSelected: (v) => Navigator.push(context, MaterialPageRoute(builder: (_) => v == 'series' ? SeriesPage(locked: widget.locked) : const ShelvesPage())),
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'series', child: ListTile(leading: Icon(Icons.layers_outlined), title: Text('Series'))),
-            PopupMenuItem(value: 'shelves', child: ListTile(leading: Icon(Icons.collections_bookmark_outlined), title: Text('Manage shelves'))),
+          onSelected: (v) => Navigator.push(context, MaterialPageRoute(builder: (_) => switch (v) {
+                'series' => SeriesPage(locked: widget.locked),
+                'trash' => const TrashPage(locked: true),
+                _ => const ShelvesPage(),
+              })),
+          itemBuilder: (_) => [
+            const PopupMenuItem(value: 'series', child: ListTile(leading: Icon(Icons.layers_outlined), title: Text('Series'))),
+            const PopupMenuItem(value: 'shelves', child: ListTile(leading: Icon(Icons.collections_bookmark_outlined), title: Text('Manage shelves'))),
+            if (widget.locked) const PopupMenuItem(value: 'trash', child: ListTile(leading: Icon(Icons.delete_sweep_outlined), title: Text('Trash'))),
           ],
         ),
         PopupMenuButton<String>(
@@ -354,6 +359,15 @@ class AddBook extends StatefulWidget {
 class _AddBookState extends State<AddBook> {
   final qc = TextEditingController();
   List<BookMeta> results = [];
+  bool showAll = false; // junk (summaries, study guides) and results beyond the first 12 sit behind a "show more" row
+  static const _shown = 12;
+
+  /// What the list shows now. If every result is junk (the user really wants a summary book) show them all.
+  List<BookMeta> get _visible {
+    if (showAll) return results;
+    final real = results.where((m) => !Lookup.isJunk(m)).take(_shown).toList();
+    return real.isEmpty ? results.take(_shown).toList() : real;
+  }
   bool busy = false;
 
   @override
@@ -363,7 +377,7 @@ class _AddBookState extends State<AddBook> {
   }
 
   Future<void> run(Future<List<BookMeta>> Function() f) async {
-    setState(() => busy = true);
+    setState(() { busy = true; showAll = false; });
     try {
       results = await f();
     } catch (e) {
@@ -456,11 +470,17 @@ class _AddBookState extends State<AddBook> {
           if (busy) const LinearProgressIndicator(),
           Expanded(
             child: ListView(children: [
-              for (final m in results)
+              for (final m in _visible)
                 ListTile(
                   leading: Cover(m.coverUrl, locked: widget.locked), title: Text(m.title),
                   subtitle: Text('${m.author}${m.year != null ? ' · ${m.year}' : ''}'),
                   onTap: () => save(m),
+                ),
+              if (!showAll && results.length > _visible.length)
+                ListTile(
+                  leading: const Icon(Icons.expand_more), title: Text('Show ${results.length - _visible.length} more results'),
+                  subtitle: const Text('Includes summaries and study guides'),
+                  onTap: () => setState(() => showAll = true),
                 ),
               ListTile(
                 leading: const Icon(Icons.edit_note), title: const Text('Add manually'),
@@ -566,7 +586,7 @@ class BookPage extends StatelessWidget {
               },
               itemBuilder: (_) => [
                 PopupMenuItem(value: 'lock', child: Text(b.locked ? 'Move to main library' : 'Move to locked library')),
-                const PopupMenuItem(value: 'del', child: Text('Delete')),
+                const PopupMenuItem(value: 'del', child: Text('Move to Trash')),
               ],
             ),
           ]),
@@ -880,14 +900,15 @@ class SettingsPage extends StatelessWidget {
 
 // ───────────────────────── Trash ─────────────────────────
 class TrashPage extends StatelessWidget {
-  const TrashPage({super.key});
+  final bool locked; // true = the locked library's Trash (reachable only from the unlocked vault)
+  const TrashPage({super.key, this.locked = false});
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Trash')),
+        appBar: AppBar(title: Text(locked ? 'Locked Trash' : 'Trash')),
         body: StreamBuilder<List<Book>>(
-          stream: db.watchTrash(),
+          stream: db.watchTrash(locked: locked),
           builder: (_, snap) {
-            final list = (snap.data ?? []).where((b) => !b.locked).toList(); // locked titles never show outside the vault
+            final list = snap.data ?? [];
             if (list.isEmpty) return const Center(child: Text('Trash is empty.'));
             return ListView(children: [
               for (final b in list)

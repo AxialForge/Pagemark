@@ -72,7 +72,21 @@ def version():
     return m.group(1) if m else "?"
 
 
+def release_notes():
+    """RELEASE_NOTES.md is generated from CHANGELOG.md (continuation lines joined) so the two never drift."""
+    c = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    body = c[re.search(r"^## \[\d", c, re.M).start():]  # skip the empty [Unreleased] block
+    body = re.sub(r"\n- (.*)\n  (?=\S)", lambda m: "\n- " + m.group(1) + " ", body)
+    for _ in range(3):  # bullets wrapped over several lines
+        body = re.sub(r"\n  (?=\S)", " ", body)
+    hdr = ("# Pagemark — Release Notes\n\nEvery release from the first (0.1.0) to the current one (" + version() + "), newest first. "
+           "Releases are published at https://github.com/AxialForge/Pagemark/releases and the same text is inside the app under "
+           "Settings → Updates → Version history.\n\n---\n\n")
+    (PKG / "RELEASE_NOTES.md").write_text(hdr + body, encoding="utf-8")
+
+
 def main():
+    release_notes()
     parts = []
     for src, out in DOCS:
         text = (PKG / f"{src}.md").read_text(encoding="utf-8")

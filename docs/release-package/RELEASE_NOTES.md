@@ -1,8 +1,24 @@
 # Pagemark — Release Notes
 
-Every release from the first (0.1.0) to the current one (0.4.1), newest first. Releases are published at https://github.com/AxialForge/Pagemark/releases and the same text is inside the app under Settings → Updates → Version history.
+Every release from the first (0.1.0) to the current one (0.4.2), newest first. Releases are published at https://github.com/AxialForge/Pagemark/releases and the same text is inside the app under Settings → Updates → Version history.
 
 ---
+
+## [0.4.2] - 2026-10-12
+
+Closing the gaps found while using and documenting 0.4.1.
+
+### Added
+
+- The locked library has its own Trash (unlock the vault, then ⋮ → Trash), so a locked book you delete can be restored within 30 days. The main Trash still never shows locked titles.
+- After restoring a backup that contains locked books, Pagemark reminds you the PIN isn't part of backups and to set a new one.
+- Updates page (debug builds only): "Preview update available" shows what an update looks like without publishing one.
+
+### Changed
+
+- Book search ranks real editions first (cover, author matches) and tucks study guides, summaries and workbooks behind "Show N more results". If every result is that kind of book they are all shown.
+- Pagemark no longer requests storage, media or notification permissions it never used (they were merged in by plugins).
+- The book menu says "Move to Trash" instead of "Delete".
 
 ## [0.4.1] - 2026-10-12
 
@@ -30,9 +46,7 @@ Day-to-day reading features.
 - Sort order and filters (status, format, shelf) are remembered per library.
 - Schema 3 (migration from v1/v2 tested): series number, current page, shelves.
 
-- In-app updates (Settings > Updates): checks the project's GitHub Releases, shows how many releases you're behind and what changed in each, downloads the APK for your phone type (arm64 / 32-bit ARM), verifies size and SHA-256, and hands it to
-  Android's installer. It installs over the current app, so your library and settings are kept. A quiet check runs at most
-  once a day (switch it off on the Updates page); Settings shows a dot when an update is waiting.
+- In-app updates (Settings > Updates): checks the project's GitHub Releases, shows how many releases you're behind and what changed in each, downloads the APK for your phone type (arm64 / 32-bit ARM), verifies size and SHA-256, and hands it to Android's installer. It installs over the current app, so your library and settings are kept. A quiet check runs at most once a day (switch it off on the Updates page); Settings shows a dot when an update is waiting.
 - "What's new" after an update, and a Version history page - the changelog ships inside the app, so it works offline.
 
 - Your logo throughout the app: launch splash (Android 12+ system splash and older launch screen), Settings header with an About dialog (including the Open Library credit), the Updates page, and friendly empty states on the library and Stats. iOS app icons generated from it.
@@ -63,8 +77,7 @@ Reliability and book-lookup release.
 
 ### Changed
 
-- Lookup is sturdier: identifies itself to Open Library, retries busy/slow responses with backoff, gives readable errors (offline / busy / slow), skips one malformed record instead of failing the whole list, dedupes repeated
-  works, hides non-genre subjects ("Accessible book", "Protected DAISY"), and falls back to searching by ISBN.
+- Lookup is sturdier: identifies itself to Open Library, retries busy/slow responses with backoff, gives readable errors (offline / busy / slow), skips one malformed record instead of failing the whole list, dedupes repeated works, hides non-genre subjects ("Accessible book", "Protected DAISY"), and falls back to searching by ISBN.
 - Lists load small cover thumbnails and decode them at display size (less data and memory).
 - ISBNs are stored as ISBN-13.
 - Changing the Google Web client ID after sign-in now says to restart instead of silently using the old one.

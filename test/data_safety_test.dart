@@ -32,7 +32,7 @@ void main() {
       final id = await addBook(db, 'Dune');
       await db.softDelete(id);
       expect(await db.watchLibrary(locked: false).first, isEmpty);
-      expect((await db.watchTrash().first).single.id, id);
+      expect((await db.watchTrash(locked: false).first).single.id, id);
       await db.restoreBook(id);
       expect((await db.watchLibrary(locked: false).first).single.book.id, id);
     });

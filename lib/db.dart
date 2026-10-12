@@ -127,8 +127,11 @@ class AppDb extends _$AppDb {
     return (delete(books)..where((b) => b.deletedAt.isSmallerThanValue(cutoff))).go();
   }
 
-  Stream<List<Book>> watchTrash() =>
-      (select(books)..where((b) => b.deletedAt.isNotNull())..orderBy([(b) => OrderingTerm.desc(b.deletedAt)])).watch();
+  /// Trashed books of one library. The main Trash never sees the vault's, and the vault has its own (opened only while unlocked).
+  Stream<List<Book>> watchTrash({required bool locked}) => (select(books)
+        ..where((b) => b.deletedAt.isNotNull() & b.locked.equals(locked))
+        ..orderBy([(b) => OrderingTerm.desc(b.deletedAt)]))
+      .watch();
 
   /// A duplicate is the same ISBN, or the same title+author (case-insensitive), among live books.
   Future<Book?> findDuplicate({required String title, required bool locked, String author = '', String isbn = ''}) async {

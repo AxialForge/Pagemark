@@ -12,6 +12,24 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+## [0.4.2] - 2026-10-12
+
+Closing the gaps found while using and documenting 0.4.1.
+
+### Added
+
+- The locked library has its own Trash (unlock the vault, then ⋮ → Trash), so a locked book you delete can be restored
+  within 30 days. The main Trash still never shows locked titles.
+- After restoring a backup that contains locked books, Pagemark reminds you the PIN isn't part of backups and to set a new one.
+- Updates page (debug builds only): "Preview update available" shows what an update looks like without publishing one.
+
+### Changed
+
+- Book search ranks real editions first (cover, author matches) and tucks study guides, summaries and workbooks behind
+  "Show N more results". If every result is that kind of book they are all shown.
+- Pagemark no longer requests storage, media or notification permissions it never used (they were merged in by plugins).
+- The book menu says "Move to Trash" instead of "Delete".
+
 ## [0.4.1] - 2026-10-12
 
 ### Fixed

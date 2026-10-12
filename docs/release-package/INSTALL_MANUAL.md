@@ -1,6 +1,6 @@
 # Pagemark — Install Manual
 
-**Version 0.4.1** · Android
+**Version 0.4.2** · Android
 
 ---
 
@@ -49,7 +49,7 @@ Pagemark opens on an empty Library. Tap **Add book** to start. Allow the **camer
 | Install packages | Lets Android offer to install a downloaded update |
 | Background work / network state | Running the scheduled Drive backup |
 
-The Android build also lists a few storage/notification permissions that come bundled with libraries it uses; Pagemark does not read your photos or other media. (A later release will strip them from the manifest.)
+Pagemark does not ask for storage, photo/media or notification permissions.
 
 ## 5. Updating
 

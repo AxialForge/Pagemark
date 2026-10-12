@@ -61,6 +61,8 @@ missing the job must fail loudly rather than fall back to debug signing (a debug
 
 Everything here was found while using or documenting 0.4.1. Target: one sitting.
 
+> **Status:** 0.4.2-A..E are implemented on `main` (not yet tagged). 0.4.2-F needs the owner's secrets.
+
 ### 0.4.2-A Vault Trash (restore locked books you deleted)
 - **Problem:** deleting a book from the locked library soft-deletes it, but `TrashPage` hides locked titles, so it can never be restored
   and silently purges after 30 days. (Report: "Found while writing the documentation".)

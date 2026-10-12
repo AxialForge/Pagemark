@@ -89,6 +89,31 @@ class Lookup {
     }
   }
 
+  static final _junk = RegExp(r'^(summary|study guide|workbook|analysis|trivia|quiz|a summary)\b|\bsummary of\b|\bstudy guide\b|\bworkbook\b|\bconversation starters\b', caseSensitive: false);
+
+  /// Summaries, study guides and workbooks (third-party companions, not the book itself).
+  static bool isJunk(BookMeta m) => _junk.hasMatch(m.title);
+
+  /// Real editions first: a cover (+3) and an author named in the query (+2) rank up; summaries, study guides and
+  /// workbooks (-5) sink. Stable, so Open Library's own order breaks ties.
+  static List<BookMeta> rank(List<BookMeta> items, String query) {
+    final q = query.toLowerCase();
+    int score(BookMeta m) {
+      var s = 0;
+      if (m.coverUrl.isNotEmpty) s += 3;
+      final firstAuthor = m.author.split(',').first.trim().toLowerCase();
+      if (firstAuthor.isNotEmpty && q.contains(firstAuthor)) s += 2;
+      if (isJunk(m)) s -= 5;
+      return s;
+    }
+
+    final idx = {for (var i = 0; i < items.length; i++) items[i]: i};
+    return [...items]..sort((a, b) {
+        final d = score(b).compareTo(score(a));
+        return d != 0 ? d : idx[a]!.compareTo(idx[b]!);
+      });
+  }
+
   static Future<List<BookMeta>> search(String q) async {
     final u = Uri.https('openlibrary.org', '/search.json', {
       'q': q.trim(), 'limit': '30',
@@ -105,7 +130,7 @@ class Lookup {
       final k = m.workKey.isNotEmpty ? m.workKey : '${m.title.toLowerCase()}|${m.author.toLowerCase()}';
       if (seen.add(k)) out.add(m);
     }
-    return out;
+    return rank(out, q);
   }
 
   /// ISBN lookup: the data API first, then a search by ISBN as a fallback.

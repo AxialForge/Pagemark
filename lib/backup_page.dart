@@ -56,7 +56,9 @@ Future<void> restoreFlow(BuildContext context, File picked) async {
     barrierDismissible: false,
     builder: (c) => AlertDialog(
       title: const Text('Restored'),
-      content: const Text('Pagemark will now close. Open it again to see your restored library.'),
+      content: Text('Pagemark will now close. Open it again to see your restored library.'
+          '${check.lockedBooks > 0 ? '\n\nYour ${check.lockedBooks} locked book${check.lockedBooks == 1 ? '' : 's'} came back too, but your PIN is not part of backups. '
+              'Open the Locked tab and set a new PIN to reach ${check.lockedBooks == 1 ? 'it' : 'them'}.' : ''}'),
       actions: [FilledButton(onPressed: () => exit(0), child: const Text('Close app'))],
     ),
   );

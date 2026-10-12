@@ -1,8 +1,8 @@
 # Pagemark — User Manual
 
-**Version 0.4.1** · A private, fully local book tracker for Android
+**Version 0.4.2** · A private, fully local book tracker for Android
 
-*Screenshots show sample books and were captured from the Android app (0.4.1).*
+*Screenshots show sample books and were captured from the Android app (0.4.2).*
 
 ---
 
@@ -37,6 +37,8 @@ Tap **Add book** (bottom of the Library).
 4. **Manually** — if a book isn't found, choose **Add manually** and enter a title; fill in the rest later with **Edit**.
 
 If the book is already in the same library (same ISBN, or the same title and author) Pagemark warns you and offers to open the existing one. The main and locked libraries never compare against each other, so the main library can't reveal a locked title.
+
+Results are ranked so real editions come first. Summaries, study guides and workbooks that Open Library also lists are tucked behind **Show N more results** (if every result is that kind of book, they are all shown).
 
 Descriptions are fetched a moment after the book is saved when Open Library has one.
 
@@ -189,6 +191,8 @@ Android decides exactly when scheduled work runs, so a "daily" backup may be a f
 2. Pagemark checks it is a healthy Pagemark database from this or an older version, and tells you how many books and reads it holds.
 3. It keeps a **safety copy of your current library** (the newest 3 are retained inside the app), then replaces the library and asks you to close and reopen the app.
 
+If the backup holds locked books, Pagemark reminds you that your **PIN is not part of backups** — open the Locked tab and set a new PIN afterwards.
+
 A damaged, foreign, or too-new file is rejected before anything changes.
 
 ## 13. Updates
@@ -200,13 +204,13 @@ Settings → **Updates** (or the dot on the Settings tab).
 - **Check automatically** (on by default) does a quiet check at most once a day. The only thing sent is a request to GitHub for the release list. Switch it off any time.
 - **Version history** shows every change in every release, offline. After an update, a **What's new** prompt links to it.
 
-<div class="shots one"><figure><img src="../screenshots/updates.jpg" alt="Updates"><figcaption>Updates</figcaption></figure></div>
+<div class="shots one"><figure><img src="../screenshots/updates.jpg" alt="Updates"><figcaption>Updates</figcaption></figure><figure><img src="../screenshots/updates-available.jpg" alt="An update is available"><figcaption>When an update is waiting (sample data)</figcaption></figure></div>
 
 
 
 ## 14. Trash
 
-Deleting a book moves it to **Settings → Trash**. Restore it, or delete it forever; anything left is removed automatically after **30 days**. **Known limitation (0.4.1):** books deleted from the *locked* library also wait 30 days, but the Trash screen deliberately doesn't list locked titles, so they can't be restored from the app — delete a locked book only if you mean it.
+Deleting a book moves it to **Settings → Trash**. Restore it, or delete it forever; anything left is removed automatically after **30 days**. Books deleted from the **locked** library have their own Trash: unlock the vault, then choose **⋮ → Trash**. They wait the same 30 days, and the main Trash never lists them.
 
 ## 15. Diagnostics
 
