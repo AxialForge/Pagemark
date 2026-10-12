@@ -90,6 +90,14 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 - **Two Trashes:** `AppDb.watchTrash(locked:)` is per library; the vault's Trash is a route opened from the unlocked vault (so `wipeLockedTraces()` closes it).
 - **Search results are ranked and filtered client-side** (`Lookup.rank`, `Lookup.isJunk`); fixtures in `test/v042_test.dart`. Don't filter in `Lookup.search` itself beyond ordering - the UI decides what to hide.
 
+- **Backup failures are classified** in `backup_errors.dart` (`friendlyBackupError`, `isAuthProblem`, `shouldNotifyBackupFailure`). A failing run increments `bk_fail`; success resets it and clears the notification. Add new Drive/Google failure modes there, with a test.
+- **flutter_local_notifications needs core-library desugaring** (`isCoreLibraryDesugaringEnabled` + `desugar_jdk_libs` in `android/app/build.gradle.kts`) or the build fails at `checkAarMetadata`.
+- **`LockService.debugDeviceSupported`** lets tests fake a phone with/without a screen lock (the local_auth plugin has no test implementation).
+- **Large-text safety:** fixed-height rows must scale with `MediaQuery.textScalerOf(context)` (see Compact and BarChart); `test/v043_ui_test.dart` draws every Library style at 200%.
+- **Hidden Locked tab:** `hideLockedTab` (prefs `hide_locked`); the vault is then a pushed `VaultPage` opened by long-pressing the Library title. It relocks/wipes on dispose and on background like the tab version.
+- **Release APKs are already R8-minified** by Flutter's default release config (`build/app/outputs/mapping/release/mapping.txt` exists); don't add rules blindly.
+- **NAS backup:** `tool/backup-to-nas.ps1` mirrors source, a git bundle, the signed APKs and the signing key to the home NAS (`\\192.168.1.204\Apocrypha_Main_Pool\Libary_Pool\APP Projects\PageMark`). Run it after every release.
+
 ## Docs & screenshots
 
 - Documentation lives in `docs/release-package/*.md`; `python docs/_tools/build_docs.py` builds the four PDFs plus the combined `Pagemark-Documentation.pdf` (needs Python `markdown` and Edge). Figures are inline HTML (`<div class="shots">`) pointing at `../screenshots/*.jpg`.

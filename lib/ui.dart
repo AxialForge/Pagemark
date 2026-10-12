@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -15,6 +16,7 @@ import 'features.dart';
 import 'lock_ui.dart';
 import 'privacy.dart';
 import 'skins.dart';
+import 'notifier.dart';
 import 'text_utils.dart';
 import 'widgets.dart';
 import 'db.dart';
@@ -1207,6 +1209,13 @@ class DiagnosticsPage extends StatelessWidget {
                 child: Row(children: [
                   OutlinedButton.icon(icon: const Icon(Icons.copy), label: const Text('Copy'), onPressed: text.isEmpty ? null : () { Clipboard.setData(ClipboardData(text: text)); snack(context, 'Log copied'); }),
                   const SizedBox(width: 8),
+                  if (kDebugMode) ...[
+                    OutlinedButton.icon(icon: const Icon(Icons.notifications_outlined), label: const Text('Test alert'), onPressed: () async {
+                      await Notifier.requestPermission();
+                      await Notifier.backupProblem('This is a test of the backup-problem notification.');
+                    }),
+                    const SizedBox(width: 8),
+                  ],
                   OutlinedButton.icon(icon: const Icon(Icons.delete_outline), label: const Text('Clear'), onPressed: () async { await Log.clear(); if (context.mounted) Navigator.pop(context); }),
                 ]),
               ),

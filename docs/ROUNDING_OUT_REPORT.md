@@ -14,6 +14,8 @@ Written 2026-10-11 from a read-through of the 0.1.0 source (`lib/*.dart`, Androi
 
 **Fixed in 0.3.0:** IB-34, 41, 53, 54, 55, 56, 57, 58, 60 (dedupe), 61, 62, 69, 72, 73, 74, 76; IM-33 (torch + feedback), IM-38, IM-39; FM-19 (pasted ISBN), FM-29 (backup status), FS-01 (checksum), FS-53 (diagnostics log).
 
+**Fixed in 0.4.3:** IB-17 (partly: warns when no strong biometric), 18 (warning + manual add), 42, 46 (clear message + notify), 48 (guidance), 51, 66, 80 (copy on NAS), 81, 85 (notify), 87, 88, 89; IM-3, 4, 10, 11, 14, 20, 21, 22, 24, 25, 26, 27, 32, 36, 37; IS-1, 2, 3, 36; IB-40, IB-31 (undo), IB-63 (partly); FB-50, FM-01 (reads), FS-14. IB-68 was already true (R8 is on).
+
 **Also in 0.4.2:** IM-17 (theme names), shelf nameplates, realistic spines, two new themes.
 
 **Added in 0.4.2:** Library styles (FB-73 grid/compact views, UI-09, UI-10 partly).

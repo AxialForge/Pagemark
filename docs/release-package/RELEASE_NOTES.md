@@ -1,8 +1,34 @@
 # Pagemark — Release Notes
 
-Every release from the first (0.1.0) to the current one (0.4.2), newest first. Releases are published at https://github.com/AxialForge/Pagemark/releases and the same text is inside the app under Settings → Updates → Version history.
+Every release from the first (0.1.0) to the current one (0.4.3), newest first. Releases are published at https://github.com/AxialForge/Pagemark/releases and the same text is inside the app under Settings → Updates → Version history.
 
 ---
+
+## [0.4.3] - 2026-10-12
+
+Trust, polish and large-text release.
+
+### Added
+
+- Backup warnings: if a scheduled Google Drive backup keeps failing, Pagemark posts a notification (immediately when you need to sign in again, otherwise after the second failure, then weekly). Android 13+ asks for notification permission when you turn on automatic backup.
+- Backup page: plain-language error messages (offline, Drive full, sign-in expired, API not enabled ...), "Back up now" reports the size uploaded, the Web client ID is checked for a valid shape, and a card explains how to stop phone battery managers killing scheduled backups.
+- Uploads to Drive are resumable, so a weak connection no longer restarts a backup from zero.
+- "Hide the Locked tab" (Settings, Privacy): nothing in the app shows a private library exists; long-press the word "Library" to open it.
+- Locked library: if the phone's screen lock is removed, the gate explains and links to security settings; choosing "device lock only" on a phone without a fingerprint now warns that it falls back to the screen lock; searching from the vault warns once that the text is sent to Open Library and offers adding the book by hand.
+- Unsaved-changes prompts in the book and read editors; undo after deleting a read.
+- Search also matches your notes and thoughts, and has a clear button; new search results stay when you go back after adding a book.
+- Books with no cover get a coloured tile with the title's first letter; long descriptions collapse behind "Read more".
+- Manual add asks for title and author; tags are tidied (trimmed, de-duplicated); numeric fields only accept digits; keyboards dismiss when you scroll.
+- Camera denied or unavailable: the scanner explains and links to app settings.
+- docs/PRIVACY.md (privacy policy and a Play "Data safety" cheat-sheet).
+
+### Changed
+
+- Library, Stats and every Library style survive 200% text size (compact rows and charts now grow with the font).
+- Dates can no longer be set in the future; sorting by rating breaks ties by title; snackbars replace each other instead of queueing.
+- Restore finishes with a proper "Close Pagemark" instead of force-quitting; predictive back is enabled.
+- The Settings footer no longer shows a hard-coded version.
+- Unchanged library lists no longer rebuild on unrelated database writes.
 
 ## [0.4.2] - 2026-10-12
 
