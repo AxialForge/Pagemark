@@ -18,6 +18,7 @@ A private, fully local book tracker for Android (iOS planned): log what you read
 - **Log any book**: print, e-book or audiobook, any genre; several reads per book, half-star ratings, private thoughts.
 - **Fast capture**: search Open Library, paste or scan an ISBN barcode, or add by hand. Free book data and covers, no key needed.
 - **Track progress**: current page, progress bars, pages per day, days left; yearly goal ring; stats dashboard.
+- **Five library looks**: classic list, cover wall, bookshelf, book spines or compact — switch any time.
 - **Organise**: shelves, series with numbers, tags, filters, sort, "Currently reading" strip.
 - **Locked library**: PIN (attempt limits + recovery code) or fingerprint; re-locks on background; blocks screenshots.
 - **Your data, your files**: CSV/JSON export; whole-database export with optional passphrase encryption.

@@ -23,6 +23,9 @@ Closing the gaps found while using and documenting 0.4.1.
 - After restoring a backup that contains locked books, Pagemark reminds you the PIN isn't part of backups and to set a new one.
 - Updates page (debug builds only): "Preview update available" shows what an update looks like without publishing one.
 
+- Library styles: choose how the Library looks — Classic, Cover wall, Bookshelf, Spines or Compact (style icon at the top of the
+  Library). Remembered separately for the main and locked libraries, with a cross-fade when you switch.
+
 ### Changed
 
 - Book search ranks real editions first (cover, author matches) and tucks study guides, summaries and workbooks behind

@@ -14,6 +14,7 @@ import 'updater_ui.dart';
 import 'features.dart';
 import 'lock_ui.dart';
 import 'privacy.dart';
+import 'skins.dart';
 import 'db.dart';
 import 'export.dart';
 import 'lock.dart';
@@ -125,6 +126,7 @@ class Library extends StatefulWidget {
 class _LibraryState extends State<Library> {
   String q = '', status = 'all', format = 'all', sort = 'added';
   int? shelf;
+  LibrarySkin skin = LibrarySkin.classic;
   List<Shelf> shelves = [];
   Map<int, Set<int>> shelfBooks = {}; // shelf id -> book ids
   StreamSubscription<List<Shelf>>? _shelfSub;
@@ -139,6 +141,7 @@ class _LibraryState extends State<Library> {
     status = prefs.getString('${_pk}_status') ?? 'all';
     format = prefs.getString('${_pk}_format') ?? 'all';
     shelf = prefs.getInt('${_pk}_shelf');
+    skin = skinById(prefs.getString('${_pk}_skin'));
     _shelfSub = db.watchShelves().listen((v) {
       if (!mounted) return;
       setState(() {
@@ -164,6 +167,7 @@ class _LibraryState extends State<Library> {
     prefs.setString('${_pk}_sort', sort);
     prefs.setString('${_pk}_status', status);
     prefs.setString('${_pk}_format', format);
+    prefs.setString('${_pk}_skin', skin.name);
     shelf == null ? prefs.remove('${_pk}_shelf') : prefs.setInt('${_pk}_shelf', shelf!);
   }
 
@@ -171,6 +175,13 @@ class _LibraryState extends State<Library> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.locked ? 'Locked library' : 'Library'), actions: [
+        IconButton(
+          icon: Icon(skin.icon), tooltip: 'Library style: ${skin.label}',
+          onPressed: () async {
+            final picked = await showSkinPicker(context, skin);
+            if (picked != null && picked != skin) { setState(() => skin = picked); _save(); }
+          },
+        ),
         PopupMenuButton<String>(
           tooltip: 'More',
           onSelected: (v) => Navigator.push(context, MaterialPageRoute(builder: (_) => switch (v) {
@@ -256,18 +267,7 @@ class _LibraryState extends State<Library> {
                       )
                     : const Center(child: Text('No matches.'));
               }
-              final list = ListView.builder(
-                padding: const EdgeInsets.only(bottom: 88), // clear of the Add button
-                itemCount: rows.length,
-                itemBuilder: (_, i) => TweenAnimationBuilder<double>(
-                  key: ValueKey(rows[i].book.id),
-                  tween: Tween(begin: 0, end: 1),
-                  duration: Duration(milliseconds: 280 + (i < 8 ? i * 40 : 320)),
-                  curve: Curves.easeOutCubic,
-                  builder: (_, v, child) => Opacity(opacity: v, child: Transform.translate(offset: Offset(0, 16 * (1 - v)), child: child)),
-                  child: BookTile(row: rows[i]),
-                ),
-              );
+              final list = SkinView(skin: skin, rows: rows);
               final reading = (snap.data ?? []).where((r) => r.status == 'reading').toList();
               final unfiltered = q.isEmpty && status == 'all' && format == 'all' && shelf == null;
               if (!unfiltered || reading.isEmpty) return list;

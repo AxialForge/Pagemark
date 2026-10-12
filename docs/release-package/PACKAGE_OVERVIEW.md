@@ -31,6 +31,7 @@
 | Logging | Multiple *reads* per book (print / e-book / audio); status, dates, half-star rating, private thoughts, narrator, time |
 | Progress | Current page, progress bars, pages per day, estimated days left |
 | Organise | Shelves (many per book), series with numbers, tags, filters, sort, "Currently reading" strip |
+| Library looks | Classic list, cover wall, bookshelf, book spines, compact — switchable, remembered per library |
 | Insight | Yearly goal ring with pace forecast, books per month, rating spread, top genres/authors, totals |
 | Privacy | Locked library (PIN with attempt limits and recovery code, or device biometrics), auto-relock, screenshot blocking |
 | Data portability | CSV and JSON export of the main library; whole-database export, optionally passphrase-encrypted |

@@ -16,7 +16,7 @@ There is no account, no server and no tracking. The only times Pagemark uses the
 
 | Tab | What it is |
 |---|---|
-| **Library** | Your books. Search, filter, sort, shelves, series. |
+| **Library** | Your books. Search, filter, sort, shelves, series — in five looks. |
 | **Locked** | A private library behind a PIN and/or your fingerprint. |
 | **Stats** | Your reading goal and charts. |
 | **Settings** | Themes, updates, export, backup, privacy, trash, diagnostics. |
@@ -104,6 +104,28 @@ While a book has an active read, its page shows a **progress card**. Tap **Updat
 <div class="shots one"><figure><img src="../screenshots/shelf-filter.jpg" alt="Filtering by a shelf"><figcaption>Filtering by a shelf</figcaption></figure></div>
 
 
+
+### Library styles
+
+Tap the **style icon** at the top of the Library to choose how your books are drawn. The choice is remembered separately for the main and locked libraries, and the Library cross-fades between styles.
+
+| Style | What it shows |
+|---|---|
+| **Classic** | A row per book: cover, title, series, status, format, rating and a progress bar |
+| **Cover wall** | A grid of covers with rating stars and a progress strip; titles underneath |
+| **Bookshelf** | Covers standing on wooden shelves, filled edge to edge |
+| **Spines** | Books side by side like a real shelf — colour from the title, width from the page count; a ribbon marks what you're reading and a tick marks what you've finished |
+| **Compact** | One tight line per book — the most books per screen |
+
+
+
+<div class="shots "><figure><img src="../screenshots/skin-picker.jpg" alt="Choosing a style"><figcaption>Choosing a style</figcaption></figure><figure><img src="../screenshots/skin-grid.jpg" alt="Cover wall"><figcaption>Cover wall</figcaption></figure><figure><img src="../screenshots/skin-shelf.jpg" alt="Bookshelf"><figcaption>Bookshelf</figcaption></figure></div>
+
+
+
+<div class="shots two"><figure><img src="../screenshots/skin-spines.jpg" alt="Spines"><figcaption>Spines</figcaption></figure><figure><img src="../screenshots/skin-compact.jpg" alt="Compact"><figcaption>Compact</figcaption></figure></div>
+
+Filters, search, sort and shelves work the same in every style, and tapping any book opens its page.
 
 ## 7. Stats
 

@@ -126,7 +126,7 @@ Theme: getting existing history in, and a nicer way to browse.
 
 ### 0.5.0-C Import: StoryGraph CSV (FB-28) — same pipeline, different column map (`Read Status`, `Star Rating`, `Last Date Read`, `Format`).
 
-### 0.5.0-D Grid / cover-wall view (FB-73, UI-09)
+### 0.5.0-D Grid / cover-wall view (FB-73, UI-09) — **DONE in 0.4.2 as part of Library styles (`lib/skins.dart`)**; the notes below are kept for reference
 - Toggle in the Library AppBar (list ⇄ grid, remembered like sort). `SliverGrid` of `Cover(w: …)` with a rating star overlay and a progress strip
   for active reads. Keep `Hero` tags (`'cover-${id}'`) so the transition to `BookPage` still works.
 - **Tests:** widget test pumping `Library` with a memory DB is awkward (global `db`); instead extract `LibraryGrid(rows:)` as a pure widget and test that.

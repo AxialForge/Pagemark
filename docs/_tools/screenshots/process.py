@@ -6,7 +6,7 @@ os.makedirs(OUT, exist_ok=True)
 names = {
     "01_library": "library", "02_book_reading": "book-reading", "03_log_read": "log-read", "04_stats_a": "stats-goal",
     "04_stats_b": "stats-totals", "06_series": "series", "07_shelves": "shelves", "08_shelf_filter": "shelf-filter",
-    "09_settings_a": "settings", "10_updates": "updates", "10b_updates_available": "updates-available", "11_lock_gate": "lock-gate", "12_add_book": "add-book",
+    "09_settings_a": "settings", "10_updates": "updates", "18_skin_picker": "skin-picker", "18_skin_grid": "skin-grid", "18_skin_shelf": "skin-shelf", "18_skin_spines": "skin-spines", "18_skin_compact": "skin-compact", "10b_updates_available": "updates-available", "11_lock_gate": "lock-gate", "12_add_book": "add-book",
     "13_book_finished": "book-finished", "15_backup": "backup", "16_dark_library": "dark-library", "16_dark_stats": "dark-stats",
     "17_about": "about",
 }

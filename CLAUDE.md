@@ -35,6 +35,7 @@ lib/
   main.dart         entrypoint, global db + theme notifier, prefs-backed theme
   db.dart           Drift tables (Books, Reads), AppDb, library join stream; db.g.dart is generated
   updater.dart      GitHub release check, APK pick/download/verify/install; updater_ui.dart = Updates page, badge, changelog
+  skins.dart        Library skins (Classic / Cover wall / Bookshelf / Spines / Compact) + the style picker; SkinView takes ready-filtered rows
   features.dart     StarRating/GoalRing/BarChart widgets, ProgressCard, shelves UI, SeriesPage, Stats
   ui.dart           all screens: Home/tabs, Library, AddBook, BookPage, EditBook, ReadEditor, Stats, LockGate, Settings
   lookup.dart       Open Library search/ISBN/description (retry + backoff, injectable http client), cover URLs
