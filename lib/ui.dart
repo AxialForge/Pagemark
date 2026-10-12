@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'backup_page.dart';
+import 'branding.dart';
 import 'updater.dart';
 import 'updater_ui.dart';
 import 'features.dart';
@@ -240,7 +241,16 @@ class _LibraryState extends State<Library> {
                   default: return b.book.added.compareTo(a.book.added);
                 }
               });
-              if (rows.isEmpty) return Center(child: Text(snap.data?.isEmpty ?? true ? 'No books yet — tap Add book.' : 'No matches.'));
+              if (rows.isEmpty) {
+                final none = snap.data?.isEmpty ?? true;
+                return none
+                    ? EmptyState(
+                        message: widget.locked ? 'Nothing in your locked library yet.' : 'Your shelf is empty.\nAdd your first book to start your log.',
+                        actionLabel: 'Add a book',
+                        onAction: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddBook(locked: widget.locked))),
+                      )
+                    : const Center(child: Text('No matches.'));
+              }
               final list = ListView.builder(
                 padding: const EdgeInsets.only(bottom: 88), // clear of the Add button
                 itemCount: rows.length,
@@ -757,6 +767,8 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text('Settings')),
         body: ListView(children: [
+          const AppHeader(),
+          const Divider(),
           const UpdateTile(),
           const Divider(),
           const ListTile(title: Text('Theme', style: TextStyle(fontWeight: FontWeight.bold))),

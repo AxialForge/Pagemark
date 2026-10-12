@@ -37,6 +37,9 @@ Day-to-day reading features.
   once a day (switch it off on the Updates page); Settings shows a dot when an update is waiting.
 - "What's new" after an update, and a Version history page - the changelog ships inside the app, so it works offline.
 
+- Your logo throughout the app: launch splash (Android 12+ system splash and older launch screen), Settings header with an About dialog
+  (including the Open Library credit), the Updates page, and friendly empty states on the library and Stats. iOS app icons generated from it.
+
 ### Changed
 
 - Ratings show as stars (4.5 = ★★★★½) in the theme's accent colour instead of a fixed amber.

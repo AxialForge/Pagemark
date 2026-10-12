@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'branding.dart';
 import 'log.dart';
 import 'main.dart';
 import 'updater.dart';
@@ -111,7 +112,7 @@ class _UpdatePageState extends State<UpdatePage> {
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Card(
           child: ListTile(
-            leading: const Icon(Icons.info_outline),
+            leading: const AppLogo(size: 44),
             title: Text('Installed: Pagemark ${version ?? '…'}'),
             subtitle: Text(prefs.getString('upd_last') == null ? 'Not checked yet' : 'Last checked ${DateFormat.yMMMd().add_jm().format(DateTime.parse(prefs.getString('upd_last')!))}'),
           ),

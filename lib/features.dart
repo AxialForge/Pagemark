@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'branding.dart';
 import 'db.dart';
 import 'main.dart';
 import 'ui.dart';
@@ -460,7 +461,7 @@ class _StatsState extends State<Stats> {
                 ])),
               );
 
-          if (rows.isEmpty) return const Center(child: Text('Add and finish some books to see your stats.'));
+          if (rows.isEmpty) return const EmptyState(message: 'Add and finish some books to see your stats.');
           return ListView(padding: const EdgeInsets.all(12), children: [
             section('$year reading goal', Row(children: [
               GoalRing(done: thisYear.length, goal: goal),
