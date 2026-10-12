@@ -39,7 +39,15 @@ class _HomeState extends State<Home> {
       SettingsPage(onLockNow: () => setState(() { unlocked = false; tab = 0; })),
     ];
     return Scaffold(
-      body: pages[tab],
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        switchInCurve: Curves.easeOutCubic,
+        transitionBuilder: (child, anim) => FadeTransition(
+          opacity: anim,
+          child: SlideTransition(position: Tween(begin: const Offset(0, 0.02), end: Offset.zero).animate(anim), child: child),
+        ),
+        child: KeyedSubtree(key: ValueKey(tab), child: pages[tab]),
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: tab,
         onDestinationSelected: (i) => setState(() {
@@ -127,7 +135,14 @@ class _LibraryState extends State<Library> {
               if (rows.isEmpty) return Center(child: Text(snap.data?.isEmpty ?? true ? 'No books yet — tap Add book.' : 'No matches.'));
               return ListView.builder(
                 itemCount: rows.length,
-                itemBuilder: (_, i) => BookTile(row: rows[i]),
+                itemBuilder: (_, i) => TweenAnimationBuilder<double>(
+                  key: ValueKey(rows[i].book.id),
+                  tween: Tween(begin: 0, end: 1),
+                  duration: Duration(milliseconds: 280 + (i < 8 ? i * 40 : 320)),
+                  curve: Curves.easeOutCubic,
+                  builder: (_, v, child) => Opacity(opacity: v, child: Transform.translate(offset: Offset(0, 16 * (1 - v)), child: child)),
+                  child: BookTile(row: rows[i]),
+                ),
               );
             },
           ),
@@ -140,12 +155,19 @@ class _LibraryState extends State<Library> {
 class Cover extends StatelessWidget {
   final String url;
   final double w;
-  const Cover(this.url, {super.key, this.w = 48});
+  final Object? tag; // shared-element (Hero) tag between list and detail
+  const Cover(this.url, {super.key, this.w = 48, this.tag});
   @override
   Widget build(BuildContext context) {
     final ph = Container(width: w, height: w * 1.5, color: Theme.of(context).colorScheme.secondaryContainer, child: const Icon(Icons.book));
-    if (url.isEmpty) return ph;
-    return CachedNetworkImage(imageUrl: url, width: w, height: w * 1.5, fit: BoxFit.cover, placeholder: (_, __) => ph, errorWidget: (_, __, ___) => ph);
+    final img = url.isEmpty
+        ? ph
+        : ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: CachedNetworkImage(imageUrl: url, width: w, height: w * 1.5, fit: BoxFit.cover,
+                fadeInDuration: const Duration(milliseconds: 250), placeholder: (_, _) => ph, errorWidget: (_, _, _) => ph),
+          );
+    return tag == null ? img : Hero(tag: tag!, child: img);
   }
 }
 
@@ -158,7 +180,7 @@ class BookTile extends StatelessWidget {
     final r = row.avgRating;
     final fmts = row.reads.map((e) => formats[e.format]).toSet().join(' · ');
     return ListTile(
-      leading: Cover(b.coverUrl),
+      leading: Cover(b.coverUrl, tag: 'cover-${b.id}'),
       title: Text(b.title, maxLines: 2, overflow: TextOverflow.ellipsis),
       subtitle: Text([b.author, if (row.reads.isNotEmpty) statuses[row.status], if (fmts.isNotEmpty) fmts].where((s) => s != null && s.isNotEmpty).join('\n')),
       isThreeLine: true,
@@ -315,7 +337,7 @@ class BookPage extends StatelessWidget {
           ),
           body: ListView(padding: const EdgeInsets.all(16), children: [
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Cover(b.coverUrl, w: 100),
+              Cover(b.coverUrl, w: 100, tag: 'cover-${b.id}'),
               const SizedBox(width: 16),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(b.title, style: Theme.of(context).textTheme.titleLarge),
@@ -497,7 +519,18 @@ class Stats extends StatelessWidget {
             final byFmt = <String, int>{};
             for (final r in done) { byFmt[r.format] = (byFmt[r.format] ?? 0) + 1; }
             final mins = done.fold<int>(0, (a, r) => a + (r.minutes ?? 0));
-            Widget t(String k, String v) => Card(child: ListTile(title: Text(k), trailing: Text(v, style: Theme.of(context).textTheme.titleLarge)));
+            Widget t(String k, String v) {
+              final n = int.tryParse(v); // integer stats count up
+              final style = Theme.of(context).textTheme.titleLarge;
+              return Card(
+                child: ListTile(
+                  title: Text(k),
+                  trailing: n == null
+                      ? Text(v, style: style)
+                      : TweenAnimationBuilder<int>(tween: IntTween(begin: 0, end: n), duration: const Duration(milliseconds: 700), curve: Curves.easeOutCubic, builder: (_, x, _) => Text('$x', style: style)),
+                ),
+              );
+            }
             return ListView(padding: const EdgeInsets.all(12), children: [
               t('Books tracked', '${books.length}'),
               t('Finished', '${done.length}'),

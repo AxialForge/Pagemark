@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 class PTheme {
@@ -7,6 +8,10 @@ class PTheme {
   const PTheme(this.id, this.name, this.seed, this.brightness);
   ThemeData get data => ThemeData(
         useMaterial3: true,
+        pageTransitionsTheme: const PageTransitionsTheme(builders: {
+          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        }),
         colorScheme: ColorScheme.fromSeed(seedColor: seed, brightness: brightness),
       );
 }
