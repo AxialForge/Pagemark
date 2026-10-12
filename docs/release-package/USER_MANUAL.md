@@ -113,8 +113,8 @@ Tap the **style icon** at the top of the Library to choose how your books are dr
 |---|---|
 | **Classic** | A row per book: cover, title, series, status, format, rating and a progress bar |
 | **Cover wall** | A grid of covers with rating stars and a progress strip; titles underneath |
-| **Bookshelf** | Covers standing on wooden shelves, filled edge to edge |
-| **Spines** | Books side by side like a real shelf — colour from the title, width from the page count; a ribbon marks what you're reading and a tick marks what you've finished |
+| **Bookshelf** | Covers standing on wooden shelves, filled edge to edge; can be grouped under named shelves |
+| **Spines** | Cloth-bound spines in natural binding colours with gold-leaf lettering and gilt bands; width follows the page count. A ribbon pokes out of the book you're reading and a small gold seal marks the ones you've finished. The author's surname joins the title when there is room |
 | **Compact** | One tight line per book — the most books per screen |
 
 
@@ -126,6 +126,14 @@ Tap the **style icon** at the top of the Library to choose how your books are dr
 <div class="shots two"><figure><img src="../screenshots/skin-spines.jpg" alt="Spines"><figcaption>Spines</figcaption></figure><figure><img src="../screenshots/skin-compact.jpg" alt="Compact"><figcaption>Compact</figcaption></figure></div>
 
 Filters, search, sort and shelves work the same in every style, and tapping any book opens its page.
+
+#### Naming your shelves on the bookcase
+
+In **Bookshelf** or **Spines**, open the style picker and switch on **Group by my shelves**. Each of your named shelves ("Comfort reads", "Book club" …) becomes its own wooden shelf under a brass **nameplate** showing its name and how many books it holds; books that aren't on any shelf collect under **Not on a shelf**. **Tap a nameplate to rename that shelf** — the new name appears everywhere (filters, the book page, Manage shelves). A book on two shelves stands on both. Create shelves from a book's page (**+ Shelf**) or **⋮ → Manage shelves**.
+
+<div class="shots "><figure><img src="../screenshots/skin-shelf-grouped.jpg" alt="Bookshelf grouped by shelf"><figcaption>Bookshelf grouped by shelf</figcaption></figure><figure><img src="../screenshots/theme-sage.jpg" alt="Sage, with Spines grouped"><figcaption>Sage, with Spines grouped</figcaption></figure><figure><img src="../screenshots/theme-lamplight.jpg" alt="Lamplight"><figcaption>Lamplight</figcaption></figure></div>
+
+
 
 ## 7. Stats
 
@@ -171,9 +179,20 @@ On the lock screen tap **Forgot PIN?**, enter the recovery code and a new PIN. Y
 
 ## 9. Themes
 
-Settings → Theme: **Light** or **Dark**, in a **blue** ("Him") or **rose/plum** ("Her") palette. Your choice is remembered.
+Settings → **Theme** offers six looks, each named for its mood:
 
-<div class="shots two"><figure><img src="../screenshots/dark-library.jpg" alt="Dark · Her (plum)"><figcaption>Dark · Her (plum)</figcaption></figure><figure><img src="../screenshots/dark-stats.jpg" alt="Stats in the dark theme"><figcaption>Stats in the dark theme</figcaption></figure></div>
+| Theme | Mode | Feel |
+|---|---|---|
+| **Harbor** | Light | calm slate blue (the default) |
+| **Midnight Ink** | Dark | deep blue-black |
+| **Rosewater** | Light | soft rose |
+| **Plum Velvet** | Dark | rich plum |
+| **Sage** | Light | gentle library green |
+| **Lamplight** | Dark | warm reading-lamp amber |
+
+Your choice is remembered. The Library styles pick up the theme too: the bookcase wall, the spine colours and the rating stars all follow it.
+
+<div class="shots two"><figure><img src="../screenshots/dark-library.jpg" alt="Plum Velvet"><figcaption>Plum Velvet (dark)</figcaption></figure><figure><img src="../screenshots/dark-stats.jpg" alt="Stats in the dark theme"><figcaption>Stats in the dark theme</figcaption></figure></div>
 
 
 

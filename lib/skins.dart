@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'db.dart';
 import 'features.dart';
+import 'main.dart';
 import 'ui.dart';
 
 /// How the Library draws your books. Same data, five looks; the choice is remembered per library.
@@ -10,7 +11,7 @@ enum LibrarySkin {
   classic('Classic', 'Cover, title, status and rating on every row', Icons.view_list_rounded),
   grid('Cover wall', 'A grid of covers with ratings and progress', Icons.grid_view_rounded),
   shelf('Bookshelf', 'Covers standing on wooden shelves', Icons.shelves),
-  spines('Spines', 'Books side by side, sized by page count', Icons.menu_book_rounded),
+  spines('Spines', 'Cloth-bound spines, sized by page count', Icons.menu_book_rounded),
   compact('Compact', 'One tight line per book - fits the most', Icons.format_list_bulleted_rounded);
 
   final String label, blurb;
@@ -20,48 +21,98 @@ enum LibrarySkin {
 
 LibrarySkin skinById(String? id) => LibrarySkin.values.firstWhere((s) => s.name == id, orElse: () => LibrarySkin.classic);
 
-Future<LibrarySkin?> showSkinPicker(BuildContext context, LibrarySkin current) => showModalBottomSheet<LibrarySkin>(
+/// Bottom sheet to pick the style. [onGrouped] fires immediately when the "Group by my shelves" switch changes
+/// (it applies to Bookshelf and Spines); picking a style closes the sheet and returns it.
+Future<LibrarySkin?> showSkinPicker(BuildContext context, LibrarySkin current,
+        {bool grouped = false, ValueChanged<bool>? onGrouped, bool hasShelves = false}) =>
+    showModalBottomSheet<LibrarySkin>(
       context: context,
       showDragHandle: true,
       builder: (c) => SafeArea(
-        child: ListView(shrinkWrap: true, children: [ // scrolls on short screens (landscape, small phones)
-          const ListTile(title: Text('Library style', style: TextStyle(fontWeight: FontWeight.bold))),
-          for (final s in LibrarySkin.values)
-            ListTile(
-              leading: Icon(s.icon),
-              title: Text(s.label),
-              subtitle: Text(s.blurb),
-              trailing: s == current ? const Icon(Icons.check) : null,
-              selected: s == current,
-              onTap: () => Navigator.pop(c, s),
-            ),
-          const SizedBox(height: 8),
-        ]),
+        child: StatefulBuilder(
+          builder: (c, setSheet) => ListView(shrinkWrap: true, children: [ // scrolls on short screens (landscape, small phones)
+            const ListTile(title: Text('Library style', style: TextStyle(fontWeight: FontWeight.bold))),
+            for (final s in LibrarySkin.values)
+              ListTile(
+                leading: Icon(s.icon),
+                title: Text(s.label),
+                subtitle: Text(s.blurb),
+                trailing: s == current ? const Icon(Icons.check) : null,
+                selected: s == current,
+                onTap: () => Navigator.pop(c, s),
+              ),
+            if (onGrouped != null) ...[
+              const Divider(height: 8),
+              SwitchListTile(
+                secondary: const Icon(Icons.label_outline),
+                title: const Text('Group by my shelves'),
+                subtitle: Text(hasShelves
+                    ? 'Bookshelf and Spines: one wooden shelf per named shelf, with a nameplate (tap it to rename)'
+                    : 'Create a shelf first: Library menu, then Manage shelves'),
+                value: grouped && hasShelves,
+                onChanged: hasShelves ? (v) { grouped = v; onGrouped(v); setSheet(() {}); } : null,
+              ),
+            ],
+            const SizedBox(height: 8),
+          ]),
+        ),
       ),
     );
+
+/// A named group of books (one of the user's shelves, or "Not on a shelf").
+class ShelfGroup {
+  final int? shelfId; // null = the catch-all group
+  final String? label; // null = no nameplate (ungrouped view)
+  final List<BookRow> rows;
+  const ShelfGroup(this.shelfId, this.label, this.rows);
+  bool get renamable => shelfId != null;
+}
+
+/// One group per non-empty shelf (a book on two shelves appears on both) plus "Not on a shelf".
+/// With no shelves at all, a single unlabelled group, so the ungrouped look is unchanged.
+List<ShelfGroup> groupRows(List<BookRow> rows, List<Shelf> shelves, Map<int, Set<int>> shelfBooks) {
+  final out = <ShelfGroup>[];
+  final placed = <int>{};
+  for (final s in shelves) {
+    final inShelf = rows.where((r) => shelfBooks[s.id]?.contains(r.book.id) ?? false).toList();
+    if (inShelf.isEmpty) continue;
+    placed.addAll(inShelf.map((r) => r.book.id));
+    out.add(ShelfGroup(s.id, s.name, inShelf));
+  }
+  final rest = rows.where((r) => !placed.contains(r.book.id)).toList();
+  if (rest.isNotEmpty) out.add(ShelfGroup(null, out.isEmpty ? null : 'Not on a shelf', rest));
+  return out;
+}
 
 /// Draws [rows] in the chosen [skin], cross-fading when the skin changes.
 class SkinView extends StatelessWidget {
   final LibrarySkin skin;
   final List<BookRow> rows;
-  const SkinView({super.key, required this.skin, required this.rows});
+  final bool groupByShelf; // Bookshelf / Spines only
+  final List<Shelf> shelves;
+  final Map<int, Set<int>> shelfBooks;
+  const SkinView({super.key, required this.skin, required this.rows, this.groupByShelf = false, this.shelves = const [], this.shelfBooks = const {}});
 
   @override
-  Widget build(BuildContext context) => AnimatedSwitcher(
-        duration: const Duration(milliseconds: 280),
-        switchInCurve: Curves.easeOutCubic,
-        transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
-        child: KeyedSubtree(
-          key: ValueKey(skin),
-          child: switch (skin) {
-            LibrarySkin.classic => ClassicList(rows: rows),
-            LibrarySkin.grid => CoverGrid(rows: rows),
-            LibrarySkin.shelf => BookshelfView(rows: rows),
-            LibrarySkin.spines => SpinesView(rows: rows),
-            LibrarySkin.compact => CompactList(rows: rows),
-          },
-        ),
-      );
+  Widget build(BuildContext context) {
+    final grouped = groupByShelf && (skin == LibrarySkin.shelf || skin == LibrarySkin.spines);
+    final groups = grouped ? groupRows(rows, shelves, shelfBooks) : [ShelfGroup(null, null, rows)];
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 280),
+      switchInCurve: Curves.easeOutCubic,
+      transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
+      child: KeyedSubtree(
+        key: ValueKey('${skin.name}-$grouped'),
+        child: switch (skin) {
+          LibrarySkin.classic => ClassicList(rows: rows),
+          LibrarySkin.grid => CoverGrid(rows: rows),
+          LibrarySkin.shelf => BookshelfView(groups: groups),
+          LibrarySkin.spines => SpinesView(groups: groups),
+          LibrarySkin.compact => CompactList(rows: rows),
+        },
+      ),
+    );
+  }
 }
 
 const _bottomPad = 96.0; // clear of the Add button
@@ -70,22 +121,38 @@ void _open(BuildContext context, BookRow r) => Navigator.push(context, MaterialP
 
 int _hash(String s) => s.codeUnits.fold(7, (a, c) => (a * 31 + c) & 0x7fffffff);
 
-/// A stable colour per title, nudged 16% toward the theme's primary so spines and blank covers feel at home in
-/// every theme (blue for "Him", rose/plum for "Her") while staying distinguishable from each other.
-Color bookColorFor(String title, ColorScheme cs) {
-  final dark = cs.brightness == Brightness.dark;
-  final h = _hash(title);
-  final base = HSLColor.fromAHSL(1, (h % 360).toDouble(), 0.42 + (h % 5) * 0.04, dark ? 0.30 : 0.42).toColor();
-  return Color.lerp(base, cs.primary, 0.16)!;
-}
+// ───────────────────────── Colour (cloth-bound palette) ─────────────────────────
+/// Gold leaf, as stamped on cloth and leather bindings.
+const _gilt = Color(0xFFDDBF74);
+
+/// Dark, natural binding colours (oxblood, bottle green, navy ...), so gilt lettering always reads.
+const _cloth = [
+  Color(0xFF6B1E2A), Color(0xFF1F4A35), Color(0xFF1F2F55), Color(0xFF2B2E34), Color(0xFF5A3A22), Color(0xFF24474D), Color(0xFF4B2A55),
+  Color(0xFF55512A), Color(0xFF7A3524), Color(0xFF2D3A4A), Color(0xFF1B3B2C), Color(0xFF6A4B2A), Color(0xFF402B3A), Color(0xFF3A3F2B),
+];
 
 double _contrast(Color a, Color b) {
   final la = a.computeLuminance(), lb = b.computeLuminance();
   return (math.max(la, lb) + 0.05) / (math.min(la, lb) + 0.05);
 }
 
-/// Text colour with the better WCAG contrast against [c] (black or white): always at least ~4.6:1.
-Color onBookColor(Color c) => _contrast(c, Colors.white) >= _contrast(c, Colors.black87) ? Colors.white : Colors.black87;
+/// A stable binding colour per title, nudged 10% toward the theme's primary so a bookcase feels at home in every theme,
+/// and darkened if needed so gilt lettering keeps at least 4.6:1 contrast.
+Color bookColorFor(String title, ColorScheme cs) {
+  var c = _cloth[_hash(title) % _cloth.length];
+  c = Color.lerp(c, cs.primary, 0.10)!;
+  if (cs.brightness == Brightness.dark) c = Color.lerp(c, Colors.black, 0.10)!;
+  for (var i = 0; i < 12 && _contrast(c, _gilt) < 4.6; i++) {
+    c = Color.lerp(c, Colors.black, 0.08)!;
+  }
+  return c;
+}
+
+/// Lettering colour for a binding: gilt when it reads (always, for [bookColorFor] colours), else the best of white/black.
+Color onBookColor(Color c) {
+  if (_contrast(c, _gilt) >= 4.5) return _gilt;
+  return _contrast(c, Colors.white) >= _contrast(c, Colors.black87) ? Colors.white : Colors.black87;
+}
 
 Color _bookColor(BuildContext context, String title) => bookColorFor(title, Theme.of(context).colorScheme);
 Color _onColor(Color c) => onBookColor(c);
@@ -164,7 +231,7 @@ class _Blank extends StatelessWidget {
       decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(4)),
       alignment: Alignment.center,
       child: Text(title, textAlign: TextAlign.center, maxLines: 5, overflow: TextOverflow.ellipsis,
-          style: TextStyle(color: _onColor(c), fontSize: math.max(9, w / 9), fontWeight: FontWeight.w700, height: 1.15)),
+          style: TextStyle(color: _onColor(c), fontFamily: 'serif', fontSize: math.max(9, w / 9), fontWeight: FontWeight.w700, height: 1.15)),
     );
   }
 }
@@ -222,7 +289,7 @@ class CoverGrid extends StatelessWidget {
       });
 }
 
-// ───────────────────────── Shelves ─────────────────────────
+// ───────────────────────── Shared shelf furniture ─────────────────────────
 class _Board extends StatelessWidget {
   const _Board();
   @override
@@ -240,7 +307,57 @@ class _Board extends StatelessWidget {
   }
 }
 
-/// Lays out [items] (with their widths) into rows that fit [maxW]; returns the index ranges of each row.
+/// Brass nameplate screwed above a group of shelves. Tap to rename (real shelves only).
+class _Nameplate extends StatelessWidget {
+  final ShelfGroup group;
+  const _Nameplate(this.group);
+
+  Future<void> _rename(BuildContext context) async {
+    final n = await ask(context, 'Rename shelf', group.label ?? '');
+    if (n != null && n.trim().isNotEmpty && n.trim() != group.label) await db.renameShelf(group.shelfId!, n);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const ink = Color(0xFF3B2A12);
+    Widget screw() => Container(width: 5, height: 5, decoration: BoxDecoration(shape: BoxShape.circle, color: ink.withValues(alpha: 0.55)));
+    final plate = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(3),
+        gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFFE9D08C), Color(0xFFB8913F), Color(0xFFD9BC6E)]),
+        border: Border.all(color: const Color(0xFF8A6A25), width: 0.8),
+        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 3, offset: Offset(0, 2))],
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        screw(),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            '${group.label!.toUpperCase()}  ·  ${group.rows.length}',
+            maxLines: 1, overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: ink, fontFamily: 'serif', fontSize: 11.5, fontWeight: FontWeight.w700, letterSpacing: 1.4),
+          ),
+        ),
+        const SizedBox(width: 8),
+        screw(),
+      ]),
+    );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Semantics(
+          label: '${group.label}, ${group.rows.length} books${group.renamable ? ', tap to rename' : ''}',
+          button: group.renamable,
+          child: group.renamable ? GestureDetector(onTap: () => _rename(context), child: plate) : plate,
+        ),
+      ),
+    );
+  }
+}
+
+/// Lays widths into rows that fit [maxW]; returns the index lists of each row.
 List<List<int>> _packRows(List<double> widths, double maxW, double gap) {
   final rows = <List<int>>[];
   var cur = <int>[], used = 0.0;
@@ -258,40 +375,70 @@ List<List<int>> _packRows(List<double> widths, double maxW, double gap) {
   return rows;
 }
 
-class BookshelfView extends StatelessWidget {
-  final List<BookRow> rows;
-  const BookshelfView({super.key, required this.rows});
+/// A bookcase: for each group an optional nameplate, then its books packed onto shelves. [bookWidth] gives each book's
+/// width; [builder] draws one book.
+class _Bookcase extends StatelessWidget {
+  final List<ShelfGroup> groups;
+  final double Function(double avail) coverWidth; // fixed width for shelf covers, or -1 to use bookWidth
+  final double? Function(BookRow r) bookWidth;
+  final double gap;
+  final Widget Function(BookRow r, double w, int index) builder;
+  final double topRoom; // headroom above the tallest book (ribbons)
+  const _Bookcase({required this.groups, required this.coverWidth, required this.bookWidth, required this.gap, required this.builder, this.topRoom = 10});
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(builder: (context, box) {
-        const side = 16.0, gap = 10.0;
+        const side = 16.0;
         final avail = box.maxWidth - side * 2;
-        final n = math.max(2, ((avail + gap) / (84 + gap)).floor()); // covers per shelf
-        final cw = ((avail - gap * (n - 1)) / n).clamp(70.0, 130.0); // stretch covers so each shelf is filled edge to edge
-        final packed = _packRows(List.filled(rows.length, cw), avail + 0.5, gap);
+        final cw = coverWidth(avail);
         final cs = Theme.of(context).colorScheme;
-        return ListView.builder(
-          padding: const EdgeInsets.only(top: 12, bottom: _bottomPad),
-          itemCount: packed.length,
-          itemBuilder: (_, ri) => Padding(
-            padding: const EdgeInsets.only(bottom: 18),
-            child: Column(children: [
-              Container(
-                color: _wall(cs),
-                padding: const EdgeInsets.fromLTRB(side, 10, side, 0),
-                child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                  for (final i in packed[ri])
-                    Padding(
-                      padding: EdgeInsets.only(right: i == packed[ri].last ? 0 : gap),
-                      child: _ShelfBook(row: rows[i], w: cw, index: i),
-                    ),
-                ]),
-              ),
-              const _Board(),
-            ]),
-          ),
-        );
+        final items = <Widget>[];
+        var index = 0;
+        for (final g in groups) {
+          if (g.label != null) items.add(_Nameplate(g));
+          final widths = [for (final r in g.rows) cw > 0 ? cw : bookWidth(r)!];
+          final packed = _packRows(widths, avail + 0.5, gap);
+          for (final row in packed) {
+            items.add(Padding(
+              padding: const EdgeInsets.only(bottom: 18),
+              child: Column(children: [
+                Container(
+                  color: _wall(cs),
+                  padding: EdgeInsets.fromLTRB(side, topRoom, side, 0),
+                  child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                    for (final i in row)
+                      Padding(
+                        padding: EdgeInsets.only(right: i == row.last ? 0 : gap),
+                        child: builder(g.rows[i], widths[i], index++),
+                      ),
+                    const Spacer(),
+                  ]),
+                ),
+                const _Board(),
+              ]),
+            ));
+          }
+        }
+        return ListView(padding: const EdgeInsets.only(top: 12, bottom: _bottomPad), children: items);
       });
+}
+
+// ───────────────────────── Bookshelf (covers) ─────────────────────────
+class BookshelfView extends StatelessWidget {
+  final List<ShelfGroup> groups;
+  const BookshelfView({super.key, required this.groups});
+
+  @override
+  Widget build(BuildContext context) => _Bookcase(
+        groups: groups,
+        gap: 10,
+        coverWidth: (avail) {
+          final n = math.max(2, ((avail + 10) / (84 + 10)).floor()); // covers per shelf
+          return ((avail - 10 * (n - 1)) / n).clamp(70.0, 130.0); // stretch so each shelf is filled edge to edge
+        },
+        bookWidth: (_) => null,
+        builder: (r, w, i) => _ShelfBook(row: r, w: w, index: i),
+      );
 }
 
 class _ShelfBook extends StatelessWidget {
@@ -323,54 +470,113 @@ class _ShelfBook extends StatelessWidget {
   }
 }
 
-// ───────────────────────── Spines ─────────────────────────
+// ───────────────────────── Spines (cloth-bound) ─────────────────────────
 class SpinesView extends StatelessWidget {
-  final List<BookRow> rows;
-  const SpinesView({super.key, required this.rows});
+  final List<ShelfGroup> groups;
+  const SpinesView({super.key, required this.groups});
 
-  static double widthOf(Book b) => ((b.pages ?? 280) / 14).clamp(30.0, 64.0);
-  static double heightOf(Book b) => 150.0 + (_hash(b.title) % 4) * 12;
+  static double widthOf(Book b) => ((b.pages ?? 280) / 14).clamp(30.0, 62.0);
+  static double heightOf(Book b) => 168.0 + (_hash(b.title) % 5) * 8;
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(builder: (context, box) {
-        const side = 16.0, gap = 3.0;
-        final packed = _packRows([for (final r in rows) widthOf(r.book)], box.maxWidth - side * 2, gap);
-        final cs = Theme.of(context).colorScheme;
-        return ListView.builder(
-          padding: const EdgeInsets.only(top: 12, bottom: _bottomPad),
-          itemCount: packed.length,
-          itemBuilder: (_, ri) => Padding(
-            padding: const EdgeInsets.only(bottom: 18),
-            child: Column(children: [
-              Container(
-                color: _wall(cs),
-                padding: const EdgeInsets.fromLTRB(side, 10, side, 0),
-                child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                  for (final i in packed[ri])
-                    Padding(padding: EdgeInsets.only(right: i == packed[ri].last ? 0 : gap), child: _Spine(row: rows[i], index: i)),
-                  const Spacer(),
-                ]),
-              ),
-              const _Board(),
-            ]),
-          ),
-        );
-      });
+  Widget build(BuildContext context) => _Bookcase(
+        groups: groups,
+        gap: 2,
+        topRoom: 16,
+        coverWidth: (_) => -1,
+        bookWidth: (r) => widthOf(r.book),
+        builder: (r, w, i) => _Spine(row: r, index: i),
+      );
+}
+
+/// Paints cloth: cylindrical shading, woven grain, a worn hinge at each edge, headbands and gilt bands.
+class _SpinePainter extends CustomPainter {
+  final Color base;
+  final int seed;
+  final bool bands;
+  const _SpinePainter(this.base, this.seed, this.bands);
+
+  Color _shade(Color c, double t) => Color.lerp(c, t < 0 ? Colors.black : Colors.white, t.abs())!;
+
+  @override
+  void paint(Canvas canvas, Size s) {
+    final rect = Offset.zero & s;
+    final body = RRect.fromRectAndCorners(rect, topLeft: const Radius.circular(2), topRight: const Radius.circular(2));
+    // rounded spine: dark at both edges, soft highlight just left of centre
+    canvas.drawRRect(
+      body,
+      Paint()
+        ..shader = LinearGradient(
+          colors: [_shade(base, -0.42), _shade(base, -0.12), _shade(base, 0.09), base, _shade(base, -0.10), _shade(base, -0.38)],
+          stops: const [0, 0.14, 0.38, 0.62, 0.86, 1],
+        ).createShader(rect),
+    );
+    // top-to-bottom ageing: a little darker at the foot (shelf shadow) and head
+    canvas.drawRRect(
+      body,
+      Paint()..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Colors.black.withValues(alpha: 0.18), Colors.transparent, Colors.transparent, Colors.black.withValues(alpha: 0.26)], stops: const [0, 0.08, 0.8, 1]).createShader(rect),
+    );
+    // cloth grain: short fibres, deterministic per book
+    final r = math.Random(seed);
+    final fibre = Paint()..strokeWidth = 0.6;
+    final n = (s.width * s.height / 38).round();
+    for (var i = 0; i < n; i++) {
+      final x = r.nextDouble() * s.width, y = r.nextDouble() * s.height;
+      fibre.color = (r.nextBool() ? Colors.white : Colors.black).withValues(alpha: 0.03 + r.nextDouble() * 0.06);
+      canvas.drawLine(Offset(x, y), Offset(x + 1.2 + r.nextDouble() * 1.8, y), fibre);
+    }
+    // hinges (the grooves where board meets spine)
+    final groove = Paint()..strokeWidth = 1;
+    groove.color = Colors.black.withValues(alpha: 0.35);
+    canvas.drawLine(const Offset(3, 2), Offset(3, s.height), groove);
+    canvas.drawLine(Offset(s.width - 3, 2), Offset(s.width - 3, s.height), groove);
+    groove.color = Colors.white.withValues(alpha: 0.07);
+    canvas.drawLine(const Offset(4, 2), Offset(4, s.height), groove);
+    canvas.drawLine(Offset(s.width - 4, 2), Offset(s.width - 4, s.height), groove);
+    // headbands
+    canvas.drawRect(Rect.fromLTWH(0, 0, s.width, 2.5), Paint()..color = Colors.black.withValues(alpha: 0.28));
+    canvas.drawRect(Rect.fromLTWH(0, s.height - 3, s.width, 3), Paint()..color = Colors.black.withValues(alpha: 0.30));
+    // gilt bands (blind-stamped pairs near head and tail)
+    if (bands) {
+      final foil = Paint()..color = _gilt.withValues(alpha: 0.78);
+      for (final y in [12.0, s.height - 16]) {
+        canvas.drawRect(Rect.fromLTWH(5, y, s.width - 10, 1.1), foil);
+        canvas.drawRect(Rect.fromLTWH(5, y + 3.2, s.width - 10, 0.6), foil..color = _gilt.withValues(alpha: 0.55));
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SpinePainter o) => o.base != base || o.seed != seed || o.bands != bands;
+}
+
+String _surname(String author) {
+  final first = author.split(',').first.trim();
+  return first.isEmpty ? '' : first.split(RegExp(r'\s+')).last;
 }
 
 class _Spine extends StatelessWidget {
   final BookRow row;
   final int index;
   const _Spine({required this.row, required this.index});
+
   @override
   Widget build(BuildContext context) {
     final b = row.book;
+    final cs = Theme.of(context).colorScheme;
     final c = _bookColor(context, b.title);
-    final on = _onColor(c);
     final w = SpinesView.widthOf(b), h = SpinesView.heightOf(b);
     final reading = row.status == 'reading';
     final done = row.status == 'finished';
-    final tertiary = Theme.of(context).colorScheme.tertiary;
+    final author = _surname(b.author);
+    // The author's surname shares the spine only when the title still fits beside it (titles always win).
+    final titleSize = math.min(13.5, w / 2.7);
+    final room = h - 48 - 10;
+    final showAuthor = w >= 40 && author.isNotEmpty && b.title.length * titleSize * 0.55 + author.length * 8 * 0.95 + 14 <= room;
+    final foil = TextStyle(
+      color: _gilt, fontFamily: 'serif', fontWeight: FontWeight.w600, letterSpacing: 0.6,
+      shadows: const [Shadow(color: Colors.black54, offset: Offset(0.6, 0.8), blurRadius: 0.4)], // stamped into the cloth
+    );
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: Duration(milliseconds: 320 + math.min(index, 12) * 30),
@@ -386,27 +592,34 @@ class _Spine extends StatelessWidget {
           },
           child: Container(
             width: w, height: h,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
-              gradient: LinearGradient(colors: [Color.lerp(c, Colors.black, 0.28)!, c, Color.lerp(c, Colors.white, 0.10)!, Color.lerp(c, Colors.black, 0.22)!], stops: const [0, 0.25, 0.6, 1]),
-              boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 3, offset: Offset(1, 0))],
-            ),
-            child: Stack(children: [
-              Positioned(top: 14, left: 0, right: 0, child: Container(height: 2, color: on.withValues(alpha: 0.35))),
-              Positioned(top: 19, left: 0, right: 0, child: Container(height: 1, color: on.withValues(alpha: 0.25))),
+            decoration: const BoxDecoration(boxShadow: [BoxShadow(color: Colors.black45, blurRadius: 4, offset: Offset(1.5, 0))]),
+            child: Stack(clipBehavior: Clip.none, children: [
+              Positioned.fill(child: CustomPaint(painter: _SpinePainter(c, _hash(b.title), w >= 34))),
               Positioned(
-                top: 28, bottom: 24, left: 0, right: 0,
+                top: 24, bottom: 24, left: 5, right: 5,
                 child: RotatedBox(
                   quarterTurns: 3,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Align(alignment: Alignment.centerLeft, child: Text(b.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: on, fontSize: math.min(13, w / 2.6), fontWeight: FontWeight.w700))),
-                  ),
+                  child: Row(children: [
+                    Expanded(child: Align(alignment: Alignment.centerLeft, child: Text(b.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: foil.copyWith(fontSize: titleSize)))),
+                    if (showAuthor) ...[
+                      const SizedBox(width: 6),
+                      Text(author.toUpperCase(), maxLines: 1, style: foil.copyWith(fontSize: 8, letterSpacing: 1.3, fontWeight: FontWeight.w500, color: _gilt.withValues(alpha: 0.8))),
+                    ],
+                  ]),
                 ),
               ),
-              if (reading) Positioned(top: 0, right: 5, child: Container(width: 8, height: 22, decoration: BoxDecoration(color: tertiary, borderRadius: const BorderRadius.vertical(bottom: Radius.circular(3))))),
-              if (done) Positioned(bottom: 5, left: 0, right: 0, child: Icon(Icons.check_rounded, size: 14, color: on.withValues(alpha: 0.85))),
-              Positioned(bottom: 22, left: 0, right: 0, child: Container(height: 1, color: on.withValues(alpha: 0.25))),
+              // a marker ribbon sticking out of the head of the book you're reading
+              if (reading)
+                Positioned(
+                  top: -9, right: w * 0.3,
+                  child: Container(width: 4.5, height: 15, decoration: BoxDecoration(color: cs.tertiary, boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 1.5)])),
+                ),
+              // finished: a small gilt seal near the foot
+              if (done)
+                Positioned(
+                  bottom: 22, left: 0, right: 0,
+                  child: Center(child: Container(width: 6, height: 6, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: _gilt.withValues(alpha: 0.85), width: 0.9)))),
+                ),
             ]),
           ),
         ),

@@ -23,7 +23,7 @@ A private, fully local book tracker for Android (iOS planned): log what you read
 - **Locked library**: PIN (attempt limits + recovery code) or fingerprint; re-locks on background; blocks screenshots.
 - **Your data, your files**: CSV/JSON export; whole-database export with optional passphrase encryption.
 - **Backups**: scheduled, verified, optionally encrypted backups to *your own* Google Drive; safe restore.
-- **Themes**: light/dark in two palettes, with smooth transitions.
+- **Six themes**: Harbor, Midnight Ink, Rosewater, Plum Velvet, Sage and Lamplight, with smooth transitions.
 - **Updates**: in-app updater with release notes and an offline version history.
 
 ## Documentation

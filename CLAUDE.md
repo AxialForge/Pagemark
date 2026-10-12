@@ -41,7 +41,7 @@ lib/
   lookup.dart       Open Library search/ISBN/description (retry + backoff, injectable http client), cover URLs
   isbn.dart         ISBN-10/13 checksums, normalise to 13, scanner filter
   log.dart          rolling event log (batched writes, 200 KB cap) + global error handlers
-  themes.dart       4 themes: light/dark × him (blue) / her (rose/plum)
+  themes.dart       6 themes (ids light_him/dark_him/light_her/dark_her are kept for saved prefs; names are Harbor, Midnight Ink, Rosewater, Plum Velvet, Sage, Lamplight)
   lock.dart         PIN (PBKDF2, attempt limiting, recovery code) + device auth; lock_ui.dart = gate, setup, confirm-current
   privacy.dart      FLAG_SECURE channel, locked-cover cache, temp-export cleanup, navigator key
   crypto_backup.dart  AES-256-GCM passphrase container for backups/exports (PGMKENC1)

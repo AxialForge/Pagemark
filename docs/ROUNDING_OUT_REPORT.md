@@ -14,6 +14,8 @@ Written 2026-10-11 from a read-through of the 0.1.0 source (`lib/*.dart`, Androi
 
 **Fixed in 0.3.0:** IB-34, 41, 53, 54, 55, 56, 57, 58, 60 (dedupe), 61, 62, 69, 72, 73, 74, 76; IM-33 (torch + feedback), IM-38, IM-39; FM-19 (pasted ISBN), FM-29 (backup status), FS-01 (checksum), FS-53 (diagnostics log).
 
+**Also in 0.4.2:** IM-17 (theme names), shelf nameplates, realistic spines, two new themes.
+
 **Added in 0.4.2:** Library styles (FB-73 grid/compact views, UI-09, UI-10 partly).
 
 **Fixed in 0.4.2:** vault Trash gap, unused permissions, PIN-after-restore note, search noise, debug updater preview (see the "Found while writing the documentation" section at the end).

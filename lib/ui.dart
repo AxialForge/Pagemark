@@ -127,6 +127,7 @@ class _LibraryState extends State<Library> {
   String q = '', status = 'all', format = 'all', sort = 'added';
   int? shelf;
   LibrarySkin skin = LibrarySkin.classic;
+  bool groupShelves = false; // Bookshelf/Spines: one named wooden shelf per user shelf
   List<Shelf> shelves = [];
   Map<int, Set<int>> shelfBooks = {}; // shelf id -> book ids
   StreamSubscription<List<Shelf>>? _shelfSub;
@@ -142,6 +143,7 @@ class _LibraryState extends State<Library> {
     format = prefs.getString('${_pk}_format') ?? 'all';
     shelf = prefs.getInt('${_pk}_shelf');
     skin = skinById(prefs.getString('${_pk}_skin'));
+    groupShelves = prefs.getBool('${_pk}_group') ?? false;
     _shelfSub = db.watchShelves().listen((v) {
       if (!mounted) return;
       setState(() {
@@ -168,6 +170,7 @@ class _LibraryState extends State<Library> {
     prefs.setString('${_pk}_status', status);
     prefs.setString('${_pk}_format', format);
     prefs.setString('${_pk}_skin', skin.name);
+    prefs.setBool('${_pk}_group', groupShelves);
     shelf == null ? prefs.remove('${_pk}_shelf') : prefs.setInt('${_pk}_shelf', shelf!);
   }
 
@@ -178,7 +181,8 @@ class _LibraryState extends State<Library> {
         IconButton(
           icon: Icon(skin.icon), tooltip: 'Library style: ${skin.label}',
           onPressed: () async {
-            final picked = await showSkinPicker(context, skin);
+            final picked = await showSkinPicker(context, skin,
+                grouped: groupShelves, hasShelves: shelves.isNotEmpty, onGrouped: (v) { setState(() => groupShelves = v); _save(); });
             if (picked != null && picked != skin) { setState(() => skin = picked); _save(); }
           },
         ),
@@ -267,7 +271,7 @@ class _LibraryState extends State<Library> {
                       )
                     : const Center(child: Text('No matches.'));
               }
-              final list = SkinView(skin: skin, rows: rows);
+              final list = SkinView(skin: skin, rows: rows, groupByShelf: groupShelves, shelves: shelves, shelfBooks: shelfBooks);
               final reading = (snap.data ?? []).where((r) => r.status == 'reading').toList();
               final unfiltered = q.isEmpty && status == 'all' && format == 'all' && shelf == null;
               if (!unfiltered || reading.isEmpty) return list;
@@ -822,6 +826,7 @@ class SettingsPage extends StatelessWidget {
                 ListTile(
                   leading: CircleAvatar(backgroundColor: t.seed, radius: 12),
                   title: Text(t.name),
+                  subtitle: Text(t.mode),
                   trailing: id == t.id ? const Icon(Icons.check) : null,
                   onTap: () => themeId.value = t.id,
                 ),

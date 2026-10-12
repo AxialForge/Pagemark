@@ -37,7 +37,7 @@
 | Data portability | CSV and JSON export of the main library; whole-database export, optionally passphrase-encrypted |
 | Backup | Scheduled, verified backups to the user's own Google Drive; optional AES-256 encryption; safe restore with automatic safety copy |
 | Care | Trash with 30-day recovery, in-app updates with release notes, offline version history, diagnostics log |
-| Look | Light/dark × two colour palettes, animated transitions |
+| Look | Six named themes (Harbor, Midnight Ink, Rosewater, Plum Velvet, Sage, Lamplight), animated transitions |
 
 
 <div class="shots "><figure><img src="../screenshots/library.jpg" alt="Library"><figcaption>Library</figcaption></figure><figure><img src="../screenshots/book-finished.jpg" alt="Book page"><figcaption>Book page</figcaption></figure><figure><img src="../screenshots/stats-goal.jpg" alt="Stats"><figcaption>Stats</figcaption></figure></div>

@@ -26,8 +26,16 @@ Closing the gaps found while using and documenting 0.4.1.
 - Library styles: choose how the Library looks — Classic, Cover wall, Bookshelf, Spines or Compact (style icon at the top of the
   Library). Remembered separately for the main and locked libraries, with a cross-fade when you switch.
 
+- Name your shelves on the bookcase: in Bookshelf and Spines, "Group by my shelves" gives each named shelf its own wooden shelf
+  under a brass nameplate (name + book count); tap a nameplate to rename the shelf. Books on no shelf collect under "Not on a shelf".
+- Two new themes: Sage (light green) and Lamplight (dark, warm amber).
+
 ### Changed
 
+- Spines look like real cloth-bound books: natural binding colours, woven-cloth grain, rounded-spine shading, hinges, headbands,
+  gold-leaf serif lettering with gilt bands, a ribbon marker for the book you're reading and a gold seal for finished ones.
+- Themes are renamed (no more "Him/Her"): Harbor, Midnight Ink, Rosewater and Plum Velvet; each now shows Light/Dark underneath.
+  Your saved choice carries over.
 - Book search ranks real editions first (cover, author matches) and tucks study guides, summaries and workbooks behind
   "Show N more results". If every result is that kind of book they are all shown.
 - Pagemark no longer requests storage, media or notification permissions it never used (they were merged in by plugins).
