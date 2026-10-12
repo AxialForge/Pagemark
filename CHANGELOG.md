@@ -12,6 +12,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+## [0.4.1] - 2026-10-12
+
+### Fixed
+
+- The book, read and add-book editors now release their text fields when closed (a small memory leak when opening many editors).
+
+### Notes
+
+- First release published after the repository went public, so it is the first update the in-app updater can find.
+
 ## [0.4.0] - 2026-10-12
 
 Day-to-day reading features.

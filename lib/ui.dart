@@ -356,6 +356,12 @@ class _AddBookState extends State<AddBook> {
   List<BookMeta> results = [];
   bool busy = false;
 
+  @override
+  void dispose() {
+    qc.dispose();
+    super.dispose();
+  }
+
   Future<void> run(Future<List<BookMeta>> Function() f) async {
     setState(() => busy = true);
     try {
@@ -637,6 +643,14 @@ class _EditBookState extends State<EditBook> {
     }.entries) e.key: TextEditingController(text: e.value)
   };
 
+  @override
+  void dispose() {
+    for (final ctl in c.values) {
+      ctl.dispose();
+    }
+    super.dispose();
+  }
+
   Widget f(String k, String label, {int lines = 1, bool num = false}) => Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: TextField(controller: c[k], maxLines: lines, keyboardType: num ? TextInputType.number : null, decoration: InputDecoration(labelText: label, border: const OutlineInputBorder())),
@@ -682,6 +696,15 @@ class _ReadEditorState extends State<ReadEditor> {
   late final narrator = TextEditingController(text: widget.read?.narrator);
   late final minutes = TextEditingController(text: '${widget.read?.minutes ?? ''}');
   late final page = TextEditingController(text: '${widget.read?.currentPage ?? ''}');
+
+  @override
+  void dispose() {
+    thoughts.dispose();
+    narrator.dispose();
+    minutes.dispose();
+    page.dispose();
+    super.dispose();
+  }
 
   Future<DateTime?> pick(DateTime? init) =>
       showDatePicker(context: context, initialDate: init ?? DateTime.now(), firstDate: DateTime(1950), lastDate: DateTime(2100));
