@@ -1,6 +1,6 @@
 # Builds the release files for a version: signed sideload APKs named the way the in-app updater expects,
 # plus the Google Play bundle. Needs android/key.properties (the keystore stays on this PC).
-#   powershell -File tool/build.ps1
+#   powershell -ExecutionPolicy Bypass -File tool/build.ps1
 $ErrorActionPreference = 'Stop'
 $env:JAVA_TOOL_OPTIONS = '-Djdk.net.unixdomain.tmpdir=C:/tmpj'   # JDK 25 + Gradle on Windows (see CLAUDE.md)
 Set-Location (Split-Path $PSScriptRoot -Parent)

@@ -132,7 +132,7 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 
 ## Release
 
-Bump `version:` in `pubspec.yaml` and update `CHANGELOG.md` in one commit, then build everything with `powershell -File tool/build.ps1` (signed `Pagemark-x.y.z-arm64.apk` / `-armv7.apk` for GitHub, plus `Pagemark-x.y.z-play.aab` for Google Play). Then:
+Bump `version:` in `pubspec.yaml` and update `CHANGELOG.md` in one commit, then build everything with `powershell -ExecutionPolicy Bypass -File tool/build.ps1` (signed `Pagemark-x.y.z-arm64.apk` / `-armv7.apk` for GitHub, plus `Pagemark-x.y.z-play.aab` for Google Play). Then:
 
 ```bash
 git tag vX.Y.Z && git push origin vX.Y.Z
