@@ -142,8 +142,20 @@ class DriveBackup {
   static const _store = FlutterSecureStorage();
 
   static Future<String?> passphrase() => _store.read(key: 'bk_pass');
-  static Future<void> setPassphrase(String? p) =>
-      p == null || p.isEmpty ? _store.delete(key: 'bk_pass') : _store.write(key: 'bk_pass', value: p);
+
+  /// Remembers that a passphrase was chosen (plain pref), so a lost secure-storage copy is noticed instead of
+  /// silently producing unencrypted uploads.
+  static Future<void> setPassphrase(String? p) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (p == null || p.isEmpty) {
+      await prefs.setBool('bk_enc', false);
+      await _store.delete(key: 'bk_pass');
+    } else {
+      await _store.write(key: 'bk_pass', value: p);
+      await prefs.setBool('bk_enc', true);
+    }
+    await prefs.remove('bk_hash'); // a new passphrase means the next run must upload again
+  }
 
   /// Upload a fresh database snapshot (encrypted when a passphrase is set), skipping the upload
   /// when nothing changed. Old copies are pruned only after the new one is verified on Drive.
@@ -153,9 +165,12 @@ class DriveBackup {
       final api = await _api(interactive: interactive);
       final snap = await Exporter.snapshotDb(db);
       final pass = await passphrase();
+      if ((pass == null || pass.isEmpty) && (p.getBool('bk_enc') ?? false)) {
+        throw const BackupAuthException('Your backup passphrase is no longer stored on this phone, so nothing was uploaded. Open Pagemark, go to Settings, Google Drive backup, and set the passphrase again.');
+      }
       final digest = hash.sha256.convert(await snap.readAsBytes()).toString();
       final coversSig = hash.sha256.convert((await CoverStore.signature()).codeUnits).toString();
-      final sig = '$digest|$coversSig|${pass == null || pass.isEmpty ? 'plain' : 'enc'}';
+      final sig = '$digest|$coversSig|${pass == null || pass.isEmpty ? 'plain' : 'enc:${hash.sha256.convert(pass.codeUnits).toString().substring(0, 8)}'}';
       if (!force && p.getString('bk_hash') == sig) {
         await snap.delete();
         await p.setString('bk_ok', DateTime.now().toIso8601String());

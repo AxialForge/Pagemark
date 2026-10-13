@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'lock.dart';
@@ -31,7 +31,7 @@ Future<String?> _pinDialog(BuildContext c, String title, {String hint = 'PIN'}) 
 Future<bool> confirmCurrent(BuildContext c, {String title = 'Enter your current PIN'}) async {
   final mode = await LockService.mode();
   if (mode == null) return true;
-  if (mode == 'device') return LockService.deviceAuth('Confirm it is you');
+  if (mode == 'device' || mode == 'lost' || mode == 'unavailable') return LockService.deviceAuth('Confirm it is you');
   if (!c.mounted) return false;
   final pin = await _pinDialog(c, title);
   if (pin == null || !c.mounted) return false;
@@ -45,23 +45,23 @@ Future<bool> confirmCurrent(BuildContext c, {String title = 'Enter your current 
     case PinResult.lockedOut:
       final left = await LockService.lockoutRemaining();
       if (!c.mounted) return false;
-      _snack(c, 'Too many attempts — try again in ${_fmt(left)}');
+      _snack(c, 'Too many attempts â€” try again in ${_fmt(left)}');
   }
   return false;
 }
 
 /// New PIN entered twice, then a one-time recovery code the user must acknowledge.
 Future<bool> setupPin(BuildContext c) async {
-  final a = await _pinDialog(c, 'New PIN (4–12 digits)');
+  final a = await _pinDialog(c, 'New PIN (4â€“12 digits)');
   if (a == null || !c.mounted) return false;
   if (a.length < 4 || a.length > 12) {
-    _snack(c, 'PIN must be 4–12 digits');
+    _snack(c, 'PIN must be 4â€“12 digits');
     return false;
   }
   final b = await _pinDialog(c, 'Re-enter the PIN', hint: 'Confirm PIN');
   if (b == null || !c.mounted) return false;
   if (a != b) {
-    _snack(c, 'PINs did not match — nothing changed');
+    _snack(c, 'PINs did not match â€” nothing changed');
     return false;
   }
   final code = await LockService.setPin(a);
@@ -77,7 +77,16 @@ Future<bool> setupPin(BuildContext c) async {
         SelectableText(code, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
       ]),
       actions: [
-        TextButton(onPressed: () => Clipboard.setData(ClipboardData(text: code)), child: const Text('Copy')),
+        TextButton(
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: code));
+            Timer(const Duration(seconds: 60), () async { // do not leave the recovery code on the clipboard
+              final now = await Clipboard.getData(Clipboard.kTextPlain);
+              if (now?.text == code) await Clipboard.setData(const ClipboardData(text: ''));
+            });
+          },
+          child: const Text('Copy (clears in 1 min)'),
+        ),
         FilledButton(onPressed: () => Navigator.pop(c), child: const Text('I saved it')),
       ],
     ),
@@ -166,7 +175,7 @@ class _LockGateState extends State<LockGate> {
         title: const Text('Reset with recovery code'),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           TextField(controller: code, textCapitalization: TextCapitalization.characters, decoration: const InputDecoration(labelText: 'Recovery code')),
-          TextField(controller: np, obscureText: true, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'New PIN (4–12 digits)')),
+          TextField(controller: np, obscureText: true, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'New PIN (4â€“12 digits)')),
         ]),
         actions: [
           TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
@@ -176,7 +185,7 @@ class _LockGateState extends State<LockGate> {
     );
     if (ok != true || !mounted) return;
     if (np.text.length < 4 || np.text.length > 12) {
-      _snack(context, 'PIN must be 4–12 digits');
+      _snack(context, 'PIN must be 4â€“12 digits');
       return;
     }
     final fresh = await LockService.resetWithRecovery(code.text, np.text);
@@ -243,6 +252,32 @@ class _LockGateState extends State<LockGate> {
                       icon: const Icon(Icons.fingerprint),
                       label: Text(deviceOk ? 'Use fingerprint / device lock only' : 'Device lock unavailable (set a screen lock first)'),
                     ),
+                  ] else if (mode == 'lost' || mode == 'unavailable') ...[
+                    Text(
+                      mode == 'lost'
+                          ? 'Android cleared the saved lock for Pagemark (this can happen after a system restore or a change to the phone screen lock). '
+                              'Your private library stays closed until you confirm it is you.'
+                          : 'Pagemark could not read its saved lock just now, so the library stays closed. Try again in a moment.',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    if (mode == 'lost')
+                      FilledButton(
+                        onPressed: () async {
+                          // prove ownership with the phone's own lock first; with no phone lock at all there is nothing stronger to ask for
+                          final ok = !deviceOk || await LockService.deviceAuth('Confirm it is you to set a new lock');
+                          if (!ok || !mounted) return;
+                          await LockService.clear();
+                          if (!mounted) return;
+                          if (await setupPin(this.context) && mounted) {
+                            widget.onUnlock();
+                          } else if (mounted) {
+                            _load();
+                          }
+                        },
+                        child: Text(deviceOk ? 'Confirm with phone lock, then set a new PIN' : 'Set a new PIN'),
+                      ),
+                    TextButton(onPressed: _load, child: const Text('Try again')),
                   ] else if (mode == 'device') ...[
                     if (!deviceOk) ...[
                       const Text(
@@ -273,3 +308,4 @@ class _LockGateState extends State<LockGate> {
     );
   }
 }
+

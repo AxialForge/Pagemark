@@ -55,6 +55,8 @@ class _AppLockOverlayState extends State<AppLockOverlay> with WidgetsBindingObse
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // back in front with nothing locked on screen: screen capture may be allowed again (the vault can leave it on while it closes)
+    if (state == AppLifecycleState.resumed && !appLocked.value && !Secure.hold) Secure.set(false);
     if (!appLockEnabled.value) return;
     if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
       _leftAt ??= DateTime.now();

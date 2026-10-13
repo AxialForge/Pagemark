@@ -5,13 +5,17 @@ import 'package:cryptography/cryptography.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:local_auth/local_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum PinResult { ok, wrong, lockedOut }
 
 /// Locked library protection: PIN (PBKDF2, per-install random salt, attempt limiting,
 /// recovery code) and/or the device's biometrics/screen lock. Secrets live in secure storage.
 class LockService {
-  static const _s = FlutterSecureStorage();
+  // resetOnError: false - if Android's Keystore breaks, the plugin must NOT silently wipe the saved PIN (that would let
+  // anyone open the locked library by "setting a new PIN"). A failed read is treated as "locked" instead.
+  static const _s = FlutterSecureStorage(aOptions: AndroidOptions(resetOnError: false));
+  static const _marker = 'lock_set'; // plain pref: a lock WAS configured, so empty secure storage means it was lost
   static final _auth = LocalAuthentication();
   static const iterations = 150000;
   static const freeAttempts = 5;
@@ -28,12 +32,32 @@ class LockService {
     return List<int>.generate(n, (_) => r.nextInt(256));
   }
 
-  /// 'pin', 'device' or null (nothing configured yet).
+  static Future<bool> _markerSet() async {
+    try {
+      return (await SharedPreferences.getInstance()).getBool(_marker) ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<void> _setMarker(bool on) async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      on ? await p.setBool(_marker, true) : await p.remove(_marker);
+    } catch (_) {}
+  }
+
+  /// 'pin', 'device', null (nothing configured yet), 'lost' (a lock was set but Android cleared the saved copy) or
+  /// 'unavailable' (secure storage cannot be read right now). The last two are never treated as "no lock".
   static Future<String?> mode() async {
-    final m = await _s.read(key: 'mode');
-    if (m != null) return m;
-    if (await _s.read(key: 'pin') != null) return 'pin'; // v0.1.0 install (legacy hash)
-    return null;
+    try {
+      final m = await _s.read(key: 'mode');
+      if (m != null) return m;
+      if (await _s.read(key: 'pin') != null) return 'pin'; // v0.1.0 install (legacy hash)
+    } catch (_) {
+      return 'unavailable';
+    }
+    return await _markerSet() ? 'lost' : null;
   }
 
   static Future<bool> hasPin() async => await mode() == 'pin';
@@ -42,6 +66,7 @@ class LockService {
   static Future<String> setPin(String pin) async {
     final salt = _randomBytes(16);
     await _s.write(key: 'mode', value: 'pin');
+    await _setMarker(true);
     await _s.write(key: 'pin_salt', value: base64.encode(salt));
     await _s.write(key: 'pin_hash', value: await _derive(pin, salt));
     await _s.delete(key: 'pin');
@@ -64,6 +89,7 @@ class LockService {
 
   static Future<void> setDeviceOnly() async {
     await _s.write(key: 'mode', value: 'device');
+    await _setMarker(true);
     await _s.delete(key: 'pin_hash');
     await _s.delete(key: 'pin_salt');
     await _s.delete(key: 'rec_hash');
@@ -75,6 +101,7 @@ class LockService {
     for (final k in ['mode', 'pin_hash', 'pin_salt', 'pin', 'salt', 'rec_hash', 'rec_salt']) {
       await _s.delete(key: k);
     }
+    await _setMarker(false);
     await _resetFails();
   }
 
@@ -95,13 +122,22 @@ class LockService {
     await _s.write(key: 'fails', value: '$n');
     if (n >= freeAttempts) {
       // 30 s after the 5th miss, doubling every further 5 misses, capped at 1 h.
-      final steps = (n ~/ freeAttempts) - 1;
-      final secs = min(3600, 30 * pow(2, steps).toInt());
+      final steps = min(7, (n ~/ freeAttempts) - 1); // capped so the shift can never overflow (30 << 7 = 3840 s > 1 h)
+      final secs = min(3600, 30 * (1 << steps));
       await _s.write(key: 'lock_until', value: '${DateTime.now().millisecondsSinceEpoch + secs * 1000}');
     }
   }
 
-  static Future<PinResult> checkPin(String pin) async {
+  static Future<void> _chain = Future<void>.value();
+
+  /// Attempts are checked one at a time, so two quick taps cannot be counted as one failure.
+  static Future<PinResult> checkPin(String pin) {
+    final next = _chain.then((_) => _checkPin(pin));
+    _chain = next.then<void>((_) {}, onError: (_) {});
+    return next;
+  }
+
+  static Future<PinResult> _checkPin(String pin) async {
     if ((await lockoutRemaining()) > Duration.zero) return PinResult.lockedOut;
     final ok = await _verifyPin(pin);
     if (ok) {

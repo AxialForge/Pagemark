@@ -13,6 +13,9 @@ final lockedCache = CacheManager(Config('lockedCovers', stalePeriod: const Durat
 class Secure {
   static const _ch = MethodChannel('pagemark/secure');
 
+  /// True while the locked library is on screen (so the lifecycle code does not drop screen protection under it).
+  static bool hold = false;
+
   /// Android FLAG_SECURE: blocks screenshots/screen recording and blanks the recents thumbnail.
   /// Build-time switch for documentation builds only (`--dart-define=PAGEMARK_SCREENSHOTS=true`): lets the emulator capture the
   /// locked screens. Never set for releases.

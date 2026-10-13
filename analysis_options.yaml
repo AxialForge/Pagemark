@@ -1,4 +1,4 @@
-# This file configures the analyzer, which statically analyzes Dart code to
+﻿# This file configures the analyzer, which statically analyzes Dart code to
 # check for errors, warnings, and lints.
 #
 # The issues identified by the analyzer are surfaced in the UI of Dart-enabled
@@ -18,6 +18,7 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+    - docs/**
 
 linter:
   # The lint rules applied to this project can be customized in the
@@ -36,3 +37,4 @@ linter:
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
+

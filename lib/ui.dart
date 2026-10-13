@@ -172,7 +172,9 @@ class _VaultPageState extends State<VaultPage> with WidgetsBindingObserver {
     if (unlocked) {
       lockedCache.emptyCache(); // leaving the vault: its covers and temp exports go with it
       cleanTempExports();
-      Secure.set(false);
+      Secure.hold = false;
+      // when leaving because the app went to the background, keep the screen protected until it is back in front
+      if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) Secure.set(false);
     }
     super.dispose();
   }
@@ -196,6 +198,7 @@ class _VaultPageState extends State<VaultPage> with WidgetsBindingObserver {
   Widget build(BuildContext context) => unlocked
       ? const Library(locked: true)
       : LockGate(onUnlock: () {
+          Secure.hold = true;
           Secure.set(true);
           setState(() => unlocked = true);
         });
@@ -1347,6 +1350,7 @@ class SettingsPage extends StatelessWidget {
             onTap: () async {
               if (!await confirmCurrent(context) || !context.mounted) return;
               await LockService.clear();
+              appLockEnabled.value = false; // the whole-app lock needs a PIN; without one it would leave the app open to anyone
               if (context.mounted) snack(context, 'Lock removed');
             },
           ),
