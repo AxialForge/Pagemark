@@ -120,6 +120,8 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 - **Share/shortcut intents are untrusted text:** `MainActivity.describe` caps and whitelists them, `Incoming.queryFromShared` only produces a search string for `AddBook(initialQuery:)`, which saves nothing by itself. A fresh start reads the intent once (`savedInstanceState == null`) so process death cannot replay a share.
 - **Reminders are 21 separate inexact notifications** (ids 100-120, exact local times from `Reminders.upcoming`, so DST cannot shift them), rebuilt by `Reminders.apply()` at every start; no exact-alarm permission. Cancel with `Notifier.cancelReminders` (not `cancelAll`, which would drop the backup-problem notification).
 
+- **Never edit source with PowerShell `Get-Content`/`Set-Content` (Windows PowerShell 5.1):** it reads UTF-8 as ANSI and writes a BOM, turning every en/em dash into mojibake (this shipped in 0.7.1 to 0.8.0 on the lock screens). Edit with the Edit tool or Python (`encoding='utf-8'`, `newline=''`), and check `git diff` for non-ASCII changes.
+
 ## Docs & screenshots
 
 - Documentation lives in `docs/release-package/*.md`; `python docs/_tools/build_docs.py` builds the four PDFs plus the combined `Pagemark-Documentation.pdf` (needs Python `markdown` and Edge). Figures are inline HTML (`<div class="shots">`) pointing at `../screenshots/*.jpg`.
