@@ -6,6 +6,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-10-12
+
+The rest of the audit fixes.
+
+### Fixed
+- **Undo import** now takes back everything the import added: reads and quotes added to books you already had, and shelves it created (new books still go to Trash).
+- A shelf that only holds locked books no longer shows its name in the main library (and the other way round). Covers of locked books are no longer counted or saved by the main Covers page.
+- Selecting tens of thousands of books at once no longer fails; undoing "mark finished" keeps a read you edited afterwards.
+- A cover saved a moment ago can no longer be removed by the clean-up before it is attached to its book; cover file names that are just dots are refused.
+- "At this pace" on Stats is correct around daylight-saving changes and in leap years; series numbers like NaN or 1e20 are refused.
+- Open Library answers that are not valid JSON show a normal message instead of a generic error; a lockout can never last longer than an hour even if the phone clock was moved.
+- CSV cells that begin with a tab or carriage return survive an export/import round trip.
+
+### Changed
+- The NAS backup script reads its folder from the `PAGEMARK_NAS` environment variable, so the address is no longer in the public repository.
+- Documentation (CLAUDE.md, manuals) brought in line with the two build flavors and the new restore points.
+
 ## [0.7.1] - 2026-10-12
 
 Audit fixes and a Google Play build.

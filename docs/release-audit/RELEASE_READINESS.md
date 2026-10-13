@@ -14,6 +14,10 @@ Verified on the emulator after the fixes: the 0.7.1 sideload release installs ov
 
 Verdict now: **READY WITH CONDITIONS** for a 0.7.1 release once the real-device checks in MANUAL_TEST_PLAN.md pass.
 
+### Second fix pass (version 0.7.2, not yet released)
+
+Also fixed: PGM-108 (Undo import), PGM-110 (shelf names per library), 114, 115, 118, 122, 123, 126, 127, 129, 206, 211, 213, 244. Accepted with a reason: 116 and 117 (matching by ISBN and the Date Added fallback are intended), 205 (PBKDF2 iterations: the PIN's own length dominates), 215, 225, 128. Deferred: 125 (Unicode-normalised passphrases), 223 (CI release job needs secrets you add), 245 (screenshots to regenerate), 247 (manual numbering), 250 (localisation, planned for 0.9.0). 211 needs one action from you: set the `PAGEMARK_NAS` environment variable before running `tool/backup-to-nas.ps1`.
+
 ## HIGH findings as found (fix unless accepted)
 
 | ID | One line | Verify with |

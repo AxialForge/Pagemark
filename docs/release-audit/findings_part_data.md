@@ -12,28 +12,28 @@ Scripts are in `scripts/` (`run_data_audit.ps1` runs them; each prints `AUDIT|ca
 | PGM-105 | MEDIUM | Data safety | export.dart safetyCopy | Safety-copy names have minute resolution; a second restore/import in the same minute overwrites the first restore point | script [R-safety-copy-collision, R-pre-import-collision] | f272ec6 | READY FOR VERIFICATION |
 | PGM-106 | MEDIUM | Data safety | export.dart inspect() | No column checks: id-only tables or user_version 0 pass inspection, then fail to open after the swap | script [D-inspect-no-column-check, D-inspect-user-version-0] | f272ec6 | READY FOR VERIFICATION |
 | PGM-107 | MEDIUM | Robustness | export.dart:163-176 | unpack has no size cap and decompresses ignored entries in memory; a 537 KB zip uses 120 MB RAM and disk | script | f272ec6 | READY FOR VERIFICATION |
-| PGM-108 | MEDIUM | Data safety | importer | Undo import leaves reads/quotes added to existing books and created shelves | script [I-undo-addreads, I-undo-shelves] | | OPEN |
+| PGM-108 | MEDIUM | Data safety | importer | Undo import leaves reads/quotes added to existing books and created shelves | script [I-undo-addreads, I-undo-shelves] | 91d4e2c | READY FOR VERIFICATION |
 | PGM-109 | MEDIUM | Data safety | CSV/JSON export-import | Round trip loses series_number, current_page, description, cover | script [RT-*-lossless] | a8f05d4 | READY FOR VERIFICATION |
-| PGM-110 | MEDIUM | Privacy | shelves | Shelf names are global; vault shelf names show in main-library chips/picker | script [V-leak[shelf names]] | | OPEN |
+| PGM-110 | MEDIUM | Privacy | shelves | Shelf names are global; vault shelf names show in main-library chips/picker | script [V-leak[shelf names]] | 19f74f1 | READY FOR VERIFICATION |
 | PGM-111 | MEDIUM | Privacy | book_extras.dart:219-235 | Covers page counts locked books and "Save all" downloads vault covers into the plain covers folder | code (UI not run) | 6fdb6b8 | READY FOR VERIFICATION |
 | PGM-112 | LOW | Robustness | importer | Raw UnsupportedError on NaN/Infinity/1e400 in year/pages/minutes cells; TypeError for non-list JSON `books` | script | a8f05d4 | READY FOR VERIFICATION |
 | PGM-113 | LOW | Engine | date parsing | Lenient ISO dates (02-30 becomes 03-02, month 13 rolls, offset shifts day, years 0001/9999) | script | a8f05d4 | READY FOR VERIFICATION |
-| PGM-114 | LOW | Robustness | export.dart | Zip entry `covers/.` throws raw PathAccessException and leaks the temp dir | script | | OPEN |
-| PGM-115 | LOW | Engine | covers | removeUnused race can delete a just-saved cover | code | | OPEN |
-| PGM-116 | LOW | Engine | importer | Same ISBN with different titles merged silently | script | | OPEN |
-| PGM-117 | LOW | Engine | Goodreads import | Read-shelf row without Date Read gets finished = Date Added | script | | OPEN |
-| PGM-118 | LOW | Engine | CSV | Leading tab/CR gains an apostrophe; text starting `'=` loses it on round trip | script | | OPEN |
+| PGM-114 | LOW | Robustness | export.dart | Zip entry `covers/.` throws raw PathAccessException and leaks the temp dir | script | 19f74f1 | READY FOR VERIFICATION |
+| PGM-115 | LOW | Engine | covers | removeUnused race can delete a just-saved cover | code | 91d4e2c | READY FOR VERIFICATION |
+| PGM-116 | LOW | Engine | importer | Same ISBN with different titles merged silently | script |  | ACCEPTED RISK |
+| PGM-117 | LOW | Engine | Goodreads import | Read-shelf row without Date Read gets finished = Date Added | script |  | ACCEPTED RISK |
+| PGM-118 | LOW | Engine | CSV | Leading tab/CR gains an apostrophe; text starting `'=` loses it on round trip | script | 91d4e2c | READY FOR VERIFICATION |
 | PGM-119 | LOW | Robustness | updater.dart | Raw TypeError for non-list assets; missing tag_name becomes release "null" | script | a8f05d4 | READY FOR VERIFICATION |
 | PGM-120 | LOW | Robustness | import | `pagemark_export` as string/double bypasses the newer-format guard | script | a8f05d4 | READY FOR VERIFICATION |
 | PGM-121 | LOW | Engine | compareVersions | int64 overflow gives 0; `-rc` suffix ignored | script | a8f05d4 | READY FOR VERIFICATION |
-| PGM-122 | LOW | Engine | Stats pace | Off by one day in the first hour after midnight under DST; 365 constant | script (expression replicated) | | OPEN |
-| PGM-123 | LOW | Engine | series number | Accepts NaN/Infinity; 1e20 displays 9223372036854775807 | script | | OPEN |
+| PGM-122 | LOW | Engine | Stats pace | Off by one day in the first hour after midnight under DST; 365 constant | script (expression replicated) | 91d4e2c | READY FOR VERIFICATION |
+| PGM-123 | LOW | Engine | series number | Accepts NaN/Infinity; 1e20 displays 9223372036854775807 | script | 91d4e2c | READY FOR VERIFICATION |
 | PGM-124 | LOW | Security | lock.dart | Concurrent checkPin undercounts failures (6 attempts count as 2) | script | 6052bc8 | READY FOR VERIFICATION |
-| PGM-125 | LOW | Engine | backup passphrase | Not Unicode-normalised (same visible passphrase can fail to decrypt) | code | | OPEN |
-| PGM-126 | LOW | Robustness | bulk ops | 40,000-id bulk operation raises "too many SQL variables" | script | | OPEN |
-| PGM-127 | LOW | Engine | undo | Undo of mark-finished deletes a created read the user has since edited | code | | OPEN |
-| PGM-128 | LOW | Engine | dates | Stored as instants; a timezone change shifts the finished date | code | | OPEN |
-| PGM-129 | LOW | Robustness | lookup.dart | `byIsbn` has unguarded infinite paging, nameless suggestions, FormatException on bad bodies (UI shows a generic snackbar) | code | | OPEN |
+| PGM-125 | LOW | Engine | backup passphrase | Not Unicode-normalised (same visible passphrase can fail to decrypt) | code |  | DEFERRED |
+| PGM-126 | LOW | Robustness | bulk ops | 40,000-id bulk operation raises "too many SQL variables" | script | 91d4e2c | READY FOR VERIFICATION |
+| PGM-127 | LOW | Engine | undo | Undo of mark-finished deletes a created read the user has since edited | code | 91d4e2c | READY FOR VERIFICATION |
+| PGM-128 | LOW | Engine | dates | Stored as instants; a timezone change shifts the finished date | code |  | ACCEPTED RISK |
+| PGM-129 | LOW | Robustness | lookup.dart | `byIsbn` has unguarded infinite paging, nameless suggestions, FormatException on bad bodies (UI shows a generic snackbar) | code | 19f74f1 | READY FOR VERIFICATION |
 | PGM-130 | INFO | Engine | duplicates | Trashed titles are invisible to duplicate check and import; shelf names can differ only by case | code | | OPEN |
 | PGM-131 | INFO | Privacy | watchQuoteText | Carries vault quote text into main-screen state (not displayed) | code | | OPEN |
 | PGM-132 | INFO | Security | updater | Update download with no size/sha has no integrity check (see PGM-209) | code | a8f05d4 | READY FOR VERIFICATION |
