@@ -2,8 +2,8 @@
 
 | ID | Sev | Category | Component | Finding | Evidence | Fix commit | Status |
 |---|---|---|---|---|---|---|---|
-| PGM-001 | LOW | Accessibility | Library filter chips | At system font scale 2.0 the "All" status chip text is clipped at the bottom (chip height does not grow with text); other chips scroll horizontally and are fine. | auditor (shots/c_font2.png) | | OPEN |
-| PGM-002 | LOW | UX | Empty library | The empty state shows both an "Add a book" button and the "Add book" FAB, two controls for one action. | auditor (shots/a_first_launch.png) | | OPEN |
+| PGM-001 | LOW | Accessibility | Library filter chips | At system font scale 2.0 the "All" status chip text is clipped at the bottom (chip height does not grow with text); other chips scroll horizontally and are fine. | auditor (shots/c_font2.png) | 8ca6bbe | READY FOR VERIFICATION |
+| PGM-002 | LOW | UX | Empty library | The empty state shows both an "Add a book" button and the "Add book" FAB, two controls for one action. | auditor (shots/a_first_launch.png) | 8ca6bbe | READY FOR VERIFICATION |
 | PGM-003 | INFO | Packaging | Release assets | Only arm64 and armv7 APKs are published; x86_64 emulators cannot install the release. Release behaviour was verified on a locally built, release-signed x86_64 APK. | auditor | | OPEN |
 | PGM-004 | INFO | Compat | Orientation | Landscape/tablet layout NOT SEEN: the emulator did not rotate the app when user_rotation=1 was set, and the manifest has no screenOrientation lock. Needs a real device or a rotating emulator. | auditor | | OPEN |
 | PGM-005 | INFO | Tests | bulk_test | Three "tap() missed hit test" warnings in the bulk-selection tests; tests pass but the taps may not hit the intended widget. | auditor (suite1.log) | | OPEN |

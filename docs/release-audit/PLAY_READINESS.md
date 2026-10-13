@@ -2,7 +2,11 @@
 
 Static review of manifest, Gradle, dependencies and docs (2026-10-12). Play policy details change; confirm each item in Play Console before relying on it. Nothing was uploaded or registered.
 
-## Verdict: not ready yet, but close. Two real blockers, rest is paperwork.
+## Verdict: the code blockers are fixed (2026-10-12); what is left needs your Google account.
+
+Update after 0.7.1: the `play` flavor and `tool/build.ps1` exist and produce a signed `.aab`; the merged manifest has no installer permission; the HIGH findings are fixed in code and covered by tests. Remaining items are listed in [../PLAY_STORE.md](../PLAY_STORE.md) (account, closed test, OAuth SHA-1, feature graphic, Data safety form, real-device check).
+
+Original assessment below.
 
 | # | Item | Status | Action |
 |---|---|---|---|

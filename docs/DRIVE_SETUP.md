@@ -26,3 +26,7 @@ Notes
 ## Release key
 
 The release APK is signed with `~/.android/pagemark-release.jks`. Add a **second Android OAuth client** for it with SHA-1 `39:04:59:AD:24:0F:35:99:4B:CD:A5:86:81:AF:9C:21:8C:FD:27:F7` (package `com.axialforge.pagemark`), or Drive sign-in fails in the release app.
+
+## Google Play build
+
+If you publish on Google Play, Play re-signs the app with its own key. Add a **third Android OAuth client** with the SHA-1 shown in Play Console > Setup > App signing, or Drive sign-in fails in the Play build. See [PLAY_STORE.md](PLAY_STORE.md).
