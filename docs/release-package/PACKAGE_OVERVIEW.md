@@ -60,33 +60,33 @@
 ## Stack
 Flutter (Dart) app; **Drift** over **SQLite** for storage; plain `StatefulWidget`s with database streams (no state-management package); `flutter_secure_storage` for secrets; `cryptography` for PBKDF2 and AES-GCM; `workmanager` for scheduled backup; `google_sign_in` + `googleapis` (Drive v3, `drive.appdata` scope) for backup; `http` for Open Library and GitHub; `mobile_scanner` for barcodes; `local_auth` for biometrics.
 
-## Data model (schema 3)
+## Data model (schema 4)
 - `books` — catalog entry: title, author, ISBN-13, cover URL, genre, series, `seriesNumber`, publisher, year, pages, description, tags, notes, `locked`, `added`, `deletedAt` (soft delete).
 - `reads` — one read-through: format, status, started/finished, rating (0.5–5), thoughts, narrator, minutes, `currentPage`; FK to `books` with cascade.
 - `shelves`, `book_shelves` — many-to-many.
-- Indexes on `reads.bookId`, `books.locked`, `books.title`. WAL journal, 5 s busy timeout, `foreign_keys=ON` in `beforeOpen`. Versioned migrations (1→2→3) covered by a migration test.
+- Indexes on `reads.bookId`, `books.locked`, `books.title`. WAL journal, 5 s busy timeout, `foreign_keys=ON` in `beforeOpen`. Versioned migrations (1→2→3→4) covered by a migration test.
 
 ## Privacy and security design
 - **Vault is a flag, not a second database**, enforced at every read path: library queries, Stats, Trash, duplicate check and CSV/JSON export all filter on `locked`. Full DB exports/backups include it by design and can be encrypted.
 - **PIN:** PBKDF2-HMAC-SHA256, 150 000 iterations, random 16-byte salt, constant-time compare, persistent attempt counter with exponential lockout (30 s doubling, cap 1 h). One-time recovery code stored only as a PBKDF2 hash. v0.1.0 hashes upgrade on first successful unlock.
 - **Vault lifecycle:** on background/leave the app pops locked routes, empties the locked-cover cache and deletes temporary exports; `FLAG_SECURE` is set while the vault is open and kept until resume so the recents thumbnail is blank.
 - **Backups:** container `PGMKENC1 | salt | nonce | AES-256-GCM ciphertext | tag`, key from PBKDF2 (150 k). Drive upload is skipped when the plaintext digest is unchanged, size-verified before older copies (newest 5 kept) are pruned. The passphrase lives in secure storage so the background isolate can encrypt unattended.
-- **Restore:** open candidate read-only, `PRAGMA integrity_check`, require `books`/`reads`, reject newer schemas, snapshot current DB (newest 3 kept), close connection, delete `-wal/-shm`, rename staged copy into place; app restarts.
+- **Restore:** open candidate read-only, `PRAGMA integrity_check`, require `books`/`reads`, reject newer schemas, snapshot current DB as a restore point (newest 3 kept, listed under Settings > Restore points), close connection, delete `-wal/-shm`, rename staged copy into place; app restarts.
 - **Android:** `allowBackup=false` plus data-extraction rules exclude everything; no analytics SDKs.
 
 ## Networking
 Open Library search/ISBN/works endpoints with an identifying User-Agent, retry with backoff on 429/5xx/timeouts, per-record fault tolerance, ISBN-10→13 normalisation and checksum validation. Updates use the unauthenticated GitHub releases API: newest-first release list → APK chosen by ABI → streamed download with size and SHA-256 (from the release asset's digest) verification → system installer via `open_filex`. Same signing key ⇒ in-place upgrade.
 
 ## Quality and process
-- 193 automated tests: database behaviour, migration from v1, restore validation, export safety (formula neutralisation, BOM), encryption round-trip and tamper detection, lock service (lockout, recovery, legacy upgrade), lookup parsing/retries (mock HTTP), updater logic, and widget tests for custom UI.
+- 220+ automated tests: database behaviour, migration from v1, restore validation, export safety (formula neutralisation, BOM), encryption round-trip and tamper detection, lock service (lockout, recovery, legacy upgrade), lookup parsing/retries (mock HTTP), updater logic, and widget tests for custom UI.
 - GitHub Actions CI: analyze, tests, generated-code check, debug build. Signed release APKs are built locally; the keystore never leaves the owner's machine.
 - Release flow: version bump + `CHANGELOG.md` in one commit → tag `vX.Y.Z` → APKs (`arm64`, `armv7`) attached to a GitHub Release. The changelog ships inside the app as an asset.
 
 ## Known limits (0.7.0)
 - The library file is not separately encrypted by the app (a deliberate choice: Android already isolates and encrypts app storage, and an on-phone key adds little); saved covers are plain files in app storage. Exports and backups can be passphrase-encrypted.
-- Scheduled backups depend on Android's WorkManager timing; OEM battery managers can delay them. No failure notification yet.
+- Scheduled backups depend on Android's WorkManager timing; OEM battery managers can delay them. Pagemark notifies you when a backup needs your attention or keeps failing.
 - No iOS build yet (project is configured; needs a Mac to build and sign).
-- Release builds are not minified (size/safety trade-off pending device testing).
+- Release builds are shrunk with R8; the mapping file stays with the owner.
 
 ## Roadmap highlights
-Goodreads/StoryGraph import, grid cover view, quotes and highlights, series entity with total volumes, SQLCipher, backup failure notifications, iOS.
+Reading reminders, a home-screen widget, share target and shortcuts, localisation, tablet layouts, iOS.

@@ -1,6 +1,6 @@
 # Pagemark — Install Manual
 
-**Version 0.5.0** · Android
+**Version 0.7.1** · Android
 
 ---
 
@@ -24,7 +24,7 @@ Not sure? Download the arm64 file. If Android says the app isn't compatible, use
 ## 3. Install
 
 1. Open the downloaded `.apk` (from your browser's downloads or the Files app).
-2. Android will say your browser/Files app isn't allowed to install apps. Tap **Settings** and turn on **Allow from this source**, then go back.
+2. Android will say your browser/Files app isn't allowed to install apps. On Android 8 and newer, tap **Settings** and turn on **Allow from this source**, then go back. On Android 7, turn on **Unknown sources** in Settings > Security instead.
 3. Tap **Install**, then **Open**.
 
 Pagemark is signed with the author's key, so future updates install over it and keep your data.
@@ -33,7 +33,7 @@ Pagemark is signed with the author's key, so future updates install over it and 
 
 ## 4. First run
 
-Pagemark opens on an empty Library. Tap **Add book** to start. Allow the **camera** only if you want to scan barcodes; everything else needs no permissions. In **Settings** you can pick a theme and read **About**.
+Pagemark opens on an empty Library. Tap **Add book** to start. Allow the **camera** only if you want to scan barcodes. Android 13 and newer asks once for **notifications** when you turn on automatic Google Drive backup, so Pagemark can tell you if a backup keeps failing; everything else needs no permissions. In **Settings** you can pick a theme and read **About**.
 
 <div class="shots one"><figure><img src="../screenshots/library.jpg" alt="Pagemark with a few books added"><figcaption>Pagemark with a few books added</figcaption></figure></div>
 
@@ -49,7 +49,7 @@ Pagemark opens on an empty Library. Tap **Add book** to start. Allow the **camer
 | Install packages | Lets Android offer to install a downloaded update |
 | Background work / network state | Running the scheduled Drive backup |
 
-Pagemark does not ask for storage, photo/media or notification permissions.
+Pagemark does not ask for storage or photo/media permissions. It asks for the camera (barcode scanner) and, on Android 13+, for notifications (backup problems). The version on GitHub also holds the permission to install updates; the Google Play version does not.
 
 ## 5. Updating
 

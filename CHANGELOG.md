@@ -6,6 +6,31 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-10-12
+
+Audit fixes and a Google Play build.
+
+### Security
+- A lost lock no longer opens the library. If Android clears Pagemark's saved PIN, the locked library and the whole-app lock stay closed until the phone's own screen lock confirms you, then you set a new PIN (previously the screen offered "Set a PIN" and opened).
+- PIN lockout can no longer overflow: after hundreds of wrong tries it stays at 1 hour instead of switching off.
+- Wrong PINs tapped quickly are all counted.
+- If the backup passphrase goes missing from the phone, scheduled backups stop and tell you instead of uploading an unencrypted copy. Changing the passphrase now triggers a new upload.
+- Remove lock also turns off the whole-app lock. The recovery code is cleared from the clipboard after a minute.
+- Screen capture protection stays on while the locked library closes in the background.
+- The diagnostics log drops database details (they could contain titles); the share-sheet and file-picker caches are wiped; failed backups clean up their temporary copy.
+- The updater only downloads from GitHub over https and refuses a download it cannot check.
+
+### Added
+- **Restore points** (Settings): go back to the copy Pagemark kept before any restore or import.
+- A `play` build flavor for Google Play, without the permission to install updates. `tool/build.ps1` builds the GitHub APKs and the Play bundle.
+
+### Fixed
+- Two restores in the same minute no longer overwrite each other's restore point; a restore no longer reports failure after the library was already replaced; stricter checks reject database files that only look like Pagemark ones; oversized backup files are refused.
+- Imports: impossible dates (Feb 30) are rejected, NaN/Infinity cells and unusual JSON shapes no longer crash, series numbers and descriptions survive an export/import round trip.
+- Version comparison handles very large parts and release candidates.
+- The Covers page no longer counts or saves covers of locked books.
+- Removed an unused library; documentation brought in line with the app.
+
 ### Added
 
 ### Changed

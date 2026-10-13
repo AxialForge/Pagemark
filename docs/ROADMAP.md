@@ -2,7 +2,7 @@
 
 Written 2026-10-12 after v0.4.1. This file is meant to be picked up cold — from another computer, or by a fresh Claude Code
 session — without the history of how we got here. Pair it with [CLAUDE.md](../CLAUDE.md) (architecture + every gotcha) and
-[ROUNDING_OUT_REPORT.md](ROUNDING_OUT_REPORT.md) (the 330-item backlog; IDs like `IB-41` below refer to it).
+[ROUNDING_OUT_REPORT.md](ROUNDING_OUT_REPORT.md) (the 430-item backlog; IDs like `IB-41` below refer to it).
 
 ## 0. Working away from home
 

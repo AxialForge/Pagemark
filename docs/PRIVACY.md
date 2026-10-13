@@ -9,7 +9,7 @@ Pagemark is a private reading log. It has no accounts, no servers of its own, no
 - **Settings:** theme, library style, filters, backup options.
 - **Your PIN (if you set one)** as a salted hash, and its recovery code as a hash, in Android's secure storage. The PIN itself is never stored.
 - **A backup passphrase (if you set one)** in Android's secure storage, so scheduled backups can encrypt without you.
-- **A small event log** (Settings → Diagnostics): error messages and backup run results. It never contains book titles or your writing.
+- **A small event log** (Settings → Diagnostics): error messages and backup run results. Database error details are removed before anything is written, so it does not keep book titles or your writing.
 - **Cached cover images.** Covers of locked books use a separate cache that is erased when the locked library closes.
 
 Android's own cloud backup and device-transfer are switched off for this app, so Google does not receive this data through Android.

@@ -541,3 +541,7 @@ Not part of the numbered lists above:
 - **PIN is not in backups** (by design) - after restoring on a new phone the vault needs a new PIN; the UI could say so at restore time.
 - **Search noise (seen in the real app while taking screenshots):** Open Library returns study guides, "Summary of ..." and workbook records for popular titles (e.g. searching "circe madeline miller" lists four of them below the real book). Rank results with a cover and a matching author first, and hide titles starting with "Summary of", "Study Guide" or "Workbook" behind a "Show more" row.
 - **Updates page cannot show an "update available" state without an older build installed**, so the manual's screenshot shows "up to date"; consider a hidden debug switch to preview the available state.
+
+## Corrections after the 0.7.0 audit
+
+Some items were marked fixed too early. Status now: **IB-10** (share temp files) fixed in 0.7.1 - the share sheet and file picker caches are wiped on start and when the vault closes. **IB-16** (gate after removing the PIN) improved in 0.7.1 - a lost lock now keeps the vault closed until the phone's own lock confirms; setting a first PIN on a library with no lock is still open by design. **IB-44** (prune after upload) - the new file's size is verified before older copies are pruned; a checksum is not compared. **IB-80** (single keystore copy) - the keystore is also kept in the owner's NAS backup; there is still no rotation plan.

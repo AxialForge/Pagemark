@@ -1,6 +1,6 @@
 # Pagemark — User Manual
 
-**Version 0.7.0** · A private, fully local book tracker for Android
+**Version 0.7.1** · A private, fully local book tracker for Android
 
 *Screenshots show sample books and were captured from the Android app (0.7.0).*
 
@@ -219,7 +219,7 @@ Settings → Privacy has two more options:
 
 ### Protection you can rely on
 - **Wrong PINs are limited.** After 5 misses the PIN is locked out for 30 seconds, doubling after every further 5 misses (up to 1 hour).
-- **It re-locks itself** when you leave the tab or put Pagemark in the background. Open locked screens close, locked covers are wiped from the image cache, and temporary export files are deleted.
+- **It re-locks itself** when you leave the tab or put Pagemark in the background. Open locked screens close, locked covers are wiped from the image cache, and temporary export files, including the copies the share sheet and file picker keep, are deleted the next time Pagemark opens or the vault closes.
 - **No screenshots.** While the vault is open the screen can't be captured and the app-switcher thumbnail is blank.
 - **Changing the lock needs the lock.** Changing or removing the PIN asks for the current PIN (or your fingerprint first).
 
@@ -227,7 +227,7 @@ Settings → Privacy has two more options:
 On the lock screen tap **Forgot PIN?**, enter the recovery code and a new PIN. You'll receive a **new** recovery code; the old one stops working.
 
 ### Settings → Privacy
-**Lock now**, **Set or change PIN**, and **Remove lock** (which asks for the current PIN first; locked books stay in the locked library).
+**Lock now**, **Set or change PIN**, and **Remove lock** (which asks for the current PIN first; locked books stay in the locked library, and the whole-app lock switches off because it needs a PIN). If Android ever clears Pagemark's saved lock, the library stays closed until you confirm with your phone's screen lock and set a new PIN.
 
 ## 9. Themes
 
@@ -296,7 +296,9 @@ Android decides exactly when scheduled work runs, so a "daily" backup may be a f
 
 1. Pick the backup. If it is encrypted you'll be asked for its passphrase.
 2. Pagemark checks it is a healthy Pagemark database from this or an older version, and tells you how many books and reads it holds.
-3. It keeps a **safety copy of your current library** (the newest 3 are retained inside the app), then replaces the library and asks you to close and reopen the app.
+3. It keeps a **restore point of your current library** (the newest 3 of each kind are retained inside the app), then replaces the library and asks you to close and reopen the app.
+
+**Going back:** Settings → **Restore points** lists the copies Pagemark kept before each restore and import. Tap one to restore it the same way.
 
 If the backup holds locked books, Pagemark reminds you that your **PIN is not part of backups** — open the Locked tab and set a new PIN afterwards.
 
@@ -307,7 +309,7 @@ A damaged, foreign, or too-new file is rejected before anything changes.
 Settings → **Updates** (or the dot on the Settings tab).
 
 - Shows the version you have and whether a newer one exists, how many releases you're behind, the download size, and **what changed** in each.
-- **Download & install** fetches the right file for your phone, checks its size and checksum, and opens Android's installer. The first time, Android asks you to allow installs from Pagemark. The update installs over the current app, so your library and settings are kept.
+- (Not in the Google Play version, where Play does the updating.) **Download & install** fetches the right file for your phone, checks its size and checksum, and opens Android's installer. The first time, Android asks you to allow installs from Pagemark. The update installs over the current app, so your library and settings are kept.
 - **Check automatically** (on by default) does a quiet check at most once a day. The only thing sent is a request to GitHub for the release list. Switch it off any time.
 - **Version history** shows every change in every release, offline. After an update, a **What's new** prompt links to it.
 
@@ -321,7 +323,7 @@ Deleting a book moves it to **Settings → Trash**. Restore it, or delete it for
 
 ## 15. Diagnostics
 
-Settings → **Diagnostics** shows a small rolling event log (errors, background backup runs, lookup problems). It never contains book titles or your thoughts. **Copy** it when asking for help; **Clear** it when done.
+Settings → **Diagnostics** shows a small rolling event log (errors, background backup runs, lookup problems). Database error details are removed before anything is written, so it does not keep your titles or thoughts. **Copy** it when asking for help; **Clear** it when done.
 
 ## 16. Your privacy, in plain terms
 
