@@ -225,16 +225,16 @@ class Exporter {
     try {
       d = sql.sqlite3.open(f.path, mode: sql.OpenMode.readOnly);
       final integrity = d.select('PRAGMA integrity_check').first.values.first;
-      if (integrity != 'ok') return RestoreCheck.fail('Database is damaged ($integrity).');
+      if (integrity != 'ok') return RestoreCheck.fail('This backup file is damaged.');
       final tables = d.select("SELECT name FROM sqlite_master WHERE type='table'").map((r) => r['name']).toSet();
-      if (!tables.containsAll(['books', 'reads'])) return const RestoreCheck.fail('This is not a Pagemark database.');
+      if (!tables.containsAll(['books', 'reads'])) return const RestoreCheck.fail('This is not a Pagemark backup.');
       final ver = d.select('PRAGMA user_version').first.values.first as int;
       Set<Object?> cols(String t) => d!.select('PRAGMA table_info($t)').map((r) => r['name']).toSet();
       if (ver < 1 || !cols('books').containsAll(['id', 'title']) || !cols('reads').containsAll(['id', 'book_id', 'status'])) {
-        return const RestoreCheck.fail('This is not a Pagemark database.');
+        return const RestoreCheck.fail('This is not a Pagemark backup.');
       }
       if (ver > AppDb.currentSchema) {
-        return RestoreCheck.fail('This backup is from a newer Pagemark (schema $ver). Update the app first.');
+        return RestoreCheck.fail('This backup was made by a newer version of Pagemark. Update the app first.');
       }
       final b = d.select('SELECT COUNT(*) c FROM books').first['c'] as int;
       final r = d.select('SELECT COUNT(*) c FROM reads').first['c'] as int;
@@ -244,7 +244,7 @@ class Exporter {
       } catch (_) {/* very old/odd file without the column: just don't mention the vault */}
       return RestoreCheck.pass(b, r, lockedBooks: l);
     } catch (e) {
-      return const RestoreCheck.fail('This file is not a readable Pagemark database.');
+      return const RestoreCheck.fail('This file is not a readable Pagemark backup.');
     } finally {
       d?.close();
     }

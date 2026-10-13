@@ -14,6 +14,7 @@ Plain words, simpler Settings.
 - **Settings is now a short list of seven plain-language pages** (Appearance, Reminders and widget, Privacy and lock, Backup and restore, Import and export, Your library, Help and about) instead of one long scroll. Wording is simpler throughout: "Save a copy as a file" with a password, "Go back to an earlier copy", "Deleted books", "Problem report", "Turn off the lock".
 
 ### Fixed
+- Plainer words everywhere: "password" instead of "passphrase", friendlier error messages for backups, the book search and updates, "Add by hand", "What's new", "Deleted books" and "Problem report".
 - The dashes in the PIN screens ("4–12 digits") showed as garbled characters in 0.7.1 to 0.8.0.
 - Version history now shows bold text and code properly instead of asterisks and backticks.
 

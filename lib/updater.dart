@@ -99,13 +99,13 @@ class Updater {
           .timeout(const Duration(seconds: 12));
     } catch (e) {
       Log.w('update', 'check failed: $e');
-      throw UpdateException('Could not reach GitHub — check your connection.');
+      throw UpdateException('Could not check for updates. Check your internet connection.');
     }
     if (r.statusCode == 404) {
-      throw UpdateException('No public releases found. If the repository is private, updates can\'t be checked from the app.');
+      throw UpdateException('No updates were found.');
     }
-    if (r.statusCode == 403 || r.statusCode == 429) throw UpdateException('GitHub is rate-limiting update checks. Try again later.');
-    if (r.statusCode != 200) throw UpdateException('GitHub answered HTTP ${r.statusCode}.');
+    if (r.statusCode == 403 || r.statusCode == 429) throw UpdateException('Too many update checks. Please try again later.');
+    if (r.statusCode != 200) throw UpdateException('The update check had a problem. Please try again later.');
 
     final list = jsonDecode(utf8.decode(r.bodyBytes));
     final releases = [
@@ -138,16 +138,16 @@ class Updater {
     final uri = Uri.tryParse(info.assetUrl ?? '');
     const hosts = {'github.com', 'objects.githubusercontent.com', 'github-releases.githubusercontent.com'};
     if (uri == null || uri.scheme != 'https' || !hosts.contains(uri.host)) {
-      throw UpdateException('The update is not hosted on GitHub, so Pagemark will not download it.');
+      throw UpdateException('This update does not look safe to download, so Pagemark skipped it.');
     }
     if (info.sha256 == null && info.assetBytes == null) {
-      throw UpdateException('GitHub did not say how large or which file this update should be, so it cannot be checked. Not downloaded.');
+      throw UpdateException('Pagemark could not check this update file, so it was not downloaded.');
     }
     final file = to ?? File('${(await getTemporaryDirectory()).path}/pagemark-update.apk');
     if (await file.exists()) await file.delete();
     final req = http.Request('GET', uri)..headers['User-Agent'] = 'Pagemark-updater';
     final resp = await client.send(req).timeout(const Duration(seconds: 20));
-    if (resp.statusCode != 200) throw UpdateException('Download failed (HTTP ${resp.statusCode}).');
+    if (resp.statusCode != 200) throw UpdateException('The download did not work. Please try again.');
     final total = resp.contentLength ?? info.assetBytes ?? 0;
     final sink = file.openWrite();
     var got = 0;
@@ -162,13 +162,13 @@ class Updater {
     }
     if (info.assetBytes != null && got != info.assetBytes) {
       await file.delete();
-      throw UpdateException('The download was cut short ($got of ${info.assetBytes} bytes). Try again.');
+      throw UpdateException('The download did not finish. Please try again.');
     }
     if (info.sha256 != null) {
       final digest = (await hash.sha256.bind(file.openRead()).first).toString();
       if (digest != info.sha256) {
         await file.delete();
-        throw UpdateException('The downloaded file failed its integrity check, so it was discarded.');
+        throw UpdateException('The downloaded update was damaged, so it was thrown away. Please try again.');
       }
     }
     return file;
@@ -180,8 +180,8 @@ class Updater {
     final r = await OpenFilex.open(apk.path, type: 'application/vnd.android.package-archive');
     Log.i('update', 'installer result: ${r.type} ${r.message}');
     if (r.type == ResultType.permissionDenied) {
-      throw UpdateException('Allow Pagemark to install apps (Android will have asked), then tap Install again.');
+      throw UpdateException('Allow Pagemark to install apps (Android will ask), then tap Install again.');
     }
-    if (r.type != ResultType.done) throw UpdateException('Could not open the installer: ${r.message}');
+    if (r.type != ResultType.done) throw UpdateException('Could not start the installer. Please try again.');
   }
 }

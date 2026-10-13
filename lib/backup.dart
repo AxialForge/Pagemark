@@ -101,9 +101,9 @@ class DriveBackup {
   static Future<void> _ensureInit() async {
     final p = await SharedPreferences.getInstance();
     final cid = p.getString('bk_cid') ?? '';
-    if (cid.isEmpty) throw const BackupAuthException('Enter your Google Web client ID first.');
+    if (cid.isEmpty) throw const BackupAuthException('Enter your Google Web client ID first (see the setup guide).');
     if (_init) {
-      if (_initId != cid) throw 'The client ID changed. Close and reopen Pagemark to apply it.';
+      if (_initId != cid) throw 'The sign-in setting changed. Close and reopen Pagemark, then try again.';
       return;
     }
     await GoogleSignIn.instance.initialize(serverClientId: cid);
@@ -133,10 +133,10 @@ class DriveBackup {
     // Lightweight (silent) auth works from the background isolate after the first grant.
     var acct = await GoogleSignIn.instance.attemptLightweightAuthentication();
     if (acct == null && interactive) acct = await GoogleSignIn.instance.authenticate();
-    if (acct == null) throw const BackupAuthException('Signed out of Google. Open Pagemark, go to Settings, Google Drive backup, and sign in again.');
+    if (acct == null) throw const BackupAuthException('You are signed out of Google. Open Pagemark, go to Settings, then Backup and restore, then Back up to Google Drive, and sign in again.');
     var auth = await acct.authorizationClient.authorizationForScopes([_scope]);
     if (auth == null && interactive) auth = await acct.authorizationClient.authorizeScopes([_scope]);
-    if (auth == null) throw const BackupAuthException('Drive permission is missing or was revoked. Open Pagemark, go to Settings, Google Drive backup, and sign in again.');
+    if (auth == null) throw const BackupAuthException('Pagemark no longer has permission to use your Google Drive. Open Pagemark, go to Settings, then Backup and restore, then Back up to Google Drive, and sign in again.');
     return drive.DriveApi(_Auth(auth.accessToken));
   }
 
@@ -167,7 +167,7 @@ class DriveBackup {
       final snap = await Exporter.snapshotDb(db);
       final pass = await passphrase();
       if ((pass == null || pass.isEmpty) && (p.getBool('bk_enc') ?? false)) {
-        throw const BackupAuthException('Your backup passphrase is no longer stored on this phone, so nothing was uploaded. Open Pagemark, go to Settings, Google Drive backup, and set the passphrase again.');
+        throw const BackupAuthException('Your backup password is no longer saved on this phone, so nothing was uploaded. Open Pagemark, go to Settings, then Backup and restore, then Back up to Google Drive, and set the password again.');
       }
       final digest = hash.sha256.convert(await snap.readAsBytes()).toString();
       final coversSig = hash.sha256.convert((await CoverStore.signature()).codeUnits).toString();
@@ -199,7 +199,7 @@ class DriveBackup {
       );
       if (int.tryParse(made.size ?? '') != size) {
         if (made.id != null) await api.files.delete(made.id!);
-        throw 'Drive did not store the whole backup (it reports ${made.size} bytes, expected $size). Nothing was removed; try Back up now again.';
+        throw 'Google Drive did not save the whole backup. Nothing was removed. Please try Back up now again.';
       }
       for (final f in (await list(api: api)).skip(keepBackups)) {
         await api.files.delete(f.id!);

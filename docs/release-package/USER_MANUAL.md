@@ -34,7 +34,7 @@ Tap **Add book** (bottom of the Library).
 1. **Search** — type a title or author and press search. Tap a result to add it.
 2. **By ISBN** — type or paste an ISBN into the same box and it is looked up directly. Invalid ISBNs are explained instead of searched.
 3. **Scan** — tap the barcode icon at the top and point the camera at the ISBN barcode on the back cover. Only real book barcodes are accepted; the torch button helps in dim light.
-4. **Manually** — if a book isn't found, choose **Add manually** and enter a title; fill in the rest later with **Edit**.
+4. **Manually** — if a book isn't found, choose **Add by hand** and enter a title; fill in the rest later with **Edit**.
 
 If the book is already in the same library (same ISBN, or the same title and author) Pagemark warns you and offers to open the existing one. The main and locked libraries never compare against each other, so the main library can't reveal a locked title.
 
@@ -149,7 +149,7 @@ Tap an author's name on a book to open their page: every book by them in this li
 
 ### Covers on your phone
 
-By default covers load from the internet. From a book's ⋮ menu you can **Save cover on this phone** (so it works offline and travels in backups), **Choose cover from gallery**, or **Remove saved cover** (the web cover returns). **Settings → Covers** shows how many are saved and can save them all in one go, with a Stop button, and tidy unused files. Covers of locked books are saved too; they stay on the phone and are in backups, so protect backups with a passphrase.
+By default covers load from the internet. From a book's ⋮ menu you can **Save cover on this phone** (so it works offline and travels in backups), **Choose cover from gallery**, or **Remove saved cover** (the web cover returns). **Settings → Covers** shows how many are saved and can save them all in one go, with a Stop button, and tidy unused files. Covers of locked books are saved too; they stay on the phone and are in backups, so protect backups with a password.
 
 ### Series totals
 
@@ -267,7 +267,7 @@ Settings → Import and export (main library only — locked books are never inc
 
 Settings → Backup and restore (**includes locked books**):
 
-- **Export database file** — a complete copy you can restore on another device. You'll be asked for a **passphrase**; leave it empty only if you understand the file will be readable by anyone who gets it.
+- **Export database file** — a complete copy you can restore on another device. You'll be asked for a **password**; leave it empty only if you understand the file will be readable by anyone who gets it.
 - **Restore from database file** — see §12.
 
 ## 10b. Importing your reading history
@@ -289,7 +289,7 @@ What gets mapped: statuses (read, currently reading, to-read, did-not-finish), r
 Settings → Backup and restore → **Back up to Google Drive**. One-time setup (a free Google Cloud project) is described in `docs/DRIVE_SETUP.md`. After that:
 
 1. Paste your **Web client ID** and tap **Sign in**.
-2. Turn on **Encrypt backups with a passphrase** (recommended — your locked books are inside every backup). **Remember the passphrase:** without it a backup can't be opened by anyone.
+2. Turn on **Encrypt backups with a password** (recommended — your locked books are inside every backup). **Remember the password:** without it a backup can't be opened by anyone.
 3. Turn on **Automatic backup**, choose **Daily** or **Weekly**, and **Wi-Fi only** if you like.
 
 Backups go to Pagemark's private app-data area on your Drive (they don't appear among your normal files). The **newest 5** are kept. An unchanged library isn't uploaded again, and each upload is verified before older copies are removed. **Back up now** uploads immediately. The Settings page shows the last backup time, or **FAILED** if something went wrong (details are on the backup page).
@@ -304,7 +304,7 @@ Android decides exactly when scheduled work runs, so a "daily" backup may be a f
 
 **From a file** (Settings → Backup and restore → Restore from a file) or **from Drive** (Backup page → Restore from Drive…):
 
-1. Pick the backup. If it is encrypted you'll be asked for its passphrase.
+1. Pick the backup. If it is encrypted you'll be asked for its password.
 2. Pagemark checks it is a healthy Pagemark database from this or an older version, and tells you how many books and reads it holds.
 3. It keeps a **restore point of your current library** (the newest 3 of each kind are retained inside the app), then replaces the library and asks you to close and reopen the app.
 
@@ -321,7 +321,7 @@ Settings → **Updates** (or the dot on the Settings tab).
 - Shows the version you have and whether a newer one exists, how many releases you're behind, the download size, and **what changed** in each.
 - (Not in the Google Play version, where Play does the updating.) **Download & install** fetches the right file for your phone, checks its size and checksum, and opens Android's installer. The first time, Android asks you to allow installs from Pagemark. The update installs over the current app, so your library and settings are kept.
 - **Check automatically** (on by default) does a quiet check at most once a day. The only thing sent is a request to GitHub for the release list. Switch it off any time.
-- **Version history** shows every change in every release, offline. After an update, a **What's new** prompt links to it.
+- **What's new** shows every change in every release, offline. After an update, a **What's new** prompt links to it.
 
 <div class="shots one"><figure><img src="../screenshots/updates.jpg" alt="Updates"><figcaption>Updates</figcaption></figure><figure><img src="../screenshots/updates-available.jpg" alt="An update is available"><figcaption>When an update is waiting (sample data)</figcaption></figure></div>
 
@@ -346,7 +346,7 @@ Settings → Help and about → **Problem report** shows a small rolling event l
 
 | Problem | What to do |
 |---|---|
-| Search says it couldn't reach Open Library | Check your connection and try again; Pagemark retries busy servers automatically. You can always **Add manually**. |
+| Search says it couldn't reach Open Library | Check your connection and try again; Pagemark retries busy servers automatically. You can always **Add by hand**. |
 | A scanned barcode does nothing | Only ISBN book barcodes (starting 978 or 979) are accepted. Try the torch, or type the ISBN. |
 | Covers are blank offline | Covers are downloaded on demand and cached; they appear once they've loaded online. |
 | Forgot the PIN and lost the recovery code | The locked library can't be opened — that is the point of the lock. Removing the lock also needs the PIN, and the PIN is not part of backups, so a restore won't help. Keep the recovery code safe. |

@@ -35,22 +35,22 @@ String friendlyBackupError(Object e) {
     final detail = '${e.message ?? ''} ${e.errors.map((x) => x.reason).join(' ')}'.toLowerCase();
     switch (e.status) {
       case 401:
-        return 'Google sign-in expired. Open Pagemark, go to Settings, Google Drive backup, and sign in again.';
+        return 'Your Google sign-in ran out. Open Pagemark, go to Settings, then Backup and restore, then Back up to Google Drive, and sign in again.';
       case 403:
         if (detail.contains('quota') || detail.contains('storage')) return 'Your Google Drive is full. Free some space and back up again.';
         if (detail.contains('ratelimit') || detail.contains('rate limit')) return 'Google is limiting requests right now. Try again in a few minutes.';
         if (detail.contains('accessnotconfigured') || detail.contains('has not been used')) {
-          return 'The Google Drive API is not enabled for your Google Cloud project. Enable it, then try again (see the setup guide).';
+          return 'Google Drive is not switched on for this app yet. See the setup guide, then try again.';
         }
-        return 'Google Drive refused access. Check the Drive API is enabled and the sign-in is set up for this app (see the setup guide).';
+        return 'Google Drive said no. Check the setup guide, then try again.';
       case 404:
-        return 'Google Drive could not find the backup. Try Back up now again.';
+        return 'Google Drive could not find the backup. Please try Back up now again.';
       case 429:
         return 'Google is limiting requests right now. Try again in a few minutes.';
       default:
-        if ((e.status ?? 0) >= 500) return 'Google Drive is having problems. The backup will try again later.';
+        if ((e.status ?? 0) >= 500) return 'Google Drive is having problems. Pagemark will try again later.';
     }
-    return 'Google Drive answered with an error (${e.status}).';
+    return 'Google Drive had a problem (code ${e.status}). Please try again later.';
   }
   if (e is GoogleSignInException) {
     switch (e.code) {
@@ -59,16 +59,16 @@ String friendlyBackupError(Object e) {
         return 'Sign-in was cancelled.';
       case GoogleSignInExceptionCode.clientConfigurationError:
       case GoogleSignInExceptionCode.providerConfigurationError:
-        return 'Google rejected the app setup. Check the Web client ID, and that the Android client uses this app\'s signing key (see the setup guide).';
+        return 'Google would not accept the sign-in settings. See the setup guide.';
       case GoogleSignInExceptionCode.userMismatch:
-        return 'A different Google account is signed in. Sign out and sign in with the account you backed up with.';
+        return 'A different Google account is signed in. Sign out, then sign in with the account you backed up with.';
       case GoogleSignInExceptionCode.uiUnavailable:
-        return 'Google sign-in cannot be shown right now. Open Pagemark and try again.';
+        return 'Google sign-in could not open. Please try again.';
       default:
         return 'Google sign-in failed. Check your connection and try again.';
     }
   }
-  return 'The backup failed (${e.runtimeType}). Details are in Settings, Diagnostics.';
+  return 'The backup failed (${e.runtimeType}). Details are in Settings, Help and about, Problem report.';
 }
 
 /// When a background backup fails, should we bother the user? Auth problems need action: tell them at once.

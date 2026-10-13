@@ -157,7 +157,7 @@ class _UpdatePageState extends State<UpdatePage> {
         if (!checking && error != null)
           Card(color: cs.errorContainer, child: Padding(padding: const EdgeInsets.all(14), child: Text(error!, style: TextStyle(color: cs.onErrorContainer)))),
         if (!checking && i != null && !i.available)
-          const Card(child: ListTile(leading: Icon(Icons.check_circle_outline), title: Text("You're up to date"), subtitle: Text('This is the newest release.'))),
+          const Card(child: ListTile(leading: Icon(Icons.check_circle_outline), title: Text("You're up to date"), subtitle: Text('This is the newest version.'))),
         if (!checking && i != null && i.available) ...[
           Card(
             color: cs.primaryContainer,
@@ -182,7 +182,7 @@ class _UpdatePageState extends State<UpdatePage> {
                 ] else if (i.canInstall)
                   FilledButton.icon(onPressed: _install, icon: const Icon(Icons.download), label: Text('Download & install ${i.latest}'))
                 else
-                  Text('This release has no APK for your phone type.', style: TextStyle(color: cs.onPrimaryContainer)),
+                  Text('This version has no download for your phone type.', style: TextStyle(color: cs.onPrimaryContainer)),
               ]),
             ),
           ),
@@ -206,15 +206,15 @@ class _UpdatePageState extends State<UpdatePage> {
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('Check automatically'),
-          subtitle: const Text('Once a day when the app opens. The only thing sent is a request to GitHub for the release list.'),
+          subtitle: const Text('Once a day when the app opens. Pagemark only asks the project website whether a new version exists.'),
           value: prefs.getBool('upd_auto') ?? true,
           onChanged: (v) async { await prefs.setBool('upd_auto', v); setState(() {}); },
         ),
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.history),
-          title: const Text('Version history'),
-          subtitle: const Text('Everything that changed in every release (works offline)'),
+          title: const Text("What's new"),
+          subtitle: const Text('Every change in every version (works without internet)'),
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangelogPage())),
         ),
       ]),
@@ -244,7 +244,7 @@ class ChangelogPage extends StatelessWidget {
   const ChangelogPage({super.key});
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Version history')),
+        appBar: AppBar(title: const Text("What's new")),
         body: FutureBuilder<String>(
           future: rootBundle.loadString('CHANGELOG.md'),
           builder: (_, snap) {

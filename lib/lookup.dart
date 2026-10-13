@@ -37,18 +37,18 @@ class Lookup {
       try {
         final r = await client.get(u, headers: _headers).timeout(const Duration(seconds: 12));
         if (r.statusCode == 429 || r.statusCode >= 500) {
-          last = LookupException('Open Library is busy (HTTP ${r.statusCode}).');
+          last = LookupException('The book search is busy right now. Please try again in a moment.');
         } else if (r.statusCode != 200) {
-          throw LookupException('Open Library answered HTTP ${r.statusCode}.');
+          throw LookupException('The book search had a problem. Please try again in a moment.');
         } else {
           return r;
         }
       } on TimeoutException {
-        last = LookupException('Open Library took too long to answer.');
+        last = LookupException('The book search took too long. Check your internet and try again.');
       } on LookupException {
         rethrow;
       } catch (e) {
-        last = LookupException('Could not reach Open Library — check your connection.');
+        last = LookupException('Could not reach the book search. Check your internet connection.');
         Log.w('lookup', 'network error: $e');
       }
       if (attempt < 2) await Future<void>.delayed(retryDelay * (attempt + 1));
@@ -61,7 +61,7 @@ class Lookup {
     try {
       return jsonDecode(utf8.decode(r.bodyBytes));
     } on FormatException {
-      throw LookupException('Open Library sent an answer Pagemark could not read. Try again in a moment.');
+      throw LookupException('The book search sent an answer Pagemark could not read. Try again in a moment.');
     }
   }
 
@@ -145,7 +145,7 @@ class Lookup {
   /// ISBN lookup: the data API first, then a search by ISBN as a fallback.
   static Future<BookMeta?> byIsbn(String raw) async {
     final isbn = Isbn.to13(raw);
-    if (isbn == null) throw LookupException('"$raw" is not a valid ISBN.');
+    if (isbn == null) throw LookupException('"$raw" is not a valid barcode number (ISBN).');
     final u = Uri.https('openlibrary.org', '/api/books', {'bibkeys': 'ISBN:$isbn', 'format': 'json', 'jscmd': 'data'});
     final r = await _get(u);
     final m = _decode(r);

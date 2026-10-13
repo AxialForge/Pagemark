@@ -20,7 +20,7 @@ register the app once. No billing is needed.
 
 Notes
 - Android runs the schedule via WorkManager: "daily/weekly" is approximate and may be delayed by battery saver.
-- Backups include locked books. They are encrypted on the phone before upload only if you set a **backup passphrase** (Settings > Google Drive backup); without one they sit unencrypted in your private Drive app folder. If the passphrase is ever lost from the phone, Pagemark stops uploading and tells you instead of sending an unencrypted copy.
+- Backups include locked books. They are encrypted on the phone before upload only if you set a **backup password** (Settings > Google Drive backup); without one they sit unencrypted in your private Drive app folder. If the password is ever lost from the phone, Pagemark stops uploading and tells you instead of sending an unencrypted copy.
 - Restore: **Restore from Drive…** replaces the whole library, then the app closes.
 
 ## Release key

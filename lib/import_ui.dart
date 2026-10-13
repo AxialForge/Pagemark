@@ -40,7 +40,7 @@ class _ImportPageState extends State<ImportPage> {
       setState(() => error = e.message);
     } catch (e) {
       Log.e('import', e);
-      setState(() => error = 'That file could not be read. Is it a CSV or JSON export?');
+      setState(() => error = 'That file could not be read. Is it a Goodreads, StoryGraph or Pagemark export?');
     }
     setState(() => busy = false);
   }
@@ -53,7 +53,7 @@ class _ImportPageState extends State<ImportPage> {
       setState(() => done = r);
     } catch (e) {
       Log.e('import', e);
-      setState(() => error = 'The import failed and nothing was changed. Details are in Settings, Diagnostics.');
+      setState(() => error = 'The import failed and nothing was changed. Details are in Settings, Help and about, Problem report.');
     }
     setState(() => busy = false);
   }
@@ -73,7 +73,7 @@ class _ImportPageState extends State<ImportPage> {
       appBar: AppBar(title: const Text('Import')),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         if (busy) const LinearProgressIndicator(),
-        const Text('Bring in a reading history from another app, or restore a Pagemark CSV/JSON export. '
+        const Text('Bring in your reading history from another app, or from a Pagemark list you saved earlier. '
             'Imports go into your main library (never the locked one), and nothing is changed until you confirm.'),
         const SizedBox(height: 12),
         Card(
@@ -82,7 +82,7 @@ class _ImportPageState extends State<ImportPage> {
             title: const Text('Where do I get the file?'),
             subtitle: const Text('Goodreads: My Books → Import and export → Export Library.\n'
                 'StoryGraph: Manage Account → Manage Your Data → Export.\n'
-                'Pagemark: Settings → Export (CSV or JSON).'),
+                'Pagemark: Settings → Import and export.'),
           ),
         ),
         const SizedBox(height: 8),
@@ -128,7 +128,7 @@ class _ImportPageState extends State<ImportPage> {
             label: Text(_importLabel(pl)),
           ),
           const SizedBox(height: 4),
-          const Text('A safety copy of your library is saved first, and you can undo the import afterwards.', style: TextStyle(fontSize: 12)),
+          const Text('A copy of your library is saved first, and you can undo the import afterwards.', style: TextStyle(fontSize: 12)),
         ],
         if (done != null) ...[
           const SizedBox(height: 12),

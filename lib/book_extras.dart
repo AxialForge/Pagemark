@@ -276,8 +276,8 @@ class _CoversPageState extends State<CoversPage> {
             OutlinedButton.icon(onPressed: _tidy, icon: const Icon(Icons.cleaning_services_outlined), label: const Text('Remove unused cover files')),
           ],
           const SizedBox(height: 16),
-          const Text('Covers of locked books are saved here too. They stay on the phone (they are not erased when the vault closes) and are included '
-              'in backups, so protect backups with a passphrase.', style: TextStyle(fontSize: 12)),
+          const Text('Covers of locked books are saved here too. They stay on the phone (they are not erased when the locked library closes) and are included '
+              'in backups, so protect backups with a password.', style: TextStyle(fontSize: 12)),
         ]),
       );
 }

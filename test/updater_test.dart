@@ -63,10 +63,10 @@ void main() {
     });
 
     test('readable errors for private repo, rate limit and offline', () async {
-      await expectLater(run([], code: 404), throwsA(isA<UpdateException>().having((e) => e.message, 'm', contains('private'))));
-      await expectLater(run([], code: 403), throwsA(isA<UpdateException>().having((e) => e.message, 'm', contains('rate'))));
+      await expectLater(run([], code: 404), throwsA(isA<UpdateException>().having((e) => e.message, 'm', contains('No updates'))));
+      await expectLater(run([], code: 403), throwsA(isA<UpdateException>().having((e) => e.message, 'm', contains('Too many'))));
       Updater.client = MockClient((_) async => throw const SocketException('offline'));
-      await expectLater(Updater.check(currentVersion: '0.3.0', abis: ['arm64-v8a']), throwsA(isA<UpdateException>().having((e) => e.message, 'm', contains('connection'))));
+      await expectLater(Updater.check(currentVersion: '0.3.0', abis: ['arm64-v8a']), throwsA(isA<UpdateException>().having((e) => e.message, 'm', contains('internet connection'))));
     });
   });
 
@@ -90,10 +90,10 @@ void main() {
     test('wrong checksum or wrong size is rejected and the file deleted', () async {
       Updater.client = MockClient((_) async => http.Response.bytes(bytes, 200));
       final f1 = File('${dir.path}/a.apk');
-      await expectLater(Updater.download(info(sha: 'deadbeef'), (_) {}, to: f1), throwsA(isA<UpdateException>().having((e) => e.message, 'm', contains('integrity'))));
+      await expectLater(Updater.download(info(sha: 'deadbeef'), (_) {}, to: f1), throwsA(isA<UpdateException>().having((e) => e.message, 'm', contains('damaged'))));
       expect(await f1.exists(), isFalse);
       final f2 = File('${dir.path}/b.apk');
-      await expectLater(Updater.download(info(size: 5000), (_) {}, to: f2), throwsA(isA<UpdateException>().having((e) => e.message, 'm', contains('cut short'))));
+      await expectLater(Updater.download(info(size: 5000), (_) {}, to: f2), throwsA(isA<UpdateException>().having((e) => e.message, 'm', contains('did not finish'))));
       expect(await f2.exists(), isFalse);
     });
 

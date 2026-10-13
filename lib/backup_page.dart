@@ -21,7 +21,7 @@ Future<void> restoreFlow(BuildContext context, File picked) async {
   var file = picked;
   if (await BackupCrypto.isEncrypted(picked)) {
     if (!context.mounted) return;
-    final pass = await ask(context, 'Backup passphrase', '', false, true);
+    final pass = await ask(context, 'Backup password', '', false, true);
     if (pass == null || pass.isEmpty) return;
     try {
       final tmp = await getTemporaryDirectory();
@@ -165,7 +165,7 @@ class _BackupPageState extends State<BackupPage> {
 
   Future<void> persist() async {
     if (cid.text.trim().isNotEmpty && !looksLikeGoogleClientId(cid.text)) {
-      throw 'The Web client ID does not look right. It should end with .apps.googleusercontent.com (copy it from Google Cloud, Credentials, Web application).';
+      throw 'That Web client ID does not look right. It should end with .apps.googleusercontent.com.';
     }
     s!.serverClientId = cid.text.trim();
     await s!.save();
@@ -179,14 +179,14 @@ class _BackupPageState extends State<BackupPage> {
       await DriveBackup.setPassphrase(null);
       return;
     }
-    final a = await ask(context, 'Choose a backup passphrase', '', false, true);
+    final a = await ask(context, 'Choose a backup password', '', false, true);
     if (a == null || a.length < 8 || !mounted) {
       if (a != null && mounted) snack(context, 'Use at least 8 characters');
       return;
     }
-    final b = await ask(context, 'Re-enter the passphrase', '', false, true);
+    final b = await ask(context, 'Type the password again', '', false, true);
     if (b != a) {
-      if (mounted) snack(context, 'Passphrases did not match');
+      if (mounted) snack(context, 'The passwords did not match');
       return;
     }
     await DriveBackup.setPassphrase(a);
@@ -194,8 +194,8 @@ class _BackupPageState extends State<BackupPage> {
       await showDialog<void>(
         context: context,
         builder: (c) => AlertDialog(
-          title: const Text('Remember this passphrase'),
-          content: const Text('Backups are now encrypted. If you lose both this phone and the passphrase, the backups cannot be opened — not even by Pagemark.'),
+          title: const Text('Remember this password'),
+          content: const Text('Your backups are now protected. If you lose both this phone and this password, nobody can open the backups, not even Pagemark.'),
           actions: [FilledButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
         ),
       );
@@ -206,14 +206,13 @@ class _BackupPageState extends State<BackupPage> {
   Widget build(BuildContext context) {
     final st = s;
     return Scaffold(
-      appBar: AppBar(title: const Text('Google Drive backup')),
+      appBar: AppBar(title: const Text('Back up to Google Drive')),
       body: st == null
           ? const SizedBox()
           : ListView(padding: const EdgeInsets.all(16), children: [
               if (busy) const LinearProgressIndicator(),
-              const Text('Backups are full database copies (including locked books) stored in Pagemark\'s private '
-                  'app-data folder on your Drive — they don\'t show in your normal Drive files. The newest 5 are kept, '
-                  'and an unchanged library isn\'t uploaded again.'),
+              const Text('A backup is a full copy of your library, including your locked books. It is kept in a private spot on your Google Drive '
+                  'that does not show up with your normal files. The newest 5 are kept, and nothing is uploaded if nothing changed.'),
               const SizedBox(height: 16),
               TextField(
                 controller: cid,
@@ -236,8 +235,8 @@ class _BackupPageState extends State<BackupPage> {
                     : TextButton(onPressed: busy ? null : () => guard(() async { await DriveBackup.signOut(); st.enabled = false; await persist(); }), child: const Text('Sign out')),
               ),
               SwitchListTile(
-                title: const Text('Encrypt backups with a passphrase'),
-                subtitle: const Text('Recommended — your locked books are in every backup.'),
+                title: const Text('Protect backups with a password'),
+                subtitle: const Text('Recommended. Your locked books are in every backup.'),
                 value: encrypted,
                 onChanged: busy ? null : (v) => guard(() => _toggleEncryption(v)),
               ),
@@ -276,7 +275,7 @@ class _BackupPageState extends State<BackupPage> {
                     const SizedBox(height: 8),
                     Wrap(spacing: 8, children: [
                       OutlinedButton(onPressed: openAppSettings, child: const Text('App settings')),
-                      OutlinedButton(onPressed: openBatterySettings, child: const Text('Battery optimisation')),
+                      OutlinedButton(onPressed: openBatterySettings, child: const Text('Battery settings')),
                     ]),
                   ]),
                 ),

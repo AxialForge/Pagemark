@@ -163,7 +163,7 @@ class Importer {
       case ImportSource.pagemarkJson:
         final j = jsonDecode(text) as Map;
         final v = j['pagemark_export'];
-        if (v != null && (v is! int || v > 2)) throw ImportException('This export is from a newer Pagemark (format $v). Update the app first.');
+        if (v != null && (v is! int || v > 2)) throw ImportException('This file was made by a newer version of Pagemark. Update the app first.');
         final rows = [
           for (final r in (j['books'] is List ? j['books'] as List : const [])) if (r is Map) {for (final e in r.entries) '${e.key}': e.value == null ? '' : '${e.value}'},
         ];

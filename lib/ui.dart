@@ -652,11 +652,11 @@ class _AddBookState extends State<AddBook> {
       final choice = await showDialog<String>(
         context: context,
         builder: (c) => AlertDialog(
-          title: const Text('Search sends text to Open Library'),
-          content: const Text('Looking up a book sends what you typed to openlibrary.org. For a title you want to keep completely offline, add it manually instead.'),
+          title: const Text('Searching uses the internet'),
+          content: const Text('Searching sends what you type to a free book website (Open Library). If you want a title to stay completely on your phone, add it by hand instead.'),
           actions: [
             TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
-            TextButton(onPressed: () => Navigator.pop(c, 'manual'), child: const Text('Add manually')),
+            TextButton(onPressed: () => Navigator.pop(c, 'manual'), child: const Text('Add by hand')),
             FilledButton(onPressed: () => Navigator.pop(c, 'search'), child: const Text('Search anyway')),
           ],
         ),
@@ -739,7 +739,7 @@ class _AddBookState extends State<AddBook> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Add a book'), actions: [IconButton(icon: const Icon(Icons.qr_code_scanner), tooltip: 'Scan ISBN', onPressed: scan)]),
+        appBar: AppBar(title: const Text('Add a book'), actions: [IconButton(icon: const Icon(Icons.qr_code_scanner), tooltip: 'Scan a barcode', onPressed: scan)]),
         body: Column(children: [
           Padding(
             padding: const EdgeInsets.all(12),
@@ -747,7 +747,7 @@ class _AddBookState extends State<AddBook> {
               controller: qc,
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
-                hintText: 'Search Open Library (title, author, ISBN)', border: const OutlineInputBorder(),
+                hintText: 'Search for a book (title, author or ISBN)', border: const OutlineInputBorder(),
                 suffixIcon: IconButton(icon: const Icon(Icons.search), onPressed: () => go(qc.text)),
               ),
               onSubmitted: go,
@@ -769,7 +769,7 @@ class _AddBookState extends State<AddBook> {
                   onTap: () => setState(() => showAll = true),
                 ),
               ListTile(
-                leading: const Icon(Icons.edit_note), title: const Text('Add manually'),
+                leading: const Icon(Icons.edit_note), title: const Text('Add by hand'),
                 subtitle: const Text('Not found? Enter the details yourself.'),
                 onTap: manual,
               ),
@@ -844,8 +844,8 @@ class _ScanPageState extends State<ScanPage> {
                   const SizedBox(height: 16),
                   Text(
                     error.errorCode == MobileScannerErrorCode.permissionDenied
-                        ? 'Pagemark needs camera access to scan barcodes. Allow it in Android Settings, or type the ISBN instead.'
-                        : 'The camera is not available right now. You can type the ISBN instead.',
+                        ? 'Pagemark needs the camera to scan barcodes. Allow it in Android Settings, or type the number under the barcode instead.'
+                        : 'The camera is not available right now. You can type the number under the barcode instead.',
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 20),
@@ -853,7 +853,7 @@ class _ScanPageState extends State<ScanPage> {
                     FilledButton.tonal(onPressed: openAppSettings, child: const Text('Open app settings')),
                     const SizedBox(height: 8),
                   ],
-                  FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Type the ISBN instead')),
+                  FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Type the number instead')),
                 ]),
               ),
             ),
@@ -872,7 +872,7 @@ class _ScanPageState extends State<ScanPage> {
           ),
           const Align(
             alignment: Alignment.bottomCenter,
-            child: Padding(padding: EdgeInsets.all(24), child: Text('Point at the ISBN barcode on the back cover', style: TextStyle(color: Colors.white, shadows: [Shadow(blurRadius: 6)]))),
+            child: Padding(padding: EdgeInsets.all(24), child: Text('Point the camera at the barcode on the back cover', style: TextStyle(color: Colors.white, shadows: [Shadow(blurRadius: 6)]))),
           ),
         ]),
       );
@@ -916,7 +916,7 @@ class BookPage extends StatelessWidget {
                 if (v == 'del') {
                   if (!context.mounted) return;
                   final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
-                    title: const Text('Move to Trash?'), content: const Text('Its reading log and thoughts go with it. You can restore it from Settings > Trash for 30 days.'),
+                    title: const Text('Move to Trash?'), content: const Text('Its reading log and thoughts go with it. You can bring it back from Settings, Your library, Deleted books for 30 days.'),
                     actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Move to Trash'))]));
                   if (ok == true) {
                     await db.softDelete(b.id);
@@ -1071,7 +1071,7 @@ class _EditBookState extends State<EditBook> {
         body: ListView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: const EdgeInsets.all(16), children: [
           f('title', 'Title', cap: TextCapitalization.words), f('author', 'Author', cap: TextCapitalization.words), f('series', 'Series', cap: TextCapitalization.words),
           f('seriesNumber', 'Number in series (e.g. 2 or 2.5)', num: true, decimal: true), f('seriesTotal', 'Books in the series (optional)', num: true), f('genre', 'Genre (fantasy, romance, science…)', cap: TextCapitalization.words),
-          f('tags', 'Tags (comma separated)'), f('publisher', 'Publisher', cap: TextCapitalization.words), f('isbn', 'ISBN'), f('coverUrl', 'Cover image URL'),
+          f('tags', 'Tags (separate with commas)'), f('publisher', 'Publisher', cap: TextCapitalization.words), f('isbn', 'ISBN'), f('coverUrl', 'Cover picture web address'),
           f('year', 'Year', num: true), f('pages', 'Pages', num: true),
           f('description', 'Description', lines: 4, cap: TextCapitalization.sentences), f('notes', 'Private notes', lines: 4, cap: TextCapitalization.sentences),
         ]),
@@ -1496,17 +1496,17 @@ class TrashPage extends StatelessWidget {
   const TrashPage({super.key, this.locked = false});
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text(locked ? 'Locked Trash' : 'Trash')),
+        appBar: AppBar(title: Text(locked ? 'Locked deleted books' : 'Deleted books')),
         body: StreamBuilder<List<Book>>(
           stream: db.watchTrash(locked: locked),
           builder: (_, snap) {
             final list = snap.data ?? [];
-            if (list.isEmpty) return const Center(child: Text('Trash is empty.'));
+            if (list.isEmpty) return const Center(child: Text('No deleted books.'));
             return ListView(children: [
               for (final b in list)
                 ListTile(
                   title: Text(b.title),
-                  subtitle: Text('${b.author}\nDeleted ${_date.format(b.deletedAt!)} - purged after ${AppDb.trashDays} days'),
+                  subtitle: Text('${b.author}\nDeleted ${_date.format(b.deletedAt!)} - removed for good after ${AppDb.trashDays} days'),
                   isThreeLine: true,
                   trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                     IconButton(icon: const Icon(Icons.restore_from_trash), tooltip: 'Restore', onPressed: () => db.restoreBook(b.id)),
@@ -1525,7 +1525,7 @@ class DiagnosticsPage extends StatelessWidget {
   const DiagnosticsPage({super.key});
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Diagnostics')),
+        appBar: AppBar(title: const Text('Problem report')),
         body: FutureBuilder<String>(
           future: Log.read(),
           builder: (_, snap) {
@@ -1546,7 +1546,7 @@ class DiagnosticsPage extends StatelessWidget {
                   OutlinedButton.icon(icon: const Icon(Icons.delete_outline), label: const Text('Clear'), onPressed: () async { await Log.clear(); if (context.mounted) Navigator.pop(context); }),
                 ]),
               ),
-              Expanded(child: SingleChildScrollView(padding: const EdgeInsets.all(12), child: SelectableText(text.isEmpty ? 'Nothing logged.' : text, style: const TextStyle(fontFamily: 'monospace', fontSize: 11)))),
+              Expanded(child: SingleChildScrollView(padding: const EdgeInsets.all(12), child: SelectableText(text.isEmpty ? 'Nothing has gone wrong.' : text, style: const TextStyle(fontFamily: 'monospace', fontSize: 11)))),
             ]);
           },
         ),

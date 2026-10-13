@@ -19,8 +19,8 @@ void main() {
       expect(friendlyBackupError(DetailedApiRequestError(401, 'bad')), contains('sign in again'));
       expect(friendlyBackupError(DetailedApiRequestError(403, 'The user has exceeded their storage quota')), contains('Drive is full'));
       expect(friendlyBackupError(DetailedApiRequestError(403, 'Rate Limit Exceeded')), contains('limiting'));
-      expect(friendlyBackupError(DetailedApiRequestError(403, 'Google Drive API has not been used in project 123')), contains('not enabled'));
-      expect(friendlyBackupError(DetailedApiRequestError(403, 'forbidden')), contains('refused'));
+      expect(friendlyBackupError(DetailedApiRequestError(403, 'Google Drive API has not been used in project 123')), contains('not switched on'));
+      expect(friendlyBackupError(DetailedApiRequestError(403, 'forbidden')), contains('said no'));
       expect(friendlyBackupError(DetailedApiRequestError(404, 'x')), contains('could not find'));
       expect(friendlyBackupError(DetailedApiRequestError(429, 'x')), contains('limiting'));
       expect(friendlyBackupError(DetailedApiRequestError(503, 'x')), contains('having problems'));
@@ -29,11 +29,11 @@ void main() {
 
     test('sign-in exceptions and our own messages', () {
       expect(friendlyBackupError(const GoogleSignInException(code: GoogleSignInExceptionCode.canceled)), contains('cancelled'));
-      expect(friendlyBackupError(const GoogleSignInException(code: GoogleSignInExceptionCode.clientConfigurationError)), contains('client ID'));
+      expect(friendlyBackupError(const GoogleSignInException(code: GoogleSignInExceptionCode.clientConfigurationError)), contains('sign-in settings'));
       expect(friendlyBackupError(const BackupAuthException('sign in please')), 'sign in please');
       expect(friendlyBackupError('plain string'), 'plain string');
-      expect(friendlyBackupError(WrongPassphrase()), contains('Wrong passphrase'));
-      expect(friendlyBackupError(StateError('boom')), allOf(contains('StateError'), contains('Diagnostics')));
+      expect(friendlyBackupError(WrongPassphrase()), contains('Wrong password'));
+      expect(friendlyBackupError(StateError('boom')), allOf(contains('StateError'), contains('Problem report')));
     });
   });
 

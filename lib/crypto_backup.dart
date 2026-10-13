@@ -5,7 +5,7 @@ import 'package:cryptography/cryptography.dart';
 
 class WrongPassphrase implements Exception {
   @override
-  String toString() => 'Wrong passphrase, or the file is damaged.';
+  String toString() => 'Wrong password, or the file is damaged.';
 }
 
 /// Passphrase-encrypted backup container:
