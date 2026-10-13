@@ -102,6 +102,11 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 - **Selection:** `SelectionScope` (selection.dart) is an InheritedWidget shared with every Library style; a new style must route taps through `_open` and long-press through `_hold` in skins.dart, and draw `SelectedBadge`. `Dismissible` rows return `false` from `confirmDismiss` so the database stream, not the widget, removes the row.
 - **Bulk operations live in `AppDb`** (`softDeleteMany`, `setLockedMany`, `markFinishedToday` -> `FinishUndo`, ...) so they are unit-tested without UI.
 
+- **Covers have two forms:** a web URL, or `local:<file>` resolved by `CoverStore` (never build paths from a book's value by hand - `CoverStore.fileFor` rejects anything that is not a plain file name). Anything that reads a restore/zip must go through `Exporter.unpack` (extracts only `pagemark.sqlite` and plain-named `covers/*`). Close `InputFileStream`s: Windows cannot delete an open file.
+- **Backups are now zips when covers exist** (`pagemark.sqlite` + `covers/`); `Exporter.bundle` / `unpack` / `inspectBackup` are the only readers/writers. Old plain-sqlite backups must keep restoring.
+- **Schema 4:** quotes table (`body`, not `text`: Drift's `text()` builder clashes), `books.series_total`, `reads.heat`, `reads.content_notes`. Heat/content notes are opt-in (`adultFields`) and excluded from exports unless that switch is on.
+- Tests that touch exports/covers use `Exporter.debugTmp` and `CoverStore.useDir`; image-decoding widget tests need `tester.runAsync` + a short real delay.
+
 ## Docs & screenshots
 
 - Documentation lives in `docs/release-package/*.md`; `python docs/_tools/build_docs.py` builds the four PDFs plus the combined `Pagemark-Documentation.pdf` (needs Python `markdown` and Edge). Figures are inline HTML (`<div class="shots">`) pointing at `../screenshots/*.jpg`.

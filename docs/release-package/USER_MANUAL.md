@@ -1,8 +1,8 @@
 # Pagemark — User Manual
 
-**Version 0.5.0** · A private, fully local book tracker for Android
+**Version 0.6.0** · A private, fully local book tracker for Android
 
-*Screenshots show sample books and were captured from the Android app (0.5.0).*
+*Screenshots show sample books and were captured from the Android app (0.6.0).*
 
 ---
 
@@ -134,6 +134,30 @@ In **Bookshelf** or **Spines**, open the style picker and switch on **Group by m
 <div class="shots "><figure><img src="../screenshots/skin-shelf-grouped.jpg" alt="Bookshelf grouped by shelf"><figcaption>Bookshelf grouped by shelf</figcaption></figure><figure><img src="../screenshots/theme-sage.jpg" alt="Sage, with Spines grouped"><figcaption>Sage, with Spines grouped</figcaption></figure><figure><img src="../screenshots/theme-lamplight.jpg" alt="Lamplight"><figcaption>Lamplight</figcaption></figure></div>
 
 
+
+## 5b. Quotes, authors, covers and series
+
+### Quotes
+
+On a book's page, **Add quote** saves a passage with its page number and an optional note about why it stuck. Tap a quote to edit it; its ⋮ menu can **copy** or **share** it (as the quote followed by author, title and page) or **delete** it (with Undo). The Library search box also searches your quotes, so you can find a book by a line from it.
+
+<div class="shots two"><figure><img src="../screenshots/quotes.jpg" alt="Quotes on a book page"><figcaption>Quotes on a book page</figcaption></figure><figure><img src="../screenshots/author.jpg" alt="An author page"><figcaption>An author page</figcaption></figure></div>
+
+### Authors
+
+Tap an author's name on a book to open their page: every book by them in this library, how many you've read and your average rating. (Locked books appear only inside the locked library.)
+
+### Covers on your phone
+
+By default covers load from the internet. From a book's ⋮ menu you can **Save cover on this phone** (so it works offline and travels in backups), **Choose cover from gallery**, or **Remove saved cover** (the web cover returns). **Settings → Covers** shows how many are saved and can save them all in one go, with a Stop button, and tidy unused files. Covers of locked books are saved too; they stay on the phone and are in backups, so protect backups with a passphrase.
+
+### Series totals
+
+In **Edit**, **Books in the series** records how long the series is. The Series screen then says things like "2 of 7 read · 5 not in your library".
+
+### Heat and content notes (optional)
+
+Settings → Privacy → **Heat level and content notes** adds two private fields to each read: a 0–5 flame rating and a content-notes line. They show on the book page, add a **Heat** chart to Stats, and are *left out* of CSV/JSON exports unless this switch is on. It is off by default.
 
 ## 6b. Selecting many books, and swiping
 

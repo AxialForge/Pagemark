@@ -3,6 +3,7 @@ import 'package:crypto/crypto.dart' as hash;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'backup_errors.dart';
+import 'covers.dart';
 import 'crypto_backup.dart';
 import 'log.dart';
 import 'notifier.dart';
@@ -153,7 +154,8 @@ class DriveBackup {
       final snap = await Exporter.snapshotDb(db);
       final pass = await passphrase();
       final digest = hash.sha256.convert(await snap.readAsBytes()).toString();
-      final sig = '$digest|${pass == null || pass.isEmpty ? 'plain' : 'enc'}';
+      final coversSig = hash.sha256.convert((await CoverStore.signature()).codeUnits).toString();
+      final sig = '$digest|$coversSig|${pass == null || pass.isEmpty ? 'plain' : 'enc'}';
       if (!force && p.getString('bk_hash') == sig) {
         await snap.delete();
         await p.setString('bk_ok', DateTime.now().toIso8601String());
@@ -161,11 +163,14 @@ class DriveBackup {
         await p.setInt('bk_fail', 0);
         return const BackupResult(false, 0);
       }
-      var upload = snap;
-      var ext = 'sqlite';
+      // covers saved on the phone travel inside the backup (a zip), so a restore on a new phone shows them offline
+      var upload = await Exporter.bundle(snap, baseName: 'pagemark-upload');
+      var ext = upload.path.endsWith('.zip') ? 'zip' : 'sqlite';
       if (pass != null && pass.isNotEmpty) {
         final tmp = await getTemporaryDirectory();
-        upload = await BackupCrypto.encrypt(snap, File('${tmp.path}/pagemark-upload.pgbak'), pass);
+        final plain = upload;
+        upload = await BackupCrypto.encrypt(plain, File('${tmp.path}/pagemark-upload.pgbak'), pass);
+        if (plain.path != upload.path && await plain.exists()) await plain.delete();
         ext = 'pgbak';
       }
       final name = 'pagemark-${DateFormat('yyyyMMdd-HHmm').format(DateTime.now())}.$ext';
@@ -183,7 +188,7 @@ class DriveBackup {
       for (final f in (await list(api: api)).skip(keepBackups)) {
         await api.files.delete(f.id!);
       }
-      for (final f in {snap, upload}) {
+      for (final f in {snap, upload}) { // (snap is already gone when it was bundled)
         if (await f.exists()) await f.delete();
       }
       await p.setString('bk_hash', sig);

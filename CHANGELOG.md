@@ -12,6 +12,29 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+## [0.6.0] - 2026-10-12
+
+Keep more of what you read.
+
+### Added
+
+- Quotes: save passages from a book with the page and a note about why they stuck. Edit, copy, share (as "quote - author, title, p. N"),
+  delete with Undo. The Library search finds a book by a line from it. Quotes travel in JSON exports and imports.
+- Covers on your phone: "Save cover on this phone", "Choose cover from gallery" and "Remove saved cover" on each book, plus Settings > Covers to
+  save every cover for offline use (with progress and Stop) and tidy unused files. Saved covers work offline and are included in backups
+  and database exports (a zip holding the library and the covers; plain library files without covers are unchanged and old backups still restore).
+- Authors: tap an author's name on a book to see all their books in the library, with how many you've read and your average rating.
+- Series: set how many books a series has ("Books in the series"); the Series screen then shows how many volumes you do not have yet.
+- Optional private fields (Settings > Privacy > "Heat level and content notes"): a 0-5 heat rating and content notes on each read, shown on
+  the book page, a Heat chart in Stats, and left out of CSV/JSON exports unless this is switched on. Off by default.
+- Books with no cover show a coloured tile with the title's first letter (done in 0.4.3; now also used with local covers).
+
+### Changed
+
+- Database schema 4 (adds quotes, series total, heat and content notes); upgrades from every earlier version are tested.
+- Export format version 2 (adds quotes); Pagemark still reads version 1 files and refuses newer ones with a clear message.
+- Restore reports how many saved covers a backup contains; zip files are checked so nothing outside the covers folder can be written.
+
 ## [0.5.0] - 2026-10-12
 
 Bring your history in, and manage many books at once.

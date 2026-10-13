@@ -31,7 +31,7 @@ Future<void> restoreFlow(BuildContext context, File picked) async {
       return;
     }
   }
-  final check = Exporter.inspect(file);
+  final check = await Exporter.inspectBackup(file);
   if (!context.mounted) return;
   if (!check.ok) {
     snack(context, check.message);
@@ -41,7 +41,7 @@ Future<void> restoreFlow(BuildContext context, File picked) async {
     context: context,
     builder: (c) => AlertDialog(
       title: const Text('Replace your library?'),
-      content: Text('This backup holds ${check.books} books and ${check.reads} reads. '
+      content: Text('This backup holds ${check.books} books and ${check.reads} reads${check.covers > 0 ? ' and ${check.covers} saved covers' : ''}. '
           'Your current library is replaced; a safety copy of it is kept in the app (newest 3). The app will close afterwards.'),
       actions: [
         TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),

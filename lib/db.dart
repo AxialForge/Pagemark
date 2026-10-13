@@ -17,6 +17,7 @@ class Books extends Table {
   TextColumn get genre => text().withDefault(const Constant(''))();
   TextColumn get series => text().withDefault(const Constant(''))();
   RealColumn get seriesNumber => real().nullable()(); // 1, 2, 2.5 ...
+  IntColumn get seriesTotal => integer().nullable()(); // how many books the series has (user-entered)
   TextColumn get publisher => text().withDefault(const Constant(''))();
   IntColumn get year => integer().nullable()();
   IntColumn get pages => integer().nullable()();
@@ -42,6 +43,18 @@ class Reads extends Table {
   TextColumn get narrator => text().withDefault(const Constant(''))();
   IntColumn get minutes => integer().nullable()(); // audio length or time spent
   IntColumn get currentPage => integer().nullable()(); // reading progress (page or %)
+  IntColumn get heat => integer().nullable()(); // 0-5 private "heat" level (opt-in field)
+  TextColumn get contentNotes => text().withDefault(const Constant(''))(); // private content notes (opt-in field)
+}
+
+/// A passage you want to keep from a book.
+class Quotes extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get bookId => integer().references(Books, #id, onDelete: KeyAction.cascade)();
+  TextColumn get body => text()();
+  IntColumn get page => integer().nullable()();
+  TextColumn get note => text().withDefault(const Constant(''))();
+  DateTimeColumn get created => dateTime().withDefault(currentDateAndTime)();
 }
 
 @DataClassName('Shelf')
@@ -59,12 +72,12 @@ class BookShelves extends Table {
   Set<Column> get primaryKey => {bookId, shelfId};
 }
 
-@DriftDatabase(tables: [Books, Reads, Shelves, BookShelves])
+@DriftDatabase(tables: [Books, Reads, Shelves, BookShelves, Quotes])
 class AppDb extends _$AppDb {
   AppDb() : super(_open());
   AppDb.forFile(File f) : super(NativeDatabase(f, setup: _pragmas));
   AppDb.memory() : super(NativeDatabase.memory());
-  static const currentSchema = 3;
+  static const currentSchema = 4;
   @override
   int get schemaVersion => currentSchema;
 
@@ -83,6 +96,12 @@ class AppDb extends _$AppDb {
             await m.addColumn(reads, reads.currentPage);
             await m.createTable(shelves);
             await m.createTable(bookShelves);
+          }
+          if (from < 4) {
+            await m.addColumn(books, books.seriesTotal);
+            await m.addColumn(reads, reads.heat);
+            await m.addColumn(reads, reads.contentNotes);
+            await m.createTable(quotes);
           }
         },
         beforeOpen: (details) async {
@@ -121,6 +140,26 @@ class AppDb extends _$AppDb {
       (update(books)..where((b) => b.id.equals(id))).write(BooksCompanion(deletedAt: Value(DateTime.now())));
   Future<void> restoreBook(int id) =>
       (update(books)..where((b) => b.id.equals(id))).write(const BooksCompanion(deletedAt: Value(null)));
+  // ── quotes ──
+  Stream<List<Quote>> watchQuotes(int bookId) =>
+      (select(quotes)..where((q) => q.bookId.equals(bookId))..orderBy([(q) => OrderingTerm.asc(q.page), (q) => OrderingTerm.asc(q.id)])).watch();
+
+  /// Every quote's text keyed by book, for library search ("find the book with that line in it").
+  Stream<Map<int, String>> watchQuoteText() => select(quotes).watch().map((all) {
+        final m = <int, StringBuffer>{};
+        for (final q in all) {
+          (m[q.bookId] ??= StringBuffer()).write('${q.body} ${q.note} ');
+        }
+        return {for (final e in m.entries) e.key: e.value.toString()};
+      });
+
+  Future<int> addQuote(int bookId, String text, {int? page, String note = ''}) =>
+      into(quotes).insert(QuotesCompanion.insert(bookId: bookId, body: text.trim(), page: Value(page), note: Value(note.trim())));
+  Future<void> updateQuote(int id, String text, {int? page, String note = ''}) => (update(quotes)..where((q) => q.id.equals(id)))
+      .write(QuotesCompanion(body: Value(text.trim()), page: Value(page), note: Value(note.trim())));
+  Future<void> deleteQuote(int id) => (delete(quotes)..where((q) => q.id.equals(id))).go();
+  Future<void> restoreQuote(Quote q) => into(quotes).insert(q, mode: InsertMode.insertOrReplace);
+
   // ── bulk operations (multi-select) ──
   Future<void> softDeleteMany(Iterable<int> ids) =>
       (update(books)..where((b) => b.id.isIn(ids))).write(BooksCompanion(deletedAt: Value(DateTime.now())));

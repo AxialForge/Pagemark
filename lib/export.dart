@@ -4,22 +4,39 @@ import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sqlite3/sqlite3.dart' as sql;
+import 'package:archive/archive_io.dart';
+import 'covers.dart';
 import 'crypto_backup.dart';
 import 'db.dart';
 
 class RestoreCheck {
   final bool ok;
   final String message;
-  final int books, reads, lockedBooks;
-  const RestoreCheck.fail(this.message) : ok = false, books = 0, reads = 0, lockedBooks = 0;
-  const RestoreCheck.pass(this.books, this.reads, {this.lockedBooks = 0}) : ok = true, message = 'ok';
+  final int books, reads, lockedBooks, covers;
+  const RestoreCheck.fail(this.message) : ok = false, books = 0, reads = 0, lockedBooks = 0, covers = 0;
+  const RestoreCheck.pass(this.books, this.reads, {this.lockedBooks = 0, this.covers = 0}) : ok = true, message = 'ok';
+}
+
+/// A restore candidate opened for inspection. [db] is always a plain sqlite file; [dir] is a temp folder to delete.
+class Unpacked {
+  final File db;
+  final Directory? covers, dir;
+  Unpacked(this.db, this.covers, this.dir);
+  Future<void> cleanup() async {
+    try {
+      if (dir != null && await dir!.exists()) await dir!.delete(recursive: true);
+    } catch (_) {}
+  }
 }
 
 class Exporter {
   /// Export format version, written into JSON so future importers can tell files apart.
-  static const formatVersion = 1;
+  static const formatVersion = 2; // 2 adds quotes (and optional heat / content notes)
 
-  static Future<File> _tmp(String name) async => File('${(await getTemporaryDirectory()).path}/$name');
+  /// Tests point exports at a temp folder (the path plugin has no implementation on the test VM).
+  static Directory? debugTmp;
+
+  static Future<File> _tmp(String name) async => File('${(debugTmp ?? await getTemporaryDirectory()).path}/$name');
 
   static String _stamp() {
     final n = DateTime.now();
@@ -33,7 +50,19 @@ class Exporter {
     return v;
   }
 
-  static Future<List<Map<String, Object?>>> rows(AppDb db, {bool includeLocked = false}) async {
+  /// Quotes of the same books [rows] would export, keyed by title/author/ISBN so an import can match them to books.
+  static Future<List<Map<String, Object?>>> quoteRows(AppDb db, {bool includeLocked = false}) async {
+    final books = {for (final b in await (db.select(db.books)..where((b) => b.deletedAt.isNull())).get()) b.id: b};
+    final out = <Map<String, Object?>>[];
+    for (final q in await db.select(db.quotes).get()) {
+      final b = books[q.bookId];
+      if (b == null || (b.locked && !includeLocked)) continue;
+      out.add({'title': b.title, 'author': b.author, 'isbn': b.isbn, 'quote': q.body, 'page': q.page, 'note': q.note, 'created': q.created.toIso8601String()});
+    }
+    return out;
+  }
+
+  static Future<List<Map<String, Object?>>> rows(AppDb db, {bool includeLocked = false, bool includePrivateFields = false}) async {
     final books = await (db.select(db.books)..where((b) => b.deletedAt.isNull())).get();
     final reads = await db.select(db.reads).get();
     final out = <Map<String, Object?>>[];
@@ -46,6 +75,8 @@ class Exporter {
           'locked': b.locked, 'format': r?.format, 'status': r?.status,
           'started': r?.started?.toIso8601String(), 'finished': r?.finished?.toIso8601String(),
           'rating': r?.rating, 'thoughts': r?.thoughts, 'narrator': r?.narrator, 'minutes': r?.minutes,
+          'series_total': b.seriesTotal,
+          if (includePrivateFields) ...{'heat': r?.heat, 'content_notes': r?.contentNotes},
         });
       }
     }
@@ -62,15 +93,18 @@ class Exporter {
     await SharePlus.instance.share(ShareParams(files: [XFile(f.path, mimeType: mime)]));
   }
 
-  static Future<void> shareCsv(AppDb db) async {
+  static Future<void> shareCsv(AppDb db, {bool includePrivateFields = false}) async {
     final f = await _tmp('pagemark-library-${_stamp()}.csv');
-    await f.writeAsString(toCsv(await rows(db)));
+    await f.writeAsString(toCsv(await rows(db, includePrivateFields: includePrivateFields)));
     await _share(f, 'text/csv');
   }
 
-  static Future<void> shareJson(AppDb db) async {
+  static Future<void> shareJson(AppDb db, {bool includePrivateFields = false}) async {
     final f = await _tmp('pagemark-library-${_stamp()}.json');
-    final doc = {'pagemark_export': formatVersion, 'exported': DateTime.now().toIso8601String(), 'books': await rows(db)};
+    final doc = {
+      'pagemark_export': formatVersion, 'exported': DateTime.now().toIso8601String(),
+      'books': await rows(db, includePrivateFields: includePrivateFields), 'quotes': await quoteRows(db),
+    };
     await f.writeAsString(const JsonEncoder.withIndent('  ').convert(doc));
     await _share(f, 'application/json');
   }
@@ -83,15 +117,97 @@ class Exporter {
     return f;
   }
 
+  /// The sqlite snapshot plus the saved covers: a zip (`pagemark.sqlite` + `covers/*`) when there are covers, otherwise just
+  /// the snapshot. Backups and database exports use this so covers come back after a restore.
+  static Future<File> bundle(File sqlite, {required String baseName}) async {
+    final covers = await CoverStore.allFiles();
+    if (covers.isEmpty) return sqlite;
+    final out = await _tmp('$baseName.zip');
+    if (await out.exists()) await out.delete();
+    final z = ZipFileEncoder()..create(out.path);
+    await z.addFile(sqlite, 'pagemark.sqlite');
+    for (final c in covers) {
+      await z.addFile(c, 'covers/${c.uri.pathSegments.last}');
+    }
+    await z.close();
+    await sqlite.delete();
+    return out;
+  }
+
+  static Future<bool> isZip(File f) async {
+    final raf = await f.open();
+    try {
+      final h = await raf.read(4);
+      return h.length == 4 && h[0] == 0x50 && h[1] == 0x4B && h[2] == 3 && h[3] == 4;
+    } finally {
+      await raf.close();
+    }
+  }
+
+  /// Opens a restore candidate: a plain sqlite file, or a bundle zip. Only the database and plain-named cover files are
+  /// ever extracted (anything else in the zip, or any path trickery, is ignored). Caller deletes [Unpacked.dir] when done.
+  static Future<Unpacked> unpack(File f) async {
+    if (!await isZip(f)) return Unpacked(f, null, null);
+    final tmp = await Directory.systemTemp.createTemp('pgm-unpack');
+    final input = InputFileStream(f.path);
+    final Archive archive;
+    try {
+      archive = ZipDecoder().decodeStream(input);
+    } catch (_) {
+      await input.close();
+      await tmp.delete(recursive: true);
+      throw 'This backup file could not be opened (it may be damaged).';
+    }
+    File? dbFile;
+    Directory? covers;
+    for (final entry in archive) {
+      if (!entry.isFile) continue;
+      final bytes = entry.readBytes();
+      if (bytes == null) continue;
+      if (entry.name == 'pagemark.sqlite') {
+        dbFile = await File('${tmp.path}/pagemark.sqlite').writeAsBytes(bytes);
+      } else if (entry.name.startsWith('covers/')) {
+        final n = entry.name.substring(7);
+        if (CoverStore.safeName(n)) {
+          covers ??= await Directory('${tmp.path}/covers').create();
+          await File('${covers.path}/$n').writeAsBytes(bytes);
+        }
+      }
+    }
+    await input.close(); // release the file handle (Windows cannot delete an open file)
+    if (dbFile == null) {
+      await tmp.delete(recursive: true);
+      throw 'This backup file does not contain a Pagemark library.';
+    }
+    return Unpacked(dbFile, covers, tmp);
+  }
+
+  /// Like [inspect] but understands bundles, and reports how many covers come with it.
+  static Future<RestoreCheck> inspectBackup(File f) async {
+    Unpacked? u;
+    try {
+      u = await unpack(f);
+      final c = inspect(u.db);
+      if (!c.ok) return c;
+      final n = u.covers == null ? 0 : u.covers!.listSync().length;
+      return RestoreCheck.pass(c.books, c.reads, lockedBooks: c.lockedBooks, covers: n);
+    } catch (e) {
+      return RestoreCheck.fail(e is String ? e : 'This file is not a readable Pagemark backup.');
+    } finally {
+      await u?.cleanup();
+    }
+  }
+
   /// Share the whole database; with [passphrase] it is encrypted first.
   static Future<void> shareDb(AppDb db, {String? passphrase}) async {
-    final snap = await snapshotDb(db, name: 'pagemark-db-${_stamp()}.sqlite');
+    final base = 'pagemark-db-${_stamp()}';
+    final file = await bundle(await snapshotDb(db, name: '$base.sqlite'), baseName: base);
     if (passphrase == null || passphrase.isEmpty) {
-      await _share(snap, 'application/vnd.sqlite3');
+      await _share(file, file.path.endsWith('.zip') ? 'application/zip' : 'application/vnd.sqlite3');
       return;
     }
-    final enc = await BackupCrypto.encrypt(snap, await _tmp('pagemark-db-${_stamp()}.pgbak'), passphrase);
-    await snap.delete();
+    final enc = await BackupCrypto.encrypt(file, await _tmp('$base.pgbak'), passphrase);
+    await file.delete();
     await _share(enc, 'application/octet-stream');
   }
 
@@ -138,9 +254,14 @@ class Exporter {
 
   /// Make [src] (already decrypted) the live database. Validates first, keeps a safety copy of the
   /// current library (newest 3 kept in app storage), swaps files, and leaves the app needing a restart.
-  static Future<File> restoreDb(AppDb db, File src) async {
+  static Future<File> restoreDb(AppDb db, File original) async {
+    final unpacked = await unpack(original);
+    final src = unpacked.db;
     final check = inspect(src);
-    if (!check.ok) throw check.message;
+    if (!check.ok) {
+      await unpacked.cleanup();
+      throw check.message;
+    }
     final dest = await AppDb.file();
     final dir = dest.parent;
     final safety = await snapshotDb(db, name: 'pagemark-prerestore.sqlite');
@@ -160,6 +281,8 @@ class Exporter {
       if (await side.exists()) await side.delete();
     }
     await staged.rename(dest.path);
+    if (unpacked.covers != null && CoverStore.ready) await CoverStore.importFrom(unpacked.covers!);
+    await unpacked.cleanup();
     return kept;
   }
 }

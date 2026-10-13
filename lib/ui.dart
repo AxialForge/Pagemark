@@ -9,6 +9,8 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'backup_page.dart';
+import 'book_extras.dart';
+import 'covers.dart';
 import 'branding.dart';
 import 'updater.dart';
 import 'updater_ui.dart';
@@ -57,7 +59,10 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     cleanTempExports();
-    db.purgeExpiredTrash();
+    db.purgeExpiredTrash().then((_) async {
+      // covers of books deleted for good are no longer needed
+      if (CoverStore.ready) await CoverStore.removeUnused({for (final b in await db.select(db.books).get()) b.coverUrl});
+    });
     autoCheckUpdates();
     WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) announceNewVersion(context); });
   }
@@ -193,6 +198,8 @@ class _LibraryState extends State<Library> {
   late final Stream<List<BookRow>> _rowsStream = db.watchLibrary(locked: widget.locked).distinct(); // one subscription; identical re-emissions are skipped
   final _searchCtl = TextEditingController();
   final Set<int> selected = {};
+  Map<int, String> _quoteText = {};
+  StreamSubscription<Map<int, String>>? _quoteSub;
   List<BookRow> _shown = []; // what the list currently shows (for Select all)
   bool groupShelves = false; // Bookshelf/Spines: one named wooden shelf per user shelf
   List<Shelf> shelves = [];
@@ -211,6 +218,7 @@ class _LibraryState extends State<Library> {
     shelf = prefs.getInt('${_pk}_shelf');
     skin = skinById(prefs.getString('${_pk}_skin'));
     groupShelves = prefs.getBool('${_pk}_group') ?? false;
+    _quoteSub = db.watchQuoteText().listen((m) { if (mounted) setState(() => _quoteText = m); });
     _shelfSub = db.watchShelves().listen((v) {
       if (!mounted) return;
       setState(() {
@@ -228,6 +236,7 @@ class _LibraryState extends State<Library> {
   @override
   void dispose() {
     _searchCtl.dispose();
+    _quoteSub?.cancel();
     _shelfSub?.cancel();
     _linkSub?.cancel();
     super.dispose();
@@ -376,7 +385,7 @@ class _LibraryState extends State<Library> {
             textInputAction: TextInputAction.search,
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.search),
-              hintText: 'Search books, notes and thoughts',
+              hintText: 'Search books, notes, thoughts and quotes',
               border: const OutlineInputBorder(),
               suffixIcon: q.isEmpty ? null : IconButton(icon: const Icon(Icons.clear), tooltip: 'Clear search', onPressed: () { _searchCtl.clear(); setState(() => q = ''); }),
             ),
@@ -408,7 +417,7 @@ class _LibraryState extends State<Library> {
             builder: (_, snap) {
               var rows = (snap.data ?? []).where((r) {
                 final b = r.book;
-                if (q.isNotEmpty && !'${b.title} ${b.author} ${b.tags} ${b.genre} ${b.series} ${b.notes} ${r.reads.map((e) => e.thoughts).join(' ')}'.toLowerCase().contains(q)) return false;
+                if (q.isNotEmpty && !'${b.title} ${b.author} ${b.tags} ${b.genre} ${b.series} ${b.notes} ${r.reads.map((e) => e.thoughts).join(' ')} ${_quoteText[b.id] ?? ''}'.toLowerCase().contains(q)) return false;
                 if (status != 'all' && !r.reads.any((e) => e.status == status)) return false;
                 if (format != 'all' && !r.reads.any((e) => e.format == format)) return false;
                 if (shelf != null && !(shelfBooks[shelf]?.contains(b.id) ?? false)) return false;
@@ -493,9 +502,15 @@ class Cover extends StatelessWidget {
             );
           });
     final small = w <= 64 ? url.replaceFirst('-L.jpg', '-M.jpg') : url; // list thumbnails: don't download full-size covers
-    final img = url.isEmpty
+    final localFile = CoverStore.fileFor(url);
+    final img = url.isEmpty || (CoverStore.isLocal(url) && localFile == null)
         ? ph
-        : ClipRRect(
+        : localFile != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Image.file(localFile, width: w, height: w * 1.5, fit: BoxFit.cover, cacheWidth: (w * 3).round(), gaplessPlayback: true, errorBuilder: (_, _, _) => ph),
+              )
+            : ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: CachedNetworkImage(imageUrl: small, cacheManager: locked ? lockedCache : null, memCacheWidth: (w * 3).round(), width: w, height: w * 1.5, fit: BoxFit.cover,
                 fadeInDuration: const Duration(milliseconds: 250), placeholder: (_, _) => ph, errorWidget: (_, _, _) => ph),
@@ -844,6 +859,10 @@ class BookPage extends StatelessWidget {
             PopupMenuButton<String>(
               onSelected: (v) async {
                 if (v == 'lock') await (db.update(db.books)..where((x) => x.id.equals(b.id))).write(BooksCompanion(locked: Value(!b.locked)));
+                if (v.startsWith('cover_')) {
+                  final msg = await coverAction(b, v.substring(6));
+                  if (msg != null && context.mounted) snack(context, msg);
+                }
                 if (v == 'del') {
                   if (!context.mounted) return;
                   final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
@@ -857,6 +876,9 @@ class BookPage extends StatelessWidget {
               },
               itemBuilder: (_) => [
                 PopupMenuItem(value: 'lock', child: Text(b.locked ? 'Move to main library' : 'Move to locked library')),
+                if (b.coverUrl.isNotEmpty && !CoverStore.isLocal(b.coverUrl)) const PopupMenuItem(value: 'cover_save', child: Text('Save cover on this phone')),
+                const PopupMenuItem(value: 'cover_pick', child: Text('Choose cover from gallery')),
+                if (CoverStore.isLocal(b.coverUrl)) const PopupMenuItem(value: 'cover_remove', child: Text('Remove saved cover')),
                 const PopupMenuItem(value: 'del', child: Text('Move to Trash')),
               ],
             ),
@@ -871,8 +893,8 @@ class BookPage extends StatelessWidget {
               const SizedBox(width: 16),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(b.title, style: Theme.of(context).textTheme.titleLarge),
-                if (b.author.isNotEmpty) Text(b.author),
-                if (b.series.isNotEmpty) Text('Series: ${b.series}${b.seriesNumber == null ? '' : ' #${SeriesPage.fmtNum(b.seriesNumber)}'}'),
+                if (b.author.isNotEmpty) AuthorLinks(b),
+                if (b.series.isNotEmpty) Text('Series: ${b.series}${b.seriesNumber == null ? '' : ' #${SeriesPage.fmtNum(b.seriesNumber)}'}${b.seriesTotal == null ? '' : ' of ${b.seriesTotal}'}'),
                 if (b.genre.isNotEmpty) Text(b.genre),
                 Text([if (b.year != null) '${b.year}', if (b.pages != null) '${b.pages} pages', if (b.publisher.isNotEmpty) b.publisher].join(' · ')),
                 if (b.isbn.isNotEmpty) Text('ISBN ${b.isbn}'),
@@ -883,6 +905,8 @@ class BookPage extends StatelessWidget {
             ]),
             if (b.description.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 12), child: ExpandableText(b.description)),
             if (b.notes.isNotEmpty) Card(margin: const EdgeInsets.only(top: 12), child: Padding(padding: const EdgeInsets.all(12), child: Text(b.notes))),
+            const Divider(height: 32),
+            QuotesSection(book: b),
             const Divider(height: 32),
             Text('Reading log', style: Theme.of(context).textTheme.titleMedium),
             StreamBuilder<List<Read>>(
@@ -901,6 +925,8 @@ class BookPage extends StatelessWidget {
                         if (r.started != null) 'Started ${_date.format(r.started!)}',
                         if (r.finished != null) 'Finished ${_date.format(r.finished!)}',
                         if (r.narrator.isNotEmpty) 'Narrator: ${r.narrator}',
+                        if (adultFieldsOn() && r.heat != null && r.heat! > 0) 'Heat ${heatText(r.heat!)}',
+                        if (adultFieldsOn() && r.contentNotes.isNotEmpty) 'Content: ${r.contentNotes}',
                         if (r.thoughts.isNotEmpty) r.thoughts,
                       ].join('\n')),
                       isThreeLine: true,
@@ -928,7 +954,7 @@ class EditBook extends StatefulWidget {
 class _EditBookState extends State<EditBook> {
   late final Map<String, TextEditingController> c = {
     for (final e in {
-      'title': widget.book.title, 'author': widget.book.author, 'series': widget.book.series, 'seriesNumber': SeriesPage.fmtNum(widget.book.seriesNumber), 'genre': widget.book.genre,
+      'title': widget.book.title, 'author': widget.book.author, 'series': widget.book.series, 'seriesNumber': SeriesPage.fmtNum(widget.book.seriesNumber), 'seriesTotal': '${widget.book.seriesTotal ?? ''}', 'genre': widget.book.genre,
       'tags': widget.book.tags, 'publisher': widget.book.publisher, 'isbn': widget.book.isbn, 'coverUrl': widget.book.coverUrl,
       'year': '${widget.book.year ?? ''}', 'pages': '${widget.book.pages ?? ''}', 'description': widget.book.description, 'notes': widget.book.notes,
     }.entries) e.key: TextEditingController(text: e.value)
@@ -984,7 +1010,7 @@ class _EditBookState extends State<EditBook> {
           TextButton(onPressed: () async {
             _saved = true;
             await (db.update(db.books)..where((x) => x.id.equals(widget.book.id))).write(BooksCompanion(
-              title: Value(c['title']!.text), author: Value(c['author']!.text), series: Value(c['series']!.text), seriesNumber: Value(double.tryParse(c['seriesNumber']!.text.trim())), genre: Value(c['genre']!.text),
+              title: Value(c['title']!.text), author: Value(c['author']!.text), series: Value(c['series']!.text), seriesNumber: Value(double.tryParse(c['seriesNumber']!.text.trim())), seriesTotal: Value(int.tryParse(c['seriesTotal']!.text.trim())), genre: Value(c['genre']!.text),
               tags: Value(normalizeTags(c['tags']!.text)), publisher: Value(c['publisher']!.text), isbn: Value(c['isbn']!.text), coverUrl: Value(c['coverUrl']!.text),
               year: Value(int.tryParse(c['year']!.text)), pages: Value(int.tryParse(c['pages']!.text)),
               description: Value(c['description']!.text), notes: Value(c['notes']!.text),
@@ -994,7 +1020,7 @@ class _EditBookState extends State<EditBook> {
         ]),
         body: ListView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: const EdgeInsets.all(16), children: [
           f('title', 'Title', cap: TextCapitalization.words), f('author', 'Author', cap: TextCapitalization.words), f('series', 'Series', cap: TextCapitalization.words),
-          f('seriesNumber', 'Number in series (e.g. 2 or 2.5)', num: true, decimal: true), f('genre', 'Genre (fantasy, romance, science…)', cap: TextCapitalization.words),
+          f('seriesNumber', 'Number in series (e.g. 2 or 2.5)', num: true, decimal: true), f('seriesTotal', 'Books in the series (optional)', num: true), f('genre', 'Genre (fantasy, romance, science…)', cap: TextCapitalization.words),
           f('tags', 'Tags (comma separated)'), f('publisher', 'Publisher', cap: TextCapitalization.words), f('isbn', 'ISBN'), f('coverUrl', 'Cover image URL'),
           f('year', 'Year', num: true), f('pages', 'Pages', num: true),
           f('description', 'Description', lines: 4, cap: TextCapitalization.sentences), f('notes', 'Private notes', lines: 4, cap: TextCapitalization.sentences),
@@ -1022,8 +1048,10 @@ class _ReadEditorState extends State<ReadEditor> {
   late final narrator = TextEditingController(text: widget.read?.narrator);
   late final minutes = TextEditingController(text: '${widget.read?.minutes ?? ''}');
   late final page = TextEditingController(text: '${widget.read?.currentPage ?? ''}');
+  late final contentNotes = TextEditingController(text: widget.read?.contentNotes);
+  late int heat = widget.read?.heat ?? 0;
 
-  String _state() => [format, status, started?.toIso8601String(), finished?.toIso8601String(), rating, thoughts.text, narrator.text, minutes.text, page.text].join('|');
+  String _state() => [format, status, started?.toIso8601String(), finished?.toIso8601String(), rating, thoughts.text, narrator.text, minutes.text, page.text, heat, contentNotes.text].join('|');
   late final String _snap = _state();
   bool _saved = false;
   bool get _dirty => !_saved && _state() != _snap;
@@ -1032,7 +1060,7 @@ class _ReadEditorState extends State<ReadEditor> {
   void initState() {
     super.initState();
     _snap; // snapshot before any editing
-    for (final ctl in [thoughts, narrator, minutes, page]) {
+    for (final ctl in [thoughts, narrator, minutes, page, contentNotes]) {
       ctl.addListener(_onChange);
     }
   }
@@ -1047,6 +1075,7 @@ class _ReadEditorState extends State<ReadEditor> {
     narrator.dispose();
     minutes.dispose();
     page.dispose();
+    contentNotes.dispose();
     super.dispose();
   }
 
@@ -1097,6 +1126,7 @@ class _ReadEditorState extends State<ReadEditor> {
             final comp = ReadsCompanion(
               bookId: Value(widget.bookId), format: Value(format), status: Value(status), started: Value(started), finished: Value(fin),
               rating: Value(rating == 0 ? null : rating), thoughts: Value(thoughts.text), narrator: Value(narrator.text), minutes: Value(int.tryParse(minutes.text)), currentPage: Value(int.tryParse(page.text)),
+              heat: Value(adultFieldsOn() ? (heat == 0 ? null : heat) : widget.read?.heat), contentNotes: Value(adultFieldsOn() ? contentNotes.text : (widget.read?.contentNotes ?? '')),
             );
             _saved = true;
             if (widget.read == null) {
@@ -1144,6 +1174,12 @@ class _ReadEditorState extends State<ReadEditor> {
           ],
           TextField(controller: minutes, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: format == 'audio' ? 'Listening time (minutes)' : 'Time spent (minutes)', border: const OutlineInputBorder())),
           const SizedBox(height: 12),
+          if (adultFieldsOn()) ...[
+            const Text('Heat (private)'),
+            HeatRating(value: heat, onChanged: (v) => setState(() => heat = v)),
+            TextField(controller: contentNotes, textCapitalization: TextCapitalization.sentences, decoration: const InputDecoration(labelText: 'Content notes (private)', border: OutlineInputBorder())),
+            const SizedBox(height: 12),
+          ],
           TextField(controller: thoughts, minLines: 5, maxLines: 14, textCapitalization: TextCapitalization.sentences, decoration: const InputDecoration(labelText: 'Your thoughts', alignLabelWithHint: true, border: OutlineInputBorder())),
         ]),
         ),
@@ -1182,8 +1218,8 @@ class SettingsPage extends StatelessWidget {
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ImportPage()))),
           const Divider(),
           const ListTile(title: Text('Export (main library only)', style: TextStyle(fontWeight: FontWeight.bold))),
-          ListTile(leading: const Icon(Icons.table_chart), title: const Text('Library log as CSV'), subtitle: const Text('Includes your notes and thoughts'), onTap: () => Exporter.shareCsv(db)),
-          ListTile(leading: const Icon(Icons.data_object), title: const Text('Library log as JSON'), subtitle: const Text('Includes your notes and thoughts'), onTap: () => Exporter.shareJson(db)),
+          ListTile(leading: const Icon(Icons.table_chart), title: const Text('Library log as CSV'), subtitle: const Text('Includes your notes and thoughts'), onTap: () => Exporter.shareCsv(db, includePrivateFields: adultFieldsOn())),
+          ListTile(leading: const Icon(Icons.data_object), title: const Text('Library log as JSON'), subtitle: const Text('Includes your notes and thoughts'), onTap: () => Exporter.shareJson(db, includePrivateFields: adultFieldsOn())),
           const Divider(),
           FutureBuilder<BackupSettings>(
             future: BackupSettings.load(),
@@ -1225,11 +1261,23 @@ class SettingsPage extends StatelessWidget {
             if (path == null || !context.mounted) return;
             await restoreFlow(context, File(path));
           }),
+          ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Covers'), subtitle: const Text('Save covers on this phone for offline use and backups'),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CoversPage()))),
           ListTile(leading: const Icon(Icons.delete_sweep_outlined), title: const Text('Trash'), subtitle: const Text('Deleted books are kept for 30 days'),
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TrashPage()))),
           const Divider(),
           const ListTile(title: Text('Privacy', style: TextStyle(fontWeight: FontWeight.bold))),
           ListTile(leading: const Icon(Icons.lock_clock), title: const Text('Lock now'), onTap: onLockNow),
+          ValueListenableBuilder<bool>(
+            valueListenable: adultFields,
+            builder: (context, on, _) => SwitchListTile(
+              secondary: const Icon(Icons.local_fire_department_outlined),
+              title: const Text('Heat level and content notes'),
+              subtitle: const Text('Adds private heat (0-5) and content-note fields to each read, and a Heat chart in Stats. Left out of CSV/JSON exports unless this is on.'),
+              value: on,
+              onChanged: (v) => adultFields.value = v,
+            ),
+          ),
           ValueListenableBuilder<bool>(
             valueListenable: hideLockedTab,
             builder: (context, hidden, _) => SwitchListTile(

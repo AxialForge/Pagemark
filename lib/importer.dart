@@ -12,12 +12,22 @@ class ImportRead {
   DateTime? started, finished;
   double? rating;
   String thoughts, narrator;
-  int? minutes;
-  ImportRead({this.format = 'print', this.status = 'want', this.started, this.finished, this.rating, this.thoughts = '', this.narrator = '', this.minutes});
+  int? minutes, heat;
+  String contentNotes;
+  ImportRead({this.heat, this.contentNotes = '', this.format = 'print', this.status = 'want', this.started, this.finished, this.rating, this.thoughts = '', this.narrator = '', this.minutes});
 }
 
 /// One book (with its reads and shelves) found in a file.
+class ImportQuote {
+  String text, note;
+  int? page;
+  DateTime? created;
+  ImportQuote(this.text, {this.page, this.note = '', this.created});
+}
+
 class ImportBook {
+  final List<ImportQuote> quotes = [];
+  int? seriesTotal;
   String title, author, isbn, genre, series, publisher, tags, notes, coverUrl;
   double? seriesNumber;
   int? year, pages;
@@ -136,11 +146,20 @@ class Importer {
       case ImportSource.pagemarkJson:
         final j = jsonDecode(text) as Map;
         final v = j['pagemark_export'];
-        if (v is int && v > 1) throw ImportException('This export is from a newer Pagemark (format $v). Update the app first.');
+        if (v is int && v > 2) throw ImportException('This export is from a newer Pagemark (format $v). Update the app first.');
         final rows = [
           for (final r in (j['books'] as List? ?? const [])) if (r is Map) {for (final e in r.entries) '${e.key}': e.value == null ? '' : '${e.value}'},
         ];
-        return _fromPagemarkRows(src, rows);
+        final parsed = _fromPagemarkRows(src, rows);
+        for (final q in (j['quotes'] as List? ?? const [])) {
+          if (q is! Map) continue;
+          final text = _s(q['quote']);
+          if (text.isEmpty) continue;
+          final key = ImportBook(title: _s(q['title']), author: _s(q['author']), isbn: cleanIsbn(_s(q['isbn']))).key;
+          final book = parsed.books.where((b) => b.key == key).firstOrNull;
+          if (book != null) book.quotes.add(ImportQuote(text, page: _int(q['page']), note: _s(q['note']), created: DateTime.tryParse(_s(q['created']))));
+        }
+        return parsed;
       case ImportSource.pagemarkCsv:
         return _fromPagemarkRows(src, table(text));
       case ImportSource.goodreads:
@@ -167,6 +186,7 @@ class Importer {
         title: title, author: _unsafe(_s(r['author'])), isbn: cleanIsbn(_s(r['isbn'])), genre: _unsafe(_s(r['genre'])), series: _unsafe(_s(r['series'])),
         publisher: _unsafe(_s(r['publisher'])), year: _int(r['year']), pages: _int(r['pages']), tags: normalizeTags(_unsafe(_s(r['tags']))), notes: _unsafe(_s(r['notes'])),
       );
+      b.seriesTotal = _int(r['series_total']);
       final book = byKey.putIfAbsent(b.key, () => b);
       final status = _s(r['status']);
       if (status.isNotEmpty) {
@@ -175,6 +195,7 @@ class Importer {
           status: const {'want', 'reading', 'finished', 'dnf'}.contains(status) ? status : 'want',
           started: parseDate(_s(r['started'])), finished: parseDate(_s(r['finished'])), rating: halfStars(r['rating']),
           thoughts: _unsafe(_s(r['thoughts'])), narrator: _unsafe(_s(r['narrator'])), minutes: _int(r['minutes']),
+          heat: _int(r['heat']), contentNotes: _unsafe(_s(r['content_notes'])),
         ));
       }
     }
@@ -320,6 +341,7 @@ class ImportRunner {
         final id = await db.into(db.books).insert(BooksCompanion.insert(
               title: b.title, author: Value(b.author), isbn: Value(b.isbn), genre: Value(b.genre), series: Value(b.series), seriesNumber: Value(b.seriesNumber),
               publisher: Value(b.publisher), year: Value(b.year), pages: Value(b.pages), tags: Value(b.tags), notes: Value(b.notes), coverUrl: Value(b.coverUrl),
+              seriesTotal: Value(b.seriesTotal),
             ));
         return id;
       }
@@ -329,8 +351,12 @@ class ImportRunner {
           await db.into(db.reads).insert(ReadsCompanion.insert(
                 bookId: bookId, format: Value(r.format), status: Value(r.status), started: Value(r.started), finished: Value(r.finished),
                 rating: Value(r.rating), thoughts: Value(r.thoughts), narrator: Value(r.narrator), minutes: Value(r.minutes),
+                heat: Value(r.heat), contentNotes: Value(r.contentNotes),
               ));
           reads++;
+        }
+        for (final q in b.quotes) {
+          await db.into(db.quotes).insert(QuotesCompanion.insert(bookId: bookId, body: q.text, page: Value(q.page), note: Value(q.note), created: Value(q.created ?? DateTime.now())));
         }
         for (final s in b.shelves) {
           await db.setOnShelf(bookId, await shelfId(s), true);
