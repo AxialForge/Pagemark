@@ -13,8 +13,10 @@ import 'branding.dart';
 import 'updater.dart';
 import 'updater_ui.dart';
 import 'features.dart';
+import 'import_ui.dart';
 import 'lock_ui.dart';
 import 'privacy.dart';
+import 'selection.dart';
 import 'skins.dart';
 import 'notifier.dart';
 import 'text_utils.dart';
@@ -190,6 +192,8 @@ class _LibraryState extends State<Library> {
   LibrarySkin skin = LibrarySkin.classic;
   late final Stream<List<BookRow>> _rowsStream = db.watchLibrary(locked: widget.locked).distinct(); // one subscription; identical re-emissions are skipped
   final _searchCtl = TextEditingController();
+  final Set<int> selected = {};
+  List<BookRow> _shown = []; // what the list currently shows (for Select all)
   bool groupShelves = false; // Bookshelf/Spines: one named wooden shelf per user shelf
   List<Shelf> shelves = [];
   Map<int, Set<int>> shelfBooks = {}; // shelf id -> book ids
@@ -229,6 +233,78 @@ class _LibraryState extends State<Library> {
     super.dispose();
   }
 
+  void _toggle(BookRow r) {
+    setState(() => selected.contains(r.book.id) ? selected.remove(r.book.id) : selected.add(r.book.id));
+  }
+
+  void _clearSel() => setState(selected.clear);
+
+  void _undoBar(String message, Future<void> Function() undo) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(message), duration: const Duration(seconds: 8), action: SnackBarAction(label: 'Undo', onPressed: undo)));
+  }
+
+  Future<void> _bulkTrash(Set<int> ids) async {
+    await db.softDeleteMany(ids);
+    _undoBar('${ids.length} ${ids.length == 1 ? 'book' : 'books'} moved to Trash', () => db.restoreMany(ids));
+  }
+
+  Future<void> _bulkFinish(Set<int> ids) async {
+    final u = await db.markFinishedToday(ids);
+    _undoBar(u.count == 0 ? 'Already finished' : '${u.count} marked finished today', () => db.undoMarkFinished(u));
+  }
+
+  Future<void> _bulkLock(Set<int> ids) async {
+    final to = !widget.locked;
+    await db.setLockedMany(ids, to);
+    _undoBar(to ? '${ids.length} moved to the locked library' : '${ids.length} moved to the main library', () => db.setLockedMany(ids, !to));
+  }
+
+  Future<void> _bulkShelf(Set<int> ids) async {
+    final shelves = await db.watchShelves().first;
+    if (!mounted) return;
+    final picked = await showModalBottomSheet<int>(
+      context: context,
+      showDragHandle: true,
+      builder: (c) => SafeArea(
+        child: ListView(shrinkWrap: true, children: [
+          const ListTile(title: Text('Add to shelf', style: TextStyle(fontWeight: FontWeight.bold))),
+          for (final s in shelves) ListTile(leading: const Icon(Icons.collections_bookmark_outlined), title: Text(s.name), onTap: () => Navigator.pop(c, s.id)),
+          ListTile(
+            leading: const Icon(Icons.add),
+            title: const Text('New shelf'),
+            onTap: () async {
+              final n = await ask(c, 'Shelf name');
+              if (n == null || n.trim().isEmpty) return;
+              final id = await db.addShelf(n);
+              if (c.mounted) Navigator.pop(c, id);
+            },
+          ),
+        ]),
+      ),
+    );
+    if (picked == null) return;
+    await db.addManyToShelf(ids, picked);
+    if (mounted) snack(context, 'Added ${ids.length} to the shelf');
+  }
+
+  PreferredSizeWidget _selectionBar() {
+    final ids = {...selected};
+    return AppBar(
+      leading: IconButton(icon: const Icon(Icons.close), tooltip: 'Cancel selection', onPressed: _clearSel),
+      title: Text('${ids.length} selected'),
+      actions: [
+        IconButton(icon: const Icon(Icons.select_all), tooltip: 'Select all shown', onPressed: () => setState(() => selected.addAll(_shown.map((r) => r.book.id)))),
+        IconButton(icon: const Icon(Icons.done_all), tooltip: 'Mark finished today', onPressed: () { _clearSel(); _bulkFinish(ids); }),
+        IconButton(icon: const Icon(Icons.collections_bookmark_outlined), tooltip: 'Add to shelf', onPressed: () async { await _bulkShelf(ids); _clearSel(); }),
+        IconButton(icon: Icon(widget.locked ? Icons.lock_open : Icons.lock_outline), tooltip: widget.locked ? 'Move to main library' : 'Move to locked library', onPressed: () { _clearSel(); _bulkLock(ids); }),
+        IconButton(icon: const Icon(Icons.delete_outline), tooltip: 'Move to Trash', onPressed: () { _clearSel(); _bulkTrash(ids); }),
+      ],
+    );
+  }
+
   void _save() {
     prefs.setString('${_pk}_sort', sort);
     prefs.setString('${_pk}_status', status);
@@ -241,7 +317,7 @@ class _LibraryState extends State<Library> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: selected.isNotEmpty ? _selectionBar() : AppBar(
         title: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onLongPress: !widget.locked && hideLockedTab.value ? () => openVault(context) : null, // stealth entrance when the tab is hidden
@@ -280,11 +356,19 @@ class _LibraryState extends State<Library> {
           ],
         ),
       ]),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: selected.isNotEmpty ? null : FloatingActionButton.extended(
         icon: const Icon(Icons.add), label: const Text('Add book'),
         onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddBook(locked: widget.locked))),
       ),
-      body: Column(children: [
+      body: PopScope(
+        canPop: selected.isEmpty, // Back first closes the selection
+        onPopInvokedWithResult: (didPop, _) { if (!didPop) _clearSel(); },
+        child: SelectionScope(
+        selected: selected,
+        onToggle: _toggle,
+        onQuickFinish: (r) => _bulkFinish({r.book.id}),
+        onQuickTrash: (r) => _bulkTrash({r.book.id}),
+        child: Column(children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
           child: TextField(
@@ -350,6 +434,7 @@ class _LibraryState extends State<Library> {
                       )
                     : const Center(child: Text('No matches.'));
               }
+              _shown = rows;
               final list = SkinView(skin: skin, rows: rows, groupByShelf: groupShelves, shelves: shelves, shelfBooks: shelfBooks);
               final reading = (snap.data ?? []).where((r) => r.status == 'reading').toList();
               final unfiltered = q.isEmpty && status == 'all' && format == 'all' && shelf == null;
@@ -380,6 +465,8 @@ class _LibraryState extends State<Library> {
           ),
         ),
       ]),
+        ),
+      ),
     );
   }
 }
@@ -425,8 +512,15 @@ class BookTile extends StatelessWidget {
     final b = row.book;
     final r = row.avgRating;
     final fmts = row.reads.map((e) => formats[e.format]).toSet().join(' · ');
+    final scope = SelectionScope.maybeOf(context);
+    final picked = SelectionScope.isSelected(context, b.id);
     return ListTile(
-      leading: Cover(b.coverUrl, tag: 'cover-${b.id}', locked: b.locked, title: b.title),
+      selected: picked,
+      selectedTileColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.6),
+      leading: Stack(clipBehavior: Clip.none, children: [
+        Cover(b.coverUrl, tag: 'cover-${b.id}', locked: b.locked, title: b.title),
+        if (picked) const Positioned(right: -6, top: -6, child: SelectedBadge()),
+      ]),
       title: Text(b.title, maxLines: 2, overflow: TextOverflow.ellipsis),
       subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text([
@@ -438,7 +532,11 @@ class BookTile extends StatelessWidget {
         if (row.progress != null) Padding(padding: const EdgeInsets.only(top: 6, right: 8), child: SlimProgress(row.progress!)),
       ]),
       trailing: r == null ? null : Semantics(label: 'Rated ${r.toStringAsFixed(1)} of 5', child: Text(starsText(r), style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 15))),
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: b.id))),
+      onTap: () => scope != null && scope.active ? scope.onToggle(row) : Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: b.id))),
+      onLongPress: scope == null ? null : () {
+        HapticFeedback.mediumImpact();
+        scope.onToggle(row);
+      },
     );
   }
 }
@@ -1079,6 +1177,9 @@ class SettingsPage extends StatelessWidget {
                 ),
             ]),
           ),
+          const Divider(),
+          ListTile(leading: const Icon(Icons.upload_file), title: const Text('Import'), subtitle: const Text('From Goodreads, StoryGraph, or a Pagemark export'),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ImportPage()))),
           const Divider(),
           const ListTile(title: Text('Export (main library only)', style: TextStyle(fontWeight: FontWeight.bold))),
           ListTile(leading: const Icon(Icons.table_chart), title: const Text('Library log as CSV'), subtitle: const Text('Includes your notes and thoughts'), onTap: () => Exporter.shareCsv(db)),

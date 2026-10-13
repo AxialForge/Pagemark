@@ -122,6 +122,20 @@ class Exporter {
     }
   }
 
+  /// A restore point of the live library before something big (restore, import): kept in app storage, newest 3 per [tag].
+  static Future<File> safetyCopy(AppDb db, String tag) async {
+    final dir = (await AppDb.file()).parent;
+    final snap = await snapshotDb(db, name: 'pagemark-$tag.sqlite');
+    final kept = File('${dir.path}/$tag-${_stamp()}.sqlite');
+    await snap.copy(kept.path);
+    await snap.delete();
+    final old = dir.listSync().whereType<File>().where((f) => f.uri.pathSegments.last.startsWith('$tag-')).toList()..sort((a, b) => b.path.compareTo(a.path));
+    for (final f in old.skip(3)) {
+      await f.delete();
+    }
+    return kept;
+  }
+
   /// Make [src] (already decrypted) the live database. Validates first, keeps a safety copy of the
   /// current library (newest 3 kept in app storage), swaps files, and leaves the app needing a restart.
   static Future<File> restoreDb(AppDb db, File src) async {

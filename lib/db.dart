@@ -121,6 +121,47 @@ class AppDb extends _$AppDb {
       (update(books)..where((b) => b.id.equals(id))).write(BooksCompanion(deletedAt: Value(DateTime.now())));
   Future<void> restoreBook(int id) =>
       (update(books)..where((b) => b.id.equals(id))).write(const BooksCompanion(deletedAt: Value(null)));
+  // ── bulk operations (multi-select) ──
+  Future<void> softDeleteMany(Iterable<int> ids) =>
+      (update(books)..where((b) => b.id.isIn(ids))).write(BooksCompanion(deletedAt: Value(DateTime.now())));
+  Future<void> restoreMany(Iterable<int> ids) =>
+      (update(books)..where((b) => b.id.isIn(ids))).write(const BooksCompanion(deletedAt: Value(null)));
+  Future<void> setLockedMany(Iterable<int> ids, bool locked) =>
+      (update(books)..where((b) => b.id.isIn(ids))).write(BooksCompanion(locked: Value(locked)));
+
+  /// Marks each book finished today: its active (else latest) read becomes Finished with today's date; a book with no
+  /// read gets one. The result says exactly what changed so [undoMarkFinished] can put it back.
+  Future<FinishUndo> markFinishedToday(Iterable<int> bookIds) => transaction(() async {
+        final changed = <Read>[];
+        final created = <int>[];
+        final today = DateTime.now();
+        final day = DateTime(today.year, today.month, today.day);
+        for (final id in bookIds) {
+          final reads = await (select(this.reads)..where((r) => r.bookId.equals(id))..orderBy([(r) => OrderingTerm.desc(r.id)])).get();
+          final target = reads.where((r) => r.status == 'reading').firstOrNull ?? reads.firstOrNull;
+          if (target == null) {
+            created.add(await into(this.reads).insert(ReadsCompanion.insert(bookId: id, status: const Value('finished'), started: Value(day), finished: Value(day))));
+          } else if (target.status != 'finished') {
+            changed.add(target);
+            await (update(this.reads)..where((r) => r.id.equals(target.id))).write(ReadsCompanion(status: const Value('finished'), finished: Value(day)));
+          }
+        }
+        return FinishUndo(changed, created);
+      });
+
+  Future<void> undoMarkFinished(FinishUndo u) => transaction(() async {
+        for (final r in u.changed) {
+          await (update(reads)..where((x) => x.id.equals(r.id))).write(ReadsCompanion(status: Value(r.status), finished: Value(r.finished)));
+        }
+        await (delete(reads)..where((x) => x.id.isIn(u.created))).go();
+      });
+
+  Future<void> addManyToShelf(Iterable<int> ids, int shelfId) async {
+    for (final id in ids) {
+      await setOnShelf(id, shelfId, true);
+    }
+  }
+
   Future<void> purgeBook(int id) => (delete(books)..where((b) => b.id.equals(id))).go();
   Future<int> purgeExpiredTrash() {
     final cutoff = DateTime.now().subtract(const Duration(days: trashDays));
@@ -168,6 +209,14 @@ class AppDb extends _$AppDb {
 
   Stream<List<Read>> watchReads(int bookId) =>
       (select(reads)..where((r) => r.bookId.equals(bookId))..orderBy([(r) => OrderingTerm.desc(r.id)])).watch();
+}
+
+/// What [AppDb.markFinishedToday] did, so it can be reversed.
+class FinishUndo {
+  final List<Read> changed; // reads as they were before
+  final List<int> created; // ids of reads it inserted
+  const FinishUndo(this.changed, this.created);
+  int get count => changed.length + created.length;
 }
 
 class BookRow {

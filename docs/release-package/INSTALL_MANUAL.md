@@ -1,6 +1,6 @@
 # Pagemark — Install Manual
 
-**Version 0.4.2** · Android
+**Version 0.5.0** · Android
 
 ---
 

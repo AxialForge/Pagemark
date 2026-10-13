@@ -1,8 +1,8 @@
 # Pagemark — User Manual
 
-**Version 0.4.2** · A private, fully local book tracker for Android
+**Version 0.5.0** · A private, fully local book tracker for Android
 
-*Screenshots show sample books and were captured from the Android app (0.4.2).*
+*Screenshots show sample books and were captured from the Android app (0.5.0).*
 
 ---
 
@@ -135,6 +135,24 @@ In **Bookshelf** or **Spines**, open the style picker and switch on **Group by m
 
 
 
+## 6b. Selecting many books, and swiping
+
+**Long-press** any book (in any Library style) to start selecting; **tap** other books to add or remove them. The bar at the top shows how many are selected and offers:
+
+| Button | What it does |
+|---|---|
+| Select all | every book currently shown (respects your search and filters) |
+| Double tick | **mark finished today**: the active read becomes Finished with today's date; books with no read get one |
+| Shelf | add them all to a shelf (or make a new one) |
+| Padlock | move them to the locked library (or, inside the vault, back to the main library) |
+| Bin | move them to Trash |
+
+Everything except "add to shelf" shows an **Undo** message afterwards. Press Back or the × to leave selection mode.
+
+<div class="shots one"><figure><img src="../screenshots/multi-select.jpg" alt="A book selected, with the bulk-action bar"><figcaption>A book selected, with the bulk-action bar</figcaption></figure></div>
+
+In the **Classic** and **Compact** styles you can also **swipe a row right** to mark it finished today, or **swipe left** to move it to Trash (with Undo).
+
 ## 7. Stats
 
 The Stats tab counts your **main library only** — locked books never appear in it.
@@ -207,6 +225,20 @@ Settings → Database (**includes locked books**):
 
 - **Export database file** — a complete copy you can restore on another device. You'll be asked for a **passphrase**; leave it empty only if you understand the file will be readable by anyone who gets it.
 - **Restore from database file** — see §12.
+
+## 10b. Importing your reading history
+
+Settings → **Import** brings books in from another app or from a Pagemark export:
+
+- **Goodreads** — on the Goodreads website: My Books → Import and export → *Export Library*.
+- **StoryGraph** — Manage Account → Manage Your Data → *Export*.
+- **Pagemark** — a CSV or JSON file made by Settings → Export (also handy for moving to a new phone's main library).
+
+Choose the file and Pagemark shows what it found: how many books and reads, how many are **new** and how many you **already have**, which shelves it would create, and any rows it had to skip (for example a row with no title). For books you already own you choose to **skip** them, **add the file's reads** to your existing entry, or import them as **separate copies**. Press **Import**: a safety copy of your library is saved first, and everything is added in one step — if anything goes wrong, nothing changes. Afterwards **Undo import** moves the new books to Trash.
+
+<div class="shots two"><figure><img src="../screenshots/import-preview.jpg" alt="What the file contains"><figcaption>What the file contains</figcaption></figure><figure><img src="../screenshots/import-done.jpg" alt="After importing"><figcaption>After importing</figcaption></figure></div>
+
+What gets mapped: statuses (read, currently reading, to-read, did-not-finish), ratings (rounded to the nearest half star), the date you finished, your review text, print / e-book / audiobook, ISBNs (so covers appear), and your Goodreads shelves become Pagemark shelves. Imports never touch the locked library, and "already have" only compares against your main library.
 
 ## 11. Google Drive backup
 

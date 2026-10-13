@@ -57,7 +57,7 @@ missing the job must fail loudly rather than fall back to debug signing (a debug
 
 ---
 
-> **Status (2026-10-12):** v0.4.2 and v0.4.3 are done and shipped/prepared; start from section 2 (0.5.0) unless the owner says otherwise.
+> **Status (2026-10-12):** v0.5.0 prepared on `main` (import: 0.5.0-A/B/C done; multi-select, swipe and undo: 0.5.0-E done; grid view done earlier); v0.4.2 and v0.4.3 are done and shipped/prepared; start from section 2 (0.5.0) unless the owner says otherwise.
 
 ## 1. v0.4.2 — "Close the gaps" (small, high value)
 

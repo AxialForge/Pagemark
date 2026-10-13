@@ -219,7 +219,7 @@ class _LockGateState extends State<LockGate> {
                           ? null
                           : () async {
                               if (!await LockService.strongBiometricAvailable()) {
-                                if (!mounted) return;
+                                if (!context.mounted) return;
                                 final go = await showDialog<bool>(
                                   context: context,
                                   builder: (c) => AlertDialog(

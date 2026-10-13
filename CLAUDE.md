@@ -98,6 +98,10 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 - **Release APKs are already R8-minified** by Flutter's default release config (`build/app/outputs/mapping/release/mapping.txt` exists); don't add rules blindly.
 - **NAS backup:** `tool/backup-to-nas.ps1` mirrors source, a git bundle, the signed APKs and the signing key to the home NAS (`\\192.168.1.204\Apocrypha_Main_Pool\Libary_Pool\APP Projects\PageMark`). Run it after every release.
 
+- **Import is two layers:** `importer.dart` (pure parsing, no DB, tested with fixtures in `test/fixtures/`) and `ImportRunner` (plan + one DB transaction). Never write imports outside `ImportRunner.run`, or the all-or-nothing and Undo guarantees go. Imports only ever compare against / write to the *main* library. Fixtures must use invented titles only.
+- **Selection:** `SelectionScope` (selection.dart) is an InheritedWidget shared with every Library style; a new style must route taps through `_open` and long-press through `_hold` in skins.dart, and draw `SelectedBadge`. `Dismissible` rows return `false` from `confirmDismiss` so the database stream, not the widget, removes the row.
+- **Bulk operations live in `AppDb`** (`softDeleteMany`, `setLockedMany`, `markFinishedToday` -> `FinishUndo`, ...) so they are unit-tested without UI.
+
 ## Docs & screenshots
 
 - Documentation lives in `docs/release-package/*.md`; `python docs/_tools/build_docs.py` builds the four PDFs plus the combined `Pagemark-Documentation.pdf` (needs Python `markdown` and Edge). Figures are inline HTML (`<div class="shots">`) pointing at `../screenshots/*.jpg`.

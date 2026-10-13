@@ -1,6 +1,6 @@
 # Pagemark — Package Overview
 
-**Version 0.4.2** · for readers outside the project. Three tiers: read the first for the idea, the second for what it does, the third for how it works.
+**Version 0.5.0** · for readers outside the project. Three tiers: read the first for the idea, the second for what it does, the third for how it works.
 
 ---
 
@@ -34,6 +34,8 @@
 | Library looks | Classic list, cover wall, bookshelf, book spines, compact — switchable, remembered per library |
 | Insight | Yearly goal ring with pace forecast, books per month, rating spread, top genres/authors, totals |
 | Privacy | Locked library (PIN with attempt limits and recovery code, or device biometrics), auto-relock, screenshot blocking |
+| Import | Goodreads, StoryGraph and Pagemark files, with a preview, duplicate handling, a safety copy and Undo |
+| Bulk actions | Multi-select (finish, shelve, lock, trash) and swipe actions, all undoable |
 | Data portability | CSV and JSON export of the main library; whole-database export, optionally passphrase-encrypted |
 | Backup | Scheduled, verified backups to the user's own Google Drive; optional AES-256 encryption; safe restore with automatic safety copy |
 | Care | Trash with 30-day recovery, in-app updates with release notes, offline version history, diagnostics log |
@@ -75,7 +77,7 @@ Flutter (Dart) app; **Drift** over **SQLite** for storage; plain `StatefulWidget
 Open Library search/ISBN/works endpoints with an identifying User-Agent, retry with backoff on 429/5xx/timeouts, per-record fault tolerance, ISBN-10→13 normalisation and checksum validation. Updates use the unauthenticated GitHub releases API: newest-first release list → APK chosen by ABI → streamed download with size and SHA-256 (from the release asset's digest) verification → system installer via `open_filex`. Same signing key ⇒ in-place upgrade.
 
 ## Quality and process
-- 49 automated tests: database behaviour, migration from v1, restore validation, export safety (formula neutralisation, BOM), encryption round-trip and tamper detection, lock service (lockout, recovery, legacy upgrade), lookup parsing/retries (mock HTTP), updater logic, and widget tests for custom UI.
+- 167 automated tests: database behaviour, migration from v1, restore validation, export safety (formula neutralisation, BOM), encryption round-trip and tamper detection, lock service (lockout, recovery, legacy upgrade), lookup parsing/retries (mock HTTP), updater logic, and widget tests for custom UI.
 - GitHub Actions CI: analyze, tests, generated-code check, debug build. Signed release APKs are built locally; the keystore never leaves the owner's machine.
 - Release flow: version bump + `CHANGELOG.md` in one commit → tag `vX.Y.Z` → APKs (`arm64`, `armv7`) attached to a GitHub Release. The changelog ships inside the app as an asset.
 

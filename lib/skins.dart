@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'db.dart';
 import 'features.dart';
 import 'main.dart';
+import 'selection.dart';
 import 'ui.dart';
 
 /// How the Library draws your books. Same data, five looks; the choice is remembered per library.
@@ -117,7 +118,22 @@ class SkinView extends StatelessWidget {
 
 const _bottomPad = 96.0; // clear of the Add button
 
-void _open(BuildContext context, BookRow r) => Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: r.book.id)));
+/// Tap: open the book, or toggle it while a selection is active. Long-press: start/extend a selection.
+void _open(BuildContext context, BookRow r) {
+  final s = SelectionScope.maybeOf(context);
+  if (s != null && s.active) {
+    s.onToggle(r);
+  } else {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: r.book.id)));
+  }
+}
+
+void _hold(BuildContext context, BookRow r) {
+  HapticFeedback.mediumImpact();
+  SelectionScope.maybeOf(context)?.onToggle(r);
+}
+
+bool _sel(BuildContext context, BookRow r) => SelectionScope.isSelected(context, r.book.id);
 
 int _hash(String s) => s.codeUnits.fold(7, (a, c) => (a * 31 + c) & 0x7fffffff);
 
@@ -174,7 +190,7 @@ class ClassicList extends StatelessWidget {
           duration: Duration(milliseconds: 280 + (i < 8 ? i * 40 : 320)),
           curve: Curves.easeOutCubic,
           builder: (_, v, child) => Opacity(opacity: v, child: Transform.translate(offset: Offset(0, 16 * (1 - v)), child: child)),
-          child: BookTile(row: rows[i]),
+          child: SwipeActions(row: rows[i], child: BookTile(row: rows[i])),
         ),
       );
 }
@@ -192,8 +208,12 @@ class CompactList extends StatelessWidget {
       itemExtent: 52 * math.max(1.0, MediaQuery.textScalerOf(context).scale(14) / 14 * 0.92), // grows with large accessibility fonts
       itemBuilder: (_, i) {
         final r = rows[i], b = r.book, rating = r.avgRating;
-        return InkWell(
+        final picked = _sel(context, r);
+        return SwipeActions(row: r, child: Material(
+          color: picked ? Theme.of(context).colorScheme.primaryContainer : Colors.transparent,
+          child: InkWell(
           onTap: () => _open(context, r),
+          onLongPress: () => _hold(context, r),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
             child: Row(children: [
@@ -210,9 +230,10 @@ class CompactList extends StatelessWidget {
               ),
               if (r.progress != null) Text('${(r.progress! * 100).round()}%', style: Theme.of(context).textTheme.labelMedium),
               if (rating != null) Padding(padding: const EdgeInsets.only(left: 8), child: Text(starsText(rating), style: TextStyle(color: tertiary, fontSize: 13))),
+              if (picked) const Padding(padding: EdgeInsets.only(left: 8), child: SelectedBadge()),
             ]),
           ),
-        );
+        )));
       },
     );
   }
@@ -264,9 +285,14 @@ class CoverGrid extends StatelessWidget {
               child: InkWell(
                 borderRadius: BorderRadius.circular(6),
                 onTap: () => _open(context, r),
+                onLongPress: () => _hold(context, r),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Stack(children: [
                     _coverOrBlank(b, w),
+                    if (_sel(context, r)) ...[
+                      Positioned.fill(child: Container(decoration: BoxDecoration(border: Border.all(color: Theme.of(context).colorScheme.primary, width: 3), color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.18)))),
+                      const Positioned(top: 6, right: 6, child: SelectedBadge()),
+                    ],
                     if (rating != null)
                       Positioned(
                         left: 4, bottom: 6,
@@ -460,10 +486,17 @@ class _ShelfBook extends StatelessWidget {
         button: true,
         child: GestureDetector(
           onTap: () => _open(context, row),
-          child: Container(
-            decoration: const BoxDecoration(boxShadow: [BoxShadow(color: Colors.black38, blurRadius: 5, offset: Offset(2, 2))]),
-            child: b.coverUrl.isEmpty ? _Blank(b.title, w, h) : SizedBox(width: w, height: h, child: ClipRRect(borderRadius: BorderRadius.circular(2), child: Cover(b.coverUrl, w: w, tag: 'cover-${b.id}', locked: b.locked))),
-          ),
+          onLongPress: () => _hold(context, row),
+          child: Stack(children: [
+            Container(
+              decoration: const BoxDecoration(boxShadow: [BoxShadow(color: Colors.black38, blurRadius: 5, offset: Offset(2, 2))]),
+              child: b.coverUrl.isEmpty ? _Blank(b.title, w, h) : SizedBox(width: w, height: h, child: ClipRRect(borderRadius: BorderRadius.circular(2), child: Cover(b.coverUrl, w: w, tag: 'cover-${b.id}', locked: b.locked))),
+            ),
+            if (_sel(context, row)) ...[
+              Positioned.fill(child: Container(decoration: BoxDecoration(border: Border.all(color: Theme.of(context).colorScheme.primary, width: 3), color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)))),
+              const Positioned(top: 5, right: 5, child: SelectedBadge()),
+            ],
+          ]),
         ),
       ),
     );
@@ -590,6 +623,7 @@ class _Spine extends StatelessWidget {
             HapticFeedback.selectionClick();
             _open(context, row);
           },
+          onLongPress: () => _hold(context, row),
           child: Container(
             width: w, height: h,
             decoration: const BoxDecoration(boxShadow: [BoxShadow(color: Colors.black45, blurRadius: 4, offset: Offset(1.5, 0))]),
@@ -614,6 +648,10 @@ class _Spine extends StatelessWidget {
                   top: -9, right: w * 0.3,
                   child: Container(width: 4.5, height: 15, decoration: BoxDecoration(color: cs.tertiary, boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 1.5)])),
                 ),
+              if (_sel(context, row)) ...[
+                Positioned.fill(child: Container(decoration: BoxDecoration(border: Border.all(color: cs.primary, width: 2.5), color: cs.primary.withValues(alpha: 0.28)))),
+                const Positioned(top: 6, left: 0, right: 0, child: Center(child: SelectedBadge())),
+              ],
               // finished: a small gilt seal near the foot
               if (done)
                 Positioned(

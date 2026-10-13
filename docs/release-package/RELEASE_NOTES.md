@@ -1,8 +1,22 @@
 # Pagemark — Release Notes
 
-Every release from the first (0.1.0) to the current one (0.4.3), newest first. Releases are published at https://github.com/AxialForge/Pagemark/releases and the same text is inside the app under Settings → Updates → Version history.
+Every release from the first (0.1.0) to the current one (0.5.0), newest first. Releases are published at https://github.com/AxialForge/Pagemark/releases and the same text is inside the app under Settings → Updates → Version history.
 
 ---
+
+## [0.5.0] - 2026-10-12
+
+Bring your history in, and manage many books at once.
+
+### Added
+
+- Import (Settings > Import): reads a Goodreads library export, a StoryGraph export, or a Pagemark CSV/JSON export. It shows what the file holds (books, reads, how many you already have, shelves it would create, rows it skipped and why), lets you choose what to do with books you already own (skip, add the file's reads to them, or import as separate copies), saves a safety copy of your library first, imports everything in one all-or-nothing step, and offers Undo (the imported books go to Trash). Goodreads shelves become Pagemark shelves; statuses, ratings, dates, reviews, formats (print / e-book / audio) and ISBNs are mapped; ratings are rounded to the nearest half star. Imports never touch the locked library.
+- Multi-select: long-press a book in any Library style to start selecting; tap to add or remove. Actions: select all shown, mark finished today, add to a shelf, move to or from the locked library, move to Trash. Back or the X closes the selection. Every action except adding to a shelf has Undo.
+- Swipe actions on the Classic and Compact lists: swipe right = finished today, swipe left = Trash, both with Undo.
+
+### Changed
+
+- The Library list now uses one database subscription (less work when scrolling and editing).
 
 ## [0.4.3] - 2026-10-12
 
