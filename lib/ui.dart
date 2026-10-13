@@ -242,7 +242,7 @@ class _LibraryState extends State<Library> {
     skin = skinById(prefs.getString('${_pk}_skin'));
     groupShelves = prefs.getBool('${_pk}_group') ?? false;
     _quoteSub = db.watchQuoteText().listen((m) { if (mounted) setState(() => _quoteText = m); });
-    _shelfSub = db.watchShelves().listen((v) {
+    _shelfSub = db.watchShelves(locked: widget.locked).listen((v) {
       if (!mounted) return;
       setState(() {
         shelves = v;
@@ -295,7 +295,7 @@ class _LibraryState extends State<Library> {
   }
 
   Future<void> _bulkShelf(Set<int> ids) async {
-    final shelves = await db.watchShelves().first;
+    final shelves = await db.watchShelves(locked: widget.locked).first;
     if (!mounted) return;
     final picked = await showModalBottomSheet<int>(
       context: context,
@@ -369,7 +369,7 @@ class _LibraryState extends State<Library> {
           onSelected: (v) => Navigator.push(context, MaterialPageRoute(builder: (_) => switch (v) {
                 'series' => SeriesPage(locked: widget.locked),
                 'trash' => const TrashPage(locked: true),
-                _ => const ShelvesPage(),
+                _ => ShelvesPage(locked: widget.locked),
               })),
           itemBuilder: (_) => [
             const PopupMenuItem(value: 'series', child: ListTile(leading: Icon(Icons.layers_outlined), title: Text('Series'))),
@@ -921,7 +921,7 @@ class BookPage extends StatelessWidget {
                 if (b.isbn.isNotEmpty) Text('ISBN ${b.isbn}'),
                 if (b.tags.isNotEmpty) Wrap(spacing: 4, children: [for (final t in b.tags.split(',').where((t) => t.trim().isNotEmpty)) Chip(label: Text(t.trim()))]),
                 const SizedBox(height: 6),
-                ShelfChips(bookId: b.id),
+                ShelfChips(bookId: b.id, locked: b.locked),
               ])),
             ]),
             if (b.description.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 12), child: ExpandableText(b.description)),

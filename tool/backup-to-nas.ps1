@@ -12,7 +12,7 @@
     BACKUP-INFO.txt what/when/which commit, and how to restore
 #>
 param(
-  [string]$Nas = "\\192.168.1.204\Apocrypha_Main_Pool\Libary_Pool\APP Projects\PageMark",
+  [string]$Nas = $env:PAGEMARK_NAS,   # e.g. \\server\share\folder (kept out of the repo; set it in your user environment)
   [switch]$SkipKeys,
   [int]$KeepBundles = 10
 )
@@ -20,6 +20,7 @@ $ErrorActionPreference = 'Continue'   # native tools (git, robocopy) print progr
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 
+if (-not $Nas) { throw "Set the PAGEMARK_NAS environment variable (or pass -Nas) to the backup folder, e.g. \\server\share\PageMark" }
 if (-not (Test-Path -LiteralPath $Nas)) { throw "NAS folder not reachable: $Nas" }
 $stamp = Get-Date -Format 'yyyyMMdd-HHmm'
 $ver = ((Select-String -Path pubspec.yaml -Pattern '^version:\s*([\d.]+)').Matches[0].Groups[1].Value)

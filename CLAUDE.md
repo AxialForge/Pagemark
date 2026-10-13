@@ -96,7 +96,7 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 - **Large-text safety:** fixed-height rows must scale with `MediaQuery.textScalerOf(context)` (see Compact and BarChart); `test/v043_ui_test.dart` draws every Library style at 200%.
 - **Hidden Locked tab:** `hideLockedTab` (prefs `hide_locked`); the vault is then a pushed `VaultPage` opened by long-pressing the Library title. It relocks/wipes on dispose and on background like the tab version.
 - **Release APKs are already R8-minified** by Flutter's default release config (`build/app/outputs/mapping/release/mapping.txt` exists); don't add rules blindly.
-- **NAS backup:** `tool/backup-to-nas.ps1` mirrors source, a git bundle, the signed APKs and the signing key to the home NAS (`\\192.168.1.204\Apocrypha_Main_Pool\Libary_Pool\APP Projects\PageMark`). Run it after every release.
+- **NAS backup:** `tool/backup-to-nas.ps1` mirrors source, a git bundle, the signed APKs and the signing key to the home NAS (the path is read from the `PAGEMARK_NAS` environment variable, so it stays out of the public repo). Run it after every release.
 
 - **Import is two layers:** `importer.dart` (pure parsing, no DB, tested with fixtures in `test/fixtures/`) and `ImportRunner` (plan + one DB transaction). Never write imports outside `ImportRunner.run`, or the all-or-nothing and Undo guarantees go. Imports only ever compare against / write to the *main* library. Fixtures must use invented titles only.
 - **Selection:** `SelectionScope` (selection.dart) is an InheritedWidget shared with every Library style; a new style must route taps through `_open` and long-press through `_hold` in skins.dart, and draw `SelectedBadge`. `Dismissible` rows return `false` from `confirmDismiss` so the database stream, not the widget, removes the row.
@@ -110,6 +110,12 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 - **Whole-app lock lives in `MaterialApp.builder`** (`AppLockOverlay`, app_lock.dart), above the Navigator, so no pushed route can cover it. The gate has its own `Navigator` wrapped in `HeroControllerScope.none` (sharing the app's Hero controller throws). `shouldRelock(away, delay)` is the single rule for both the vault and the app lock; delay 0 locks on `paused`/`hidden` (before the recents thumbnail), a delay is checked against a timestamp on `resumed` (timers don't run while backgrounded).
 - **Screenshots of locked screens are black by design** (FLAG_SECURE). For documentation builds use `--dart-define=PAGEMARK_SCREENSHOTS=true`; never ship it.
 
+- **Two flavors:** `sideload` (default, GitHub APK, has `REQUEST_INSTALL_PACKAGES` via `android/app/src/sideload/AndroidManifest.xml`, self-updates) and `play` (no installer permission, no Updates screen; `appFlavor == 'play'` in Dart). Never add the installer permission to the main manifest. Build Play with `--flavor play`.
+- **Secure storage never silently resets:** `LockService` uses `AndroidOptions(resetOnError: false)`, and a plain pref `lock_set` records that a lock existed, so empty storage reads as mode `'lost'` (vault stays closed) instead of "no lock". The backup passphrase has the same guard (`bk_enc`). Don't switch either back to a default `FlutterSecureStorage()`.
+- **Restore points:** `Exporter.safetyCopy` / `restoreDb` keep `pre-import-*` / `pre-restore-*` copies (named to the second); Settings > Restore points lists them. `Exporter.inspect` checks columns and `user_version`, so test fixtures must create real `books`/`reads` columns.
+- **Log scrubbing:** `Log.scrub` removes SQL details from exceptions (bound values can be titles). Keep logging through `Log`, never `print`.
+- **Shelves are visible per library:** `watchShelves(locked:)` hides shelves that only hold the other library's books.
+
 ## Docs & screenshots
 
 - Documentation lives in `docs/release-package/*.md`; `python docs/_tools/build_docs.py` builds the four PDFs plus the combined `Pagemark-Documentation.pdf` (needs Python `markdown` and Edge). Figures are inline HTML (`<div class="shots">`) pointing at `../screenshots/*.jpg`.
@@ -118,18 +124,19 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 
 ## Roadmap (unbuilt)
 
-**Start here: [docs/ROADMAP.md](docs/ROADMAP.md)** - the planned releases 0.4.2 → 1.0 with self-contained task specs, how to work away from home, and a prompt to paste into a fresh Claude Code session. The list below is the older, shorter version.
+**Start here: [docs/ROADMAP.md](docs/ROADMAP.md)** - the planned releases with self-contained task specs, how to work away from home, and a prompt to paste into a fresh Claude Code session.
 
 - (An encrypted database / SQLCipher was considered and **declined by the owner** on 2026-10-12 - do not re-propose; see docs/ROADMAP.md 0.7.0-A.)
-- A Flutter CI workflow (the template has none for Flutter). Release signing is local: `android/key.properties` (gitignored) points at `~/.android/pagemark-release.jks` — back that keystore up; losing it means users can't upgrade in place.
-- Reading goals/streaks, series grouping, CSV/Goodreads import, iOS build (needs a Mac).
+- Release signing is local: `android/key.properties` (gitignored) points at `~/.android/pagemark-release.jks` - back that keystore up; losing it means users can't upgrade in place. CI (`.github/workflows/ci.yml`) analyzes, tests and builds debug APKs for both flavors only.
+- iOS build (needs a Mac).
 
 ## Release
 
-Bump `version:` in `pubspec.yaml` and update `CHANGELOG.md` in one commit, then:
+Bump `version:` in `pubspec.yaml` and update `CHANGELOG.md` in one commit, then build everything with `powershell -File tool/build.ps1` (signed `Pagemark-x.y.z-arm64.apk` / `-armv7.apk` for GitHub, plus `Pagemark-x.y.z-play.aab` for Google Play). Then:
 
 ```bash
-git tag v0.1.0 && git push origin v0.1.0
+git tag vX.Y.Z && git push origin vX.Y.Z
+gh release create vX.Y.Z build/release-X.Y.Z/*.apk --title "Pagemark X.Y.Z" --notes-file <changelog section>
 ```
 
-No CI builds the APK yet, so attach it to the GitHub Release by hand until a Flutter workflow exists.
+Attach only the two APKs to the GitHub Release (the updater picks by `arm64` / `armv7` in the name); the `.aab` goes to Play Console. Publishing to Play is described in [docs/PLAY_STORE.md](docs/PLAY_STORE.md).

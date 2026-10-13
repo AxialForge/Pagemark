@@ -113,7 +113,17 @@ class AppDb extends _$AppDb {
   static const trashDays = 30;
 
   // ── shelves ──
-  Stream<List<Shelf>> watchShelves() => (select(shelves)..orderBy([(s) => OrderingTerm.asc(s.name)])).watch();
+  /// All shelves, or (with [locked]) only the ones that library may show: a shelf is visible in a library when one of its books lives
+  /// there, or when it is still empty. A shelf holding only locked books therefore never appears (by name) in the main library.
+  Stream<List<Shelf>> watchShelves({bool? locked}) {
+    if (locked == null) return (select(shelves)..orderBy([(s) => OrderingTerm.asc(s.name)])).watch();
+    return customSelect(
+      'SELECT s.id, s.name FROM shelves s WHERE NOT EXISTS (SELECT 1 FROM book_shelves l WHERE l.shelf_id = s.id) '
+      'OR EXISTS (SELECT 1 FROM book_shelves l JOIN books b ON b.id = l.book_id WHERE l.shelf_id = s.id AND b.locked = ?) ORDER BY s.name',
+      variables: [Variable.withBool(locked)],
+      readsFrom: {shelves, bookShelves, books},
+    ).watch().map((rows) => [for (final r in rows) Shelf(id: r.read<int>('id'), name: r.read<String>('name'))]);
+  }
   Stream<List<BookShelf>> watchShelfLinks() => select(bookShelves).watch();
 
   Future<int> addShelf(String name) async {

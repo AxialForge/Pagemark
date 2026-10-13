@@ -109,7 +109,8 @@ class LockService {
   static Future<Duration> lockoutRemaining() async {
     final until = int.tryParse(await _s.read(key: 'lock_until') ?? '') ?? 0;
     final left = until - DateTime.now().millisecondsSinceEpoch;
-    return left > 0 ? Duration(milliseconds: left) : Duration.zero;
+    // never longer than the longest lockout (1 h): a clock set far ahead must not lock the library out for good
+    return left > 0 ? Duration(milliseconds: left > 3600 * 1000 ? 3600 * 1000 : left) : Duration.zero;
   }
 
   static Future<void> _resetFails() async {

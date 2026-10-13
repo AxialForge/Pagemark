@@ -143,4 +143,17 @@ void main() {
     expect(SeriesPage.parseNum('1e20'), isNull);
     expect(SeriesPage.fmtNum(double.nan), '');
   });
+
+  test('PGM-110 a shelf that only holds locked books is not listed in the main library', () async {
+    final db = AppDb.memory();
+    final secret = await db.into(db.books).insert(BooksCompanion.insert(title: 'S', locked: const Value(true)));
+    final plain = await db.into(db.books).insert(BooksCompanion.insert(title: 'P'));
+    final vaultShelf = await db.addShelf('Hidden shelf');
+    final mainShelf = await db.addShelf('Comfort reads');
+    await db.setOnShelf(secret, vaultShelf, true);
+    await db.setOnShelf(plain, mainShelf, true);
+    expect((await db.watchShelves(locked: false).first).map((s) => s.name), ['Comfort reads']);
+    expect((await db.watchShelves(locked: true).first).map((s) => s.name), ['Hidden shelf']);
+    await db.close();
+  });
 }

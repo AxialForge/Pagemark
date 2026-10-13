@@ -234,11 +234,12 @@ class ProgressCard extends StatelessWidget {
 // ───────────────────────── Shelves ─────────────────────────
 class ShelfChips extends StatelessWidget {
   final int bookId;
-  const ShelfChips({super.key, required this.bookId});
+  final bool locked;
+  const ShelfChips({super.key, required this.bookId, this.locked = false});
 
   @override
   Widget build(BuildContext context) => StreamBuilder<List<Shelf>>(
-        stream: db.watchShelves(),
+        stream: db.watchShelves(locked: locked),
         builder: (_, sh) => StreamBuilder<List<BookShelf>>(
           stream: db.watchShelfLinks(),
           builder: (_, ln) {
@@ -247,20 +248,20 @@ class ShelfChips extends StatelessWidget {
             return Wrap(spacing: 6, children: [
               for (final s in shelves.where((s) => mine.contains(s.id)))
                 InputChip(avatar: const Icon(Icons.collections_bookmark_outlined, size: 16), label: Text(s.name), onDeleted: () => db.setOnShelf(bookId, s.id, false)),
-              ActionChip(avatar: const Icon(Icons.add, size: 16), label: const Text('Shelf'), onPressed: () => pickShelves(context, bookId)),
+              ActionChip(avatar: const Icon(Icons.add, size: 16), label: const Text('Shelf'), onPressed: () => pickShelves(context, bookId, locked: locked)),
             ]);
           },
         ),
       );
 }
 
-Future<void> pickShelves(BuildContext context, int bookId) => showModalBottomSheet<void>(
+Future<void> pickShelves(BuildContext context, int bookId, {bool locked = false}) => showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
       builder: (c) => SafeArea(
         child: StreamBuilder<List<Shelf>>(
-          stream: db.watchShelves(),
+          stream: db.watchShelves(locked: locked),
           builder: (_, sh) => StreamBuilder<List<BookShelf>>(
             stream: db.watchShelfLinks(),
             builder: (_, ln) {
@@ -287,7 +288,8 @@ Future<void> pickShelves(BuildContext context, int bookId) => showModalBottomShe
     );
 
 class ShelvesPage extends StatelessWidget {
-  const ShelvesPage({super.key});
+  final bool locked;
+  const ShelvesPage({super.key, this.locked = false});
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text('Shelves')),
@@ -300,7 +302,7 @@ class ShelvesPage extends StatelessWidget {
           },
         ),
         body: StreamBuilder<List<Shelf>>(
-          stream: db.watchShelves(),
+          stream: db.watchShelves(locked: locked),
           builder: (_, snap) {
             final list = snap.data ?? [];
             if (list.isEmpty) return const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('No shelves yet. Shelves group books any way you like — "Comfort reads", "Book club", "Lent out". Add one, then put books on it from the book page.', textAlign: TextAlign.center)));

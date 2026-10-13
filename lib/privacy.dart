@@ -21,6 +21,9 @@ class Secure {
   /// locked screens. Never set for releases.
   static const _docBuild = bool.fromEnvironment('PAGEMARK_SCREENSHOTS');
 
+  /// True only in documentation builds; logged at start so a release carrying it by mistake shows up in Diagnostics.
+  static bool get docBuild => _docBuild;
+
   static Future<void> set(bool on) async {
     if (_docBuild) return;
     try {

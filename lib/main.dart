@@ -19,6 +19,7 @@ final adultFields = ValueNotifier<bool>(false);
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Log.installGlobalHandlers();
+  if (Secure.docBuild) Log.w('build', 'documentation build: screenshot blocking is OFF (never ship this build)');
   prefs = await SharedPreferences.getInstance();
   await CoverStore.init();
   themeId.value = prefs.getString('theme') ?? 'light_him';

@@ -56,6 +56,15 @@ class Lookup {
     throw last as LookupException;
   }
 
+  /// Open Library sometimes answers with an HTML error page or a cut-off body; that is a lookup problem, not a crash.
+  static Object? _decode(http.Response r) {
+    try {
+      return jsonDecode(utf8.decode(r.bodyBytes));
+    } on FormatException {
+      throw LookupException('Open Library sent an answer Pagemark could not read. Try again in a moment.');
+    }
+  }
+
   static String _str(Object? v) => v is String ? v : '';
   static int? _int(Object? v) => v is int ? v : (v is num ? v.toInt() : int.tryParse('$v'));
   static List<Object?> _list(Object? v) => v is List ? v : const [];
@@ -120,7 +129,7 @@ class Lookup {
       'fields': 'key,title,author_name,isbn,cover_i,first_publish_year,number_of_pages_median,publisher,subject',
     });
     final r = await _get(u);
-    final body = jsonDecode(utf8.decode(r.bodyBytes));
+    final body = _decode(r);
     final seen = <String>{};
     final out = <BookMeta>[];
     for (final d in _list(body is Map ? body['docs'] : null)) {
@@ -139,9 +148,9 @@ class Lookup {
     if (isbn == null) throw LookupException('"$raw" is not a valid ISBN.');
     final u = Uri.https('openlibrary.org', '/api/books', {'bibkeys': 'ISBN:$isbn', 'format': 'json', 'jscmd': 'data'});
     final r = await _get(u);
-    final m = jsonDecode(utf8.decode(r.bodyBytes));
+    final m = _decode(r);
     final d = m is Map ? m['ISBN:$isbn'] : null;
-    if (d is Map) {
+    if (d is Map && _str(d['title']).isNotEmpty) {
       final subjects = _list(d['subjects']).map((s) => s is Map ? s['name'] : s);
       final pd = '${d['publish_date']}';
       return BookMeta(
@@ -166,7 +175,7 @@ class Lookup {
     if (!workKey.startsWith('/works/')) return '';
     try {
       final r = await _get(Uri.https('openlibrary.org', '$workKey.json'));
-      final j = jsonDecode(utf8.decode(r.bodyBytes));
+      final j = _decode(r);
       final d = j is Map ? j['description'] : null;
       final text = d is String ? d : (d is Map ? _str(d['value']) : '');
       return text.split('\n----------').first.trim(); // OL appends source/links after a rule

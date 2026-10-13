@@ -27,7 +27,7 @@ class CoverStore {
   static bool isLocal(String url) => url.startsWith(prefix);
 
   /// Only plain file names, never paths: a backup cannot make us read or write outside the covers folder.
-  static bool safeName(String name) => RegExp(r'^[A-Za-z0-9._-]{1,80}$').hasMatch(name) && !name.contains('..');
+  static bool safeName(String name) => RegExp(r'^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$').hasMatch(name) && !name.contains('..');
 
   static File? fileFor(String url) {
     if (!isLocal(url) || !ready) return null;
