@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:drift/drift.dart' show Value;
+import 'package:drift/drift.dart' show BooleanExpressionOperators, Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -216,7 +216,7 @@ class _CoversPageState extends State<CoversPage> {
   }
 
   Future<void> _refresh() async {
-    final books = await (db.select(db.books)..where((b) => b.deletedAt.isNull())).get();
+    final books = await (db.select(db.books)..where((b) => b.deletedAt.isNull() & b.locked.equals(false))).get();
     final files = await CoverStore.allFiles();
     if (!mounted) return;
     setState(() {
@@ -227,7 +227,7 @@ class _CoversPageState extends State<CoversPage> {
   }
 
   Future<void> _saveAll() async {
-    final books = (await (db.select(db.books)..where((b) => b.deletedAt.isNull())).get()).where((b) => b.coverUrl.startsWith('http')).toList();
+    final books = (await (db.select(db.books)..where((b) => b.deletedAt.isNull() & b.locked.equals(false))).get()).where((b) => b.coverUrl.startsWith('http')).toList();
     setState(() { running = true; cancel = false; total = books.length; doneCount = 0; failed = 0; });
     for (final b in books) {
       if (cancel || !mounted) break;

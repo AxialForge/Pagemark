@@ -36,6 +36,8 @@ Future<void> cleanTempExports() async {
     for (final f in dir.listSync()) {
       final n = f.uri.pathSegments.last;
       if (f is File && (n.startsWith('pagemark-') || n == 'restore.sqlite')) await f.delete();
+      // plugin caches: the share sheet and the file picker keep copies of what was exported / picked (can include locked books)
+      if (f is Directory && (n == 'share_plus' || n == 'file_picker')) await f.delete(recursive: true);
     }
   } catch (_) {}
 }

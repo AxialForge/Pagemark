@@ -2,6 +2,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pagemark/backup.dart';
 import 'package:pagemark/lock.dart';
+import 'package:pagemark/log.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -53,6 +54,18 @@ void main() {
       expect(p.getString('bk_hash'), isNull);
       await DriveBackup.setPassphrase('');
       expect(p.getBool('bk_enc'), isFalse);
+    });
+  });
+
+  group('PGM-201 the log never keeps database values', () {
+    test('a sqlite exception with bound parameters is cut off before it is written', () {
+      const msg = 'SqliteException(2067): UNIQUE constraint failed, Causing statement: INSERT INTO books (title) VALUES (?), parameters: [My Secret Diary]';
+      final out = Log.scrub(msg);
+      expect(out, isNot(contains('Secret')));
+      expect(out, contains('database details removed'));
+    });
+    test('long messages are capped', () {
+      expect(Log.scrub('x' * 5000).length, lessThan(700));
     });
   });
 }

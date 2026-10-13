@@ -37,6 +37,14 @@ android {
         versionName = flutter.versionName
     }
 
+    // Two builds of the same app. "sideload" (the default) is the GitHub APK and may update itself; "play" is for Google Play
+    // and has no installer permission (Play forbids apps that install APKs from outside the store).
+    flavorDimensions += "dist"
+    productFlavors {
+        create("sideload") { dimension = "dist" }
+        create("play") { dimension = "dist" }
+    }
+
     signingConfigs {
         create("release") {
             if (keyProps.containsKey("storeFile")) {

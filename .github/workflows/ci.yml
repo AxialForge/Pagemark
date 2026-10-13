@@ -26,4 +26,5 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - run: flutter build apk --debug
+      - run: flutter build apk --debug --flavor sideload
+      - run: flutter build apk --debug --flavor play

@@ -8,12 +8,15 @@ import 'log.dart';
 import 'main.dart';
 import 'updater.dart';
 
+/// The Google Play build (`--flavor play`) never updates itself: Play does that, and Play forbids installing APKs from outside the store.
+final bool selfUpdates = appFlavor != 'play';
+
 /// Set when a check found a newer release; drives the badge on Settings.
 final updateAvailable = ValueNotifier<UpdateInfo?>(null);
 
 /// Quiet check at most once a day, only if the user hasn't turned it off. Never throws.
 Future<void> autoCheckUpdates() async {
-  if (prefs.getBool('upd_auto') == false) return;
+  if (!selfUpdates || prefs.getBool('upd_auto') == false) return;
   final last = DateTime.tryParse(prefs.getString('upd_last') ?? '');
   if (last != null && DateTime.now().difference(last) < const Duration(hours: 24)) return;
   try {
@@ -41,7 +44,7 @@ Future<void> announceNewVersion(BuildContext context) async {
 class UpdateTile extends StatelessWidget {
   const UpdateTile({super.key});
   @override
-  Widget build(BuildContext context) => ValueListenableBuilder<UpdateInfo?>(
+  Widget build(BuildContext context) => !selfUpdates ? const SizedBox.shrink() : ValueListenableBuilder<UpdateInfo?>(
         valueListenable: updateAvailable,
         builder: (_, info, _) => ListTile(
           leading: Badge(isLabelVisible: info != null, child: const Icon(Icons.system_update_alt)),

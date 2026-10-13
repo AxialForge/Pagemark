@@ -4,7 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// Tiny rolling log (~200 KB) in app storage, shared by the UI and the background backup task.
-/// Never records book titles or thoughts — only event names, error types and messages from code.
+/// Never records book titles or thoughts - only event names, error types and messages from code. Database errors carry
+/// the SQL values they were given, so [scrub] cuts those off before anything is written.
 class Log {
   static const _max = 200 * 1024;
   static File? _file;
@@ -22,7 +23,17 @@ class Log {
   static void e(String tag, Object err, [StackTrace? st]) =>
       _write('E', tag, '$err${st == null ? '' : '\n${st.toString().split('\n').take(6).join('\n')}'}');
 
+  /// Removes anything a database exception could have copied from the library (bound values, the statement) and caps the length.
+  @visibleForTesting
+  static String scrub(String msg) {
+    var m = msg;
+    final cut = RegExp(r'Causing statement|with parameters|Parameters:|SQL logic error|constraint failed', caseSensitive: false).firstMatch(m);
+    if (cut != null) m = '${m.substring(0, cut.start)}[database details removed]';
+    return m.length > 600 ? '${m.substring(0, 600)}...' : m;
+  }
+
   static void _write(String level, String tag, String msg) {
+    msg = scrub(msg);
     final line = '${DateTime.now().toIso8601String()} $level $tag: $msg\n';
     if (echo) debugPrint(line.trimRight());
     // Lines logged in the same burst are written together (one file open instead of one per line).

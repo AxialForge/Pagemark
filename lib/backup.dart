@@ -7,6 +7,7 @@ import 'covers.dart';
 import 'crypto_backup.dart';
 import 'log.dart';
 import 'notifier.dart';
+import 'privacy.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
@@ -215,6 +216,7 @@ class DriveBackup {
     } catch (e) {
       Log.w('backup', 'run failed: $e');
       await p.setString('bk_err', '${DateTime.now().toIso8601String()}  ${friendlyBackupError(e)}');
+      await cleanTempExports(); // a failed run must not leave a copy of the library (locked books included) in the cache
       rethrow;
     }
   }
