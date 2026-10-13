@@ -28,6 +28,7 @@ import 'db.dart';
 import 'export.dart';
 import 'lock.dart';
 import 'isbn.dart';
+import 'guide.dart';
 import 'incoming.dart';
 import 'log.dart';
 import 'lookup.dart';
@@ -386,12 +387,14 @@ class _LibraryState extends State<Library> {
           onSelected: (v) => Navigator.push(context, MaterialPageRoute(builder: (_) => switch (v) {
                 'series' => SeriesPage(locked: widget.locked),
                 'trash' => const TrashPage(locked: true),
+                'help' => const GuidePage(),
                 _ => ShelvesPage(locked: widget.locked),
               })),
           itemBuilder: (_) => [
             const PopupMenuItem(value: 'series', child: ListTile(leading: Icon(Icons.layers_outlined), title: Text('Series'))),
             const PopupMenuItem(value: 'shelves', child: ListTile(leading: Icon(Icons.collections_bookmark_outlined), title: Text('Manage shelves'))),
-            if (widget.locked) const PopupMenuItem(value: 'trash', child: ListTile(leading: Icon(Icons.delete_sweep_outlined), title: Text('Trash'))),
+            if (widget.locked) const PopupMenuItem(value: 'trash', child: ListTile(leading: Icon(Icons.delete_sweep_outlined), title: Text('Deleted books'))),
+            const PopupMenuItem(value: 'help', child: ListTile(leading: Icon(Icons.menu_book_outlined), title: Text('How to use Pagemark'))),
           ],
         ),
         PopupMenuButton<String>(
@@ -478,6 +481,8 @@ class _LibraryState extends State<Library> {
                 return none
                     ? EmptyState(
                         message: widget.locked ? 'Nothing in your locked library yet.\nTap Add book to start.' : 'Your shelf is empty.\nTap Add book to start your log.',
+                        actionLabel: widget.locked ? null : 'See how Pagemark works',
+                        onAction: widget.locked ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GuidePage())),
                       )
                     : const Center(child: Text('No matches.'));
               }
@@ -1262,13 +1267,15 @@ class SettingsPage extends StatelessWidget {
           const AppHeader(),
           const UpdateTile(),
           const Divider(),
-          _row(context, Icons.palette_outlined, 'Appearance', 'Choose your colours', () => const _AppearancePage()),
-          _row(context, Icons.notifications_active_outlined, 'Reminders and widget', 'A daily nudge to read, and a widget for your home screen', () => const _RemindersPage()),
-          _row(context, Icons.lock_outline, 'Privacy and lock', 'PIN, fingerprint and your private library', () => _PrivacyPage(onLockNow: onLockNow)),
-          _row(context, Icons.cloud_upload_outlined, 'Backup and restore', 'Keep your library safe, or bring it back', () => const _BackupPage()),
-          _row(context, Icons.swap_horiz, 'Import and export', 'Bring books in from another app, or take your list out', () => const _ImportExportPage()),
-          _row(context, Icons.collections_bookmark_outlined, 'Your library', 'Deleted books, cover pictures and extra notes', () => const _LibraryExtrasPage()),
-          _row(context, Icons.help_outline, 'Help and about', 'What is new, and fixing problems', () => const _HelpPage()),
+          _row(context, Icons.menu_book_outlined, 'How to use Pagemark', 'Short, simple steps for everything the app does', () => const GuidePage()),
+          const Divider(),
+          _row(context, Icons.palette_outlined, SettingsTitles.appearance, 'Choose your colours', () => const _AppearancePage()),
+          _row(context, Icons.notifications_active_outlined, SettingsTitles.reminders, 'A daily nudge to read, and a widget for your home screen', () => const _RemindersPage()),
+          _row(context, Icons.lock_outline, SettingsTitles.privacy, 'PIN, fingerprint and your private library', () => _PrivacyPage(onLockNow: onLockNow)),
+          _row(context, Icons.cloud_upload_outlined, SettingsTitles.backup, 'Keep your library safe, or bring it back', () => const _BackupPage()),
+          _row(context, Icons.swap_horiz, SettingsTitles.importExport, 'Bring books in from another app, or take your list out', () => const _ImportExportPage()),
+          _row(context, Icons.collections_bookmark_outlined, SettingsTitles.library, 'Deleted books, cover pictures and extra notes', () => const _LibraryExtrasPage()),
+          _row(context, Icons.help_outline, SettingsTitles.help, 'What is new, and fixing problems', () => const _HelpPage()),
           const Padding(padding: EdgeInsets.fromLTRB(20, 16, 20, 24), child: Text('Everything stays on this phone unless you back it up or share it.')),
         ]),
       );
@@ -1293,7 +1300,7 @@ class _Hint extends StatelessWidget {
 class _AppearancePage extends StatelessWidget {
   const _AppearancePage();
   @override
-  Widget build(BuildContext context) => _SettingsSub('Appearance', [
+  Widget build(BuildContext context) => _SettingsSub(SettingsTitles.appearance, [
         const _Hint('Pick the colours you like. You can change this any time.'),
         ValueListenableBuilder<String>(
           valueListenable: themeId,
@@ -1314,7 +1321,7 @@ class _AppearancePage extends StatelessWidget {
 class _RemindersPage extends StatelessWidget {
   const _RemindersPage();
   @override
-  Widget build(BuildContext context) => _SettingsSub('Reminders and widget', [
+  Widget build(BuildContext context) => _SettingsSub(SettingsTitles.reminders, [
         const _ReminderTiles(),
         const Divider(),
         ValueListenableBuilder<bool>(
@@ -1336,7 +1343,7 @@ class _PrivacyPage extends StatelessWidget {
   final VoidCallback onLockNow;
   const _PrivacyPage({required this.onLockNow});
   @override
-  Widget build(BuildContext context) => _SettingsSub('Privacy and lock', [
+  Widget build(BuildContext context) => _SettingsSub(SettingsTitles.privacy, [
         const _Hint('Books you move to the Locked tab are hidden behind a PIN or your fingerprint.'),
         ListTile(leading: const Icon(Icons.lock_clock), title: const Text('Lock now'), subtitle: const Text('Close your private library right away'), onTap: () { onLockNow(); Navigator.pop(context); }),
         ValueListenableBuilder<int>(
@@ -1398,7 +1405,7 @@ class _PrivacyPage extends StatelessWidget {
 class _BackupPage extends StatelessWidget {
   const _BackupPage();
   @override
-  Widget build(BuildContext context) => _SettingsSub('Backup and restore', [
+  Widget build(BuildContext context) => _SettingsSub(SettingsTitles.backup, [
         const _Hint('A backup is a safe copy of your whole library, including your locked books.'),
         FutureBuilder<BackupSettings>(
           future: BackupSettings.load(),
@@ -1447,7 +1454,7 @@ class _BackupPage extends StatelessWidget {
 class _ImportExportPage extends StatelessWidget {
   const _ImportExportPage();
   @override
-  Widget build(BuildContext context) => _SettingsSub('Import and export', [
+  Widget build(BuildContext context) => _SettingsSub(SettingsTitles.importExport, [
         ListTile(leading: const Icon(Icons.upload_file), title: const Text('Bring in books from another app'), subtitle: const Text('Goodreads, StoryGraph, or a Pagemark file'), trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ImportPage()))),
         const Divider(),
@@ -1460,7 +1467,7 @@ class _ImportExportPage extends StatelessWidget {
 class _LibraryExtrasPage extends StatelessWidget {
   const _LibraryExtrasPage();
   @override
-  Widget build(BuildContext context) => _SettingsSub('Your library', [
+  Widget build(BuildContext context) => _SettingsSub(SettingsTitles.library, [
         ListTile(leading: const Icon(Icons.delete_sweep_outlined), title: const Text('Deleted books'), subtitle: const Text('Kept for 30 days, then removed for good'), trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TrashPage()))),
         ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Cover pictures'), subtitle: const Text('Keep covers on this phone so they work without internet and are included in backups'), trailing: const Icon(Icons.chevron_right),
@@ -1481,7 +1488,9 @@ class _LibraryExtrasPage extends StatelessWidget {
 class _HelpPage extends StatelessWidget {
   const _HelpPage();
   @override
-  Widget build(BuildContext context) => _SettingsSub('Help and about', [
+  Widget build(BuildContext context) => _SettingsSub(SettingsTitles.help, [
+        ListTile(leading: const Icon(Icons.menu_book_outlined), title: const Text('How to use Pagemark'), subtitle: const Text('Short, simple steps for everything the app does'), trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GuidePage()))),
         ListTile(leading: const Icon(Icons.new_releases_outlined), title: const Text("What's new"), subtitle: const Text('Every change in every version'), trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangelogPage()))),
         ListTile(leading: const Icon(Icons.bug_report_outlined), title: const Text('Problem report'), subtitle: const Text('Only needed if someone is helping you fix a problem. It contains no book titles.'), trailing: const Icon(Icons.chevron_right),

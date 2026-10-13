@@ -92,6 +92,7 @@ flutter:
 
   assets:
     - CHANGELOG.md
+    - assets/guide.md
     - assets/branding/logo.png
 
   # To add assets to your application, add an assets section, like this:

@@ -1,0 +1,98 @@
+# How to use Pagemark
+
+## Add your first book
+Tap **Add book** on the Library screen (the round button at the bottom).
+1. Type a title, an author or a barcode number and tap the magnifier. Or tap the barcode icon at the top and point the camera at the barcode on the back of the book.
+2. Tap the book you want in the list. It is added and its page opens.
+3. Can't find it? Tap **Add by hand** and type the title yourself.
+
+Tip: if you share a book from a web page or another app (Share, then Pagemark), Pagemark opens with the search already filled in.
+
+## Say what you are reading
+Open a book and tap **Log a read**.
+- Choose **Print**, **E-book** or **Audiobook**.
+- Choose a status: **Want to read**, **Reading**, **Finished** or **Did not finish**.
+- Add the dates, give it stars (you can use half stars) and write your thoughts if you like.
+- Tap **Save**.
+
+A book can have more than one read, for example if you read it again next year.
+
+## Keep track of your page
+While a book is **Reading**, its page shows a progress card. Tap **Update progress** and move the slider to the page you are on. Pagemark shows how far you are and about how many days are left at your pace.
+
+If you do not see a progress bar, tap the pencil icon and fill in the number of pages.
+
+## Find your books
+- Type in the search box at the top of the Library. It looks in titles, authors, your notes, your thoughts and your quotes.
+- Tap the round chips (**Want to read**, **Reading**, **Finished** and so on) to show only those books. Slide the chips sideways to see formats and your shelves.
+- Tap the sort icon (three lines) to sort by recently added, title, author or rating.
+- Tap the list icon next to it to change how the library looks: **Classic**, **Cover wall**, **Bookshelf**, **Spines** or **Compact**.
+
+## Shelves and series
+A shelf is a group you make yourself, like "Book club" or "Comfort reads".
+1. Open a book and tap **+ Shelf**.
+2. Tick a shelf, or tap **New shelf** to make one.
+
+To rename or delete shelves, tap the three dots at the top of the Library and choose **Manage shelves**. Deleting a shelf never deletes the books on it.
+
+To see your series (like a trilogy) and which book is next, tap the three dots and choose **Series**. To put a book in a series, tap its pencil icon and fill in **Series** and **Number in series**.
+
+## Save quotes
+Open a book and tap **Add quote**. Type the passage, add the page if you know it, and tap **Save**. Quotes show up on the book's page and in the Library search.
+
+## Move many books at once
+Press and hold a book until a tick appears, then tap other books to add them. The top bar lets you mark them finished, put them on a shelf, move them to your Locked library or delete them. Every change has an **Undo** button for a few seconds.
+
+## Your private Locked library
+The Locked tab holds books you want to keep private. They do not show in your main library, in your stats or in saved lists.
+1. Tap **Locked**, then **Set a PIN** (4 to 12 numbers) and type it twice.
+2. Write down the **recovery code** it shows. It is shown only once and is the only way back in if you forget your PIN.
+3. To put a book there, open it, tap the three dots and choose **Move to locked library**.
+
+Pagemark locks again when you leave the app. You can choose how long it waits in Settings → Privacy and lock.
+
+If you forget your PIN, tap **Forgot PIN?** on the lock screen and type the recovery code.
+
+To hide the Locked tab completely, go to Settings → Privacy and lock and turn on **Hide the Locked tab**. To open it afterwards, press and hold the word "Library" at the top of the Library screen.
+
+## Reminders and the home-screen widget
+To get a daily nudge to read, go to Settings → Reminders and widget and turn on **Daily reading reminder**. Choose the time. Android may ask if Pagemark can send notifications: say yes. The reminder never names a book.
+
+To add the widget, press and hold an empty spot on your home screen, tap **Widgets**, find **Pagemark** and tap **Add**. It shows the books you are reading and your yearly goal. It never shows your locked books.
+
+## Quick ways in
+Press and hold the Pagemark icon on your home screen for two shortcuts: **Add book** and **Reading now** (only the books you are reading).
+
+## See how you are doing
+The **Stats** tab shows how many books you finished each month, your ratings, your pages and your favourite genres and authors. Tap **Set goal** to choose how many books you want to read this year. Stats never include your locked books.
+
+## Keep your library safe
+Your books live only on this phone. A backup is a safe copy you can bring back if the phone is lost or broken. Go to Settings → Backup and restore:
+- **Back up to Google Drive** keeps a copy in your own Google account and can do it for you every day or week. It needs a one-time setup, so ask whoever gave you Pagemark if it is not set up yet.
+- **Save a copy as a file** makes one file you can keep anywhere. Choose a password so nobody else can open it. The file includes your locked books.
+- **Restore from a file** replaces your library with a saved copy. Pagemark closes afterwards. Open it again to see the restored library.
+- **Go back to an earlier copy** lists the copies Pagemark made on its own before each restore and import.
+
+Write your password down somewhere safe. If you lose it, nobody can open the backup, not even Pagemark.
+
+## Bring books in or take them out
+Go to Settings → Import and export.
+- **Bring in books from another app** reads a list from Goodreads or StoryGraph, or a list you saved from Pagemark earlier. You see a preview first, and you can undo the import afterwards.
+- **Save my list as a spreadsheet** makes a file for Excel or Google Sheets.
+- **Save my list for other apps** makes a file for other programs.
+
+Your locked books are never included in these lists.
+
+## Deleted books and mistakes
+Deleting a book moves it to **Deleted books** for 30 days. To bring one back, go to Settings → Your library → **Deleted books** and tap the restore icon.
+
+Most big actions (deleting, moving, importing) show an **Undo** button right after.
+
+## Change the look
+Go to Settings → Appearance and tap a colour theme. Three are light and three are dark.
+
+## Something is not working
+- Check your internet connection if a book search fails.
+[github] - Check for a new version in Settings, then **Updates**.
+- If someone is helping you, go to Settings → Help and about → **Problem report** and tap **Copy** to send them the report. It contains no book titles.
+- To see what has changed in each version, go to Settings → Help and about → **What's new**.

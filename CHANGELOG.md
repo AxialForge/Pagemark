@@ -10,6 +10,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Plain words, simpler Settings.
 
+### Added
+- **How to use Pagemark**: a built-in guide with short, plain steps for everything the app does, and a search box. Open it from Settings, from the three-dot menu on the Library, or from the empty Library screen. It works without internet.
+
 ### Changed
 - **Settings is now a short list of seven plain-language pages** (Appearance, Reminders and widget, Privacy and lock, Backup and restore, Import and export, Your library, Help and about) instead of one long scroll. Wording is simpler throughout: "Save a copy as a file" with a password, "Go back to an earlier copy", "Deleted books", "Problem report", "Turn off the lock".
 

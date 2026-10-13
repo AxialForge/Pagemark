@@ -226,6 +226,7 @@ WebDAV/Dropbox backup targets (FB-46) · LAN transfer between two phones (FB-42)
 Full list with IDs: `docs/ROUNDING_OUT_REPORT.md`.
 
 ## 9. Definition of done for any task
+0. If a user can see the change: update `assets/guide.md` (the in-app guide) in the same commit; `test/guide_test.dart` checks its names against the app.
 1. `flutter analyze` clean, `flutter test` green, new tests for the new behaviour.
 2. Locked-library leak check (grep your change for places that list books: does each filter `locked`?).
 3. Docs: CHANGELOG entry; manual section + screenshot if the UI changed; CLAUDE.md gotcha if something bit you.
