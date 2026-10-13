@@ -161,12 +161,20 @@ class AppDb extends _$AppDb {
   Future<void> restoreQuote(Quote q) => into(quotes).insert(q, mode: InsertMode.insertOrReplace);
 
   // ── bulk operations (multi-select) ──
+  /// SQLite allows only a limited number of `?` values per statement, so long id lists are written in slices.
+  Future<void> _inChunks(Iterable<int> ids, Future<void> Function(List<int> slice) write) => transaction(() async {
+        final all = ids.toList();
+        for (var i = 0; i < all.length; i += 500) {
+          await write(all.sublist(i, i + 500 > all.length ? all.length : i + 500));
+        }
+      });
+
   Future<void> softDeleteMany(Iterable<int> ids) =>
-      (update(books)..where((b) => b.id.isIn(ids))).write(BooksCompanion(deletedAt: Value(DateTime.now())));
+      _inChunks(ids, (s) => (update(books)..where((b) => b.id.isIn(s))).write(BooksCompanion(deletedAt: Value(DateTime.now()))));
   Future<void> restoreMany(Iterable<int> ids) =>
-      (update(books)..where((b) => b.id.isIn(ids))).write(const BooksCompanion(deletedAt: Value(null)));
+      _inChunks(ids, (s) => (update(books)..where((b) => b.id.isIn(s))).write(const BooksCompanion(deletedAt: Value(null))));
   Future<void> setLockedMany(Iterable<int> ids, bool locked) =>
-      (update(books)..where((b) => b.id.isIn(ids))).write(BooksCompanion(locked: Value(locked)));
+      _inChunks(ids, (s) => (update(books)..where((b) => b.id.isIn(s))).write(BooksCompanion(locked: Value(locked))));
 
   /// Marks each book finished today: its active (else latest) read becomes Finished with today's date; a book with no
   /// read gets one. The result says exactly what changed so [undoMarkFinished] can put it back.
@@ -192,7 +200,8 @@ class AppDb extends _$AppDb {
         for (final r in u.changed) {
           await (update(reads)..where((x) => x.id.equals(r.id))).write(ReadsCompanion(status: Value(r.status), finished: Value(r.finished)));
         }
-        await (delete(reads)..where((x) => x.id.isIn(u.created))).go();
+        // a read that was created by "mark finished" is removed only if the user has not added a rating or thoughts to it since
+        await (delete(reads)..where((x) => x.id.isIn(u.created) & x.thoughts.equals('') & x.rating.isNull())).go();
       });
 
   Future<void> addManyToShelf(Iterable<int> ids, int shelfId) async {

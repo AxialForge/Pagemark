@@ -59,9 +59,7 @@ class _ImportPageState extends State<ImportPage> {
   }
 
   Future<void> _undo() async {
-    for (final id in done!.newBookIds) {
-      await db.softDelete(id); // to Trash, so even this is recoverable for 30 days
-    }
+    await ImportRunner.undo(db, done!); // new books go to Trash, so even this is recoverable for 30 days
     if (mounted) {
       snack(context, '${done!.newBookIds.length} imported books moved to Trash');
       setState(() { done = null; parsed = null; plan = null; });
@@ -147,7 +145,7 @@ class _ImportPageState extends State<ImportPage> {
                 const SizedBox(height: 10),
                 Wrap(spacing: 8, children: [
                   FilledButton(onPressed: () => Navigator.pop(context), child: const Text('See my library')),
-                  if (done!.newBookIds.isNotEmpty) OutlinedButton(onPressed: _undo, child: const Text('Undo import')),
+                  if (done!.newBookIds.isNotEmpty || done!.existingReadIds.isNotEmpty) OutlinedButton(onPressed: _undo, child: const Text('Undo import')),
                 ]),
               ]),
             ),

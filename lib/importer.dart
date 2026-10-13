@@ -123,7 +123,7 @@ class Importer {
   }
 
   /// "'=1+1" -> "=1+1": undo the formula neutralisation that exports apply.
-  static String _unsafe(String s) => s.length > 1 && s[0] == "'" && '=+-@'.contains(s[1]) ? s.substring(1) : s;
+  static String _unsafe(String s) => s.length > 1 && s[0] == "'" && '=+-@\t\r'.contains(s[1]) ? s.substring(1) : s;
 
   // ───────── detection ─────────
   static ImportSource? detect(String text) {
@@ -324,7 +324,10 @@ class ImportPlan {
 class ImportResult {
   final int booksAdded, readsAdded, shelvesCreated, duplicatesSkipped;
   final List<int> newBookIds; // for Undo
-  const ImportResult(this.booksAdded, this.readsAdded, this.shelvesCreated, this.duplicatesSkipped, this.newBookIds);
+  /// Reads and quotes added to books that were already in the library, and shelves the import created (also for Undo).
+  final List<int> existingReadIds, existingQuoteIds, createdShelfIds;
+  const ImportResult(this.booksAdded, this.readsAdded, this.shelvesCreated, this.duplicatesSkipped, this.newBookIds,
+      {this.existingReadIds = const [], this.existingQuoteIds = const [], this.createdShelfIds = const []});
 }
 
 class ImportRunner {
@@ -353,7 +356,8 @@ class ImportRunner {
       final newIds = <int>[];
       var reads = 0, skipped = 0;
       final shelfIds = <String, int>{};
-      final shelvesBefore = (await db.select(db.shelves).get()).length;
+      final shelfIdsBefore = {for (final s in await db.select(db.shelves).get()) s.id};
+      final existingReads = <int>[], existingQuotes = <int>[];
 
       Future<int> shelfId(String name) async => shelfIds[name.toLowerCase()] ??= await db.addShelf(name);
 
@@ -366,17 +370,19 @@ class ImportRunner {
         return id;
       }
 
-      Future<void> addReads(int bookId, ImportBook b) async {
+      Future<void> addReads(int bookId, ImportBook b, {bool onExisting = false}) async {
         for (final r in b.reads) {
-          await db.into(db.reads).insert(ReadsCompanion.insert(
+          final rid = await db.into(db.reads).insert(ReadsCompanion.insert(
                 bookId: bookId, format: Value(r.format), status: Value(r.status), started: Value(r.started), finished: Value(r.finished),
                 rating: Value(r.rating), thoughts: Value(r.thoughts), narrator: Value(r.narrator), minutes: Value(r.minutes),
                 heat: Value(r.heat), contentNotes: Value(r.contentNotes),
               ));
           reads++;
+          if (onExisting) existingReads.add(rid);
         }
         for (final q in b.quotes) {
-          await db.into(db.quotes).insert(QuotesCompanion.insert(bookId: bookId, body: q.text, page: Value(q.page), note: Value(q.note), created: Value(q.created ?? DateTime.now())));
+          final qid = await db.into(db.quotes).insert(QuotesCompanion.insert(bookId: bookId, body: q.text, page: Value(q.page), note: Value(q.note), created: Value(q.created ?? DateTime.now())));
+          if (onExisting) existingQuotes.add(qid);
         }
         for (final s in b.shelves) {
           await db.setOnShelf(bookId, await shelfId(s), true);
@@ -393,15 +399,27 @@ class ImportRunner {
           case DuplicatePolicy.skip:
             skipped++;
           case DuplicatePolicy.addReads:
-            await addReads(existing.id, b);
+            await addReads(existing.id, b, onExisting: true);
           case DuplicatePolicy.addAnyway:
             final id = await addBook(b);
             newIds.add(id);
             await addReads(id, b);
         }
       }
-      final shelvesAfter = (await db.select(db.shelves).get()).length;
-      return ImportResult(newIds.length, reads, shelvesAfter - shelvesBefore, skipped, newIds);
+      final created = [for (final s in await db.select(db.shelves).get()) if (!shelfIdsBefore.contains(s.id)) s.id];
+      return ImportResult(newIds.length, reads, created.length, skipped, newIds,
+          existingReadIds: existingReads, existingQuoteIds: existingQuotes, createdShelfIds: created);
     });
   }
+
+  /// Takes an import back: new books go to Trash (still recoverable for 30 days), reads and quotes added to books you already
+  /// had are removed, and shelves the import created are removed again.
+  static Future<void> undo(AppDb db, ImportResult res) => db.transaction(() async {
+        await db.softDeleteMany(res.newBookIds);
+        if (res.existingReadIds.isNotEmpty) await (db.delete(db.reads)..where((r) => r.id.isIn(res.existingReadIds))).go();
+        if (res.existingQuoteIds.isNotEmpty) await (db.delete(db.quotes)..where((q) => q.id.isIn(res.existingQuoteIds))).go();
+        for (final sid in res.createdShelfIds) {
+          await db.deleteShelf(sid); // the import created these shelves, so they go with it (Undo is offered right after the import)
+        }
+      });
 }

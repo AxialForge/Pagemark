@@ -114,6 +114,7 @@ void main() {
       final a = await CoverStore.saveFile(1, File('${tmp.path}/a')..writeAsBytesSync([1, 2, 3]));
       final b = await CoverStore.saveFile(2, File('${tmp.path}/b')..writeAsBytesSync([4, 5, 6]));
       expect((await CoverStore.allFiles()).length, 2);
+      CoverStore.minAgeForCleanup = Duration.zero;
       expect(await CoverStore.removeUnused({a}), 1);
       expect(CoverStore.fileFor(a)!.existsSync(), isTrue);
       expect(CoverStore.fileFor(b)!.existsSync(), isFalse);

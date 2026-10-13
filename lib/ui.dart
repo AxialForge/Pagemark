@@ -1031,7 +1031,7 @@ class _EditBookState extends State<EditBook> {
           TextButton(onPressed: () async {
             _saved = true;
             await (db.update(db.books)..where((x) => x.id.equals(widget.book.id))).write(BooksCompanion(
-              title: Value(c['title']!.text), author: Value(c['author']!.text), series: Value(c['series']!.text), seriesNumber: Value(double.tryParse(c['seriesNumber']!.text.trim())), seriesTotal: Value(int.tryParse(c['seriesTotal']!.text.trim())), genre: Value(c['genre']!.text),
+              title: Value(c['title']!.text), author: Value(c['author']!.text), series: Value(c['series']!.text), seriesNumber: Value(SeriesPage.parseNum(c['seriesNumber']!.text)), seriesTotal: Value(int.tryParse(c['seriesTotal']!.text.trim())), genre: Value(c['genre']!.text),
               tags: Value(normalizeTags(c['tags']!.text)), publisher: Value(c['publisher']!.text), isbn: Value(c['isbn']!.text), coverUrl: Value(c['coverUrl']!.text),
               year: Value(int.tryParse(c['year']!.text)), pages: Value(int.tryParse(c['pages']!.text)),
               description: Value(c['description']!.text), notes: Value(c['notes']!.text),

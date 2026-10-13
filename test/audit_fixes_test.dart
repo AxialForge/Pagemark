@@ -1,6 +1,9 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:pagemark/backup.dart';
+import 'package:pagemark/db.dart';
+import 'package:pagemark/features.dart';
 import 'package:pagemark/importer.dart';
 import 'package:pagemark/lock.dart';
 import 'package:pagemark/log.dart';
@@ -87,5 +90,57 @@ void main() {
       expect(() => Importer.parse('{"pagemark_export": 2, "books": 7}'), returnsNormally);
       expect(() => Importer.parse('{"pagemark_export": 9}'), throwsA(isA<ImportException>()));
     });
+  });
+
+  group('PGM-108 undo import takes back everything it added', () {
+    test('reads on existing books, quotes and created shelves go away; new books go to Trash', () async {
+      final db = AppDb.memory();
+      final keep = await db.into(db.books).insert(BooksCompanion.insert(title: 'Old Book', author: const Value('A')));
+      final parse = ImportParse(ImportSource.pagemarkCsv, [
+        ImportBook(title: 'Old Book', author: 'A')
+          ..reads.add(ImportRead(status: 'finished'))
+          ..quotes.add(ImportQuote('a line'))
+          ..shelves.add('Imported shelf'),
+        ImportBook(title: 'New Book', author: 'B')..reads.add(ImportRead(status: 'want')),
+      ], const []);
+      final res = await ImportRunner.run(db, await ImportRunner.plan(db, parse), DuplicatePolicy.addReads);
+      expect(res.booksAdded, 1);
+      expect(res.existingReadIds, hasLength(1));
+      expect(res.createdShelfIds, hasLength(1));
+      await ImportRunner.undo(db, res);
+      expect((await db.select(db.reads).get()).where((r) => r.bookId == keep), isEmpty, reason: 'the old book had no reads before');
+      expect(await db.select(db.quotes).get(), isEmpty);
+      expect(await db.select(db.shelves).get(), isEmpty);
+      expect((await db.watchLibrary(locked: false).first).map((r) => r.book.id), [keep]);
+      await db.close();
+    });
+  });
+
+  group('PGM-126/127 bulk operations', () {
+    test('40,000 ids do not exceed SQLite variable limits', () async {
+      final db = AppDb.memory();
+      final id = await db.into(db.books).insert(BooksCompanion.insert(title: 'One'));
+      await db.softDeleteMany([id, for (var i = 1000; i < 41000; i++) i]);
+      expect((await db.select(db.books).get()).single.deletedAt, isNotNull);
+      await db.close();
+    });
+    test('undoing mark-finished keeps a created read the user has since edited', () async {
+      final db = AppDb.memory();
+      final id = await db.into(db.books).insert(BooksCompanion.insert(title: 'One'));
+      final u = await db.markFinishedToday([id]);
+      final rid = u.created.single;
+      await (db.update(db.reads)..where((r) => r.id.equals(rid))).write(const ReadsCompanion(thoughts: Value('loved it')));
+      await db.undoMarkFinished(u);
+      expect(await db.select(db.reads).get(), hasLength(1));
+      await db.close();
+    });
+  });
+
+  test('PGM-123 series numbers must be finite and sensible', () {
+    expect(SeriesPage.parseNum('2.5'), 2.5);
+    expect(SeriesPage.parseNum('NaN'), isNull);
+    expect(SeriesPage.parseNum('Infinity'), isNull);
+    expect(SeriesPage.parseNum('1e20'), isNull);
+    expect(SeriesPage.fmtNum(double.nan), '');
   });
 }

@@ -338,7 +338,13 @@ class SeriesPage extends StatelessWidget {
   final bool locked;
   const SeriesPage({super.key, required this.locked});
 
-  static String fmtNum(double? n) => n == null ? '' : (n % 1 == 0 ? n.toInt().toString() : n.toString());
+  static String fmtNum(double? n) => n == null || !n.isFinite ? '' : (n % 1 == 0 && n.abs() < 1e9 ? n.toInt().toString() : n.toString());
+
+  /// A sensible series number from text: finite, above zero and not absurd; otherwise null.
+  static double? parseNum(String text) {
+    final d = double.tryParse(text.trim());
+    return d != null && d.isFinite && d > 0 && d < 100000 ? d : null;
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -426,8 +432,10 @@ class _StatsState extends State<Stats> {
           final thisYear = done.where((r) => r.finished?.year == year).toList();
           final goal = prefs.getInt('goal_$year') ?? 0;
           final today = DateTime.now();
-          final dayOfYear = today.difference(DateTime(year)).inDays + 1;
-          final pace = dayOfYear == 0 ? 0 : (thisYear.length / dayOfYear * 365).round();
+          // calendar days in UTC, so a daylight-saving day of 23 or 25 hours cannot shift the count
+          final dayOfYear = DateTime.utc(today.year, today.month, today.day).difference(DateTime.utc(year)).inDays + 1;
+          final daysInYear = DateTime.utc(year + 1).difference(DateTime.utc(year)).inDays;
+          final pace = dayOfYear <= 0 ? 0 : (thisYear.length / dayOfYear * daysInYear).round();
 
           final perMonth = List<double>.filled(12, 0);
           for (final r in thisYear) { perMonth[r.finished!.month - 1] += 1; }

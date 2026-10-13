@@ -82,10 +82,15 @@ class CoverStore {
   }
 
   /// Removes files no book points at any more (after deleting books for good, restoring, replacing covers).
+  /// How old a cover file must be before the clean-up may delete it (tests set zero).
+  static Duration minAgeForCleanup = const Duration(minutes: 10);
+
   static Future<int> removeUnused(Set<String> inUse) async {
     var n = 0;
     for (final f in await allFiles()) {
-      if (!inUse.contains('$prefix${f.uri.pathSegments.last}')) {
+      // a cover saved in the last few minutes may not be written to its book yet; leave it for the next sweep
+      final fresh = DateTime.now().difference(f.lastModifiedSync()) < minAgeForCleanup;
+      if (!fresh && !inUse.contains('$prefix${f.uri.pathSegments.last}')) {
         await f.delete();
         n++;
       }
