@@ -38,10 +38,10 @@ class Exporter {
 
   static Future<File> _tmp(String name) async => File('${(debugTmp ?? await getTemporaryDirectory()).path}/$name');
 
-  static String _stamp() {
+  static String _stamp({bool seconds = false}) {
     final n = DateTime.now();
     String p(int v) => v.toString().padLeft(2, '0');
-    return '${n.year}${p(n.month)}${p(n.day)}-${p(n.hour)}${p(n.minute)}';
+    return '${n.year}${p(n.month)}${p(n.day)}-${p(n.hour)}${p(n.minute)}${seconds ? p(n.second) : ''}';
   }
 
   /// Spreadsheet apps execute cells that start with = + - @ ; neutralise them.
@@ -146,6 +146,8 @@ class Exporter {
 
   /// Opens a restore candidate: a plain sqlite file, or a bundle zip. Only the database and plain-named cover files are
   /// ever extracted (anything else in the zip, or any path trickery, is ignored). Caller deletes [Unpacked.dir] when done.
+  static const maxDbBytes = 500 * 1024 * 1024, maxCoverBytes = 25 * 1024 * 1024, maxUnpackBytes = 1024 * 1024 * 1024;
+
   static Future<Unpacked> unpack(File f) async {
     if (!await isZip(f)) return Unpacked(f, null, null);
     final tmp = await Directory.systemTemp.createTemp('pgm-unpack');
@@ -160,18 +162,24 @@ class Exporter {
     }
     File? dbFile;
     Directory? covers;
+    var total = 0;
     for (final entry in archive) {
       if (!entry.isFile) continue;
+      final isDb = entry.name == 'pagemark.sqlite';
+      final n = entry.name.startsWith('covers/') ? entry.name.substring(7) : null;
+      if (!isDb && !(n != null && CoverStore.safeName(n))) continue; // ignored entries are never decompressed
+      if (entry.size > (isDb ? maxDbBytes : maxCoverBytes) || (total += entry.size) > maxUnpackBytes) {
+        await input.close();
+        await tmp.delete(recursive: true);
+        throw 'This backup is larger than Pagemark expects, so it was not opened.';
+      }
       final bytes = entry.readBytes();
       if (bytes == null) continue;
-      if (entry.name == 'pagemark.sqlite') {
+      if (isDb) {
         dbFile = await File('${tmp.path}/pagemark.sqlite').writeAsBytes(bytes);
-      } else if (entry.name.startsWith('covers/')) {
-        final n = entry.name.substring(7);
-        if (CoverStore.safeName(n)) {
-          covers ??= await Directory('${tmp.path}/covers').create();
-          await File('${covers.path}/$n').writeAsBytes(bytes);
-        }
+      } else {
+        covers ??= await Directory('${tmp.path}/covers').create();
+        await File('${covers.path}/$n').writeAsBytes(bytes);
       }
     }
     await input.close(); // release the file handle (Windows cannot delete an open file)
@@ -221,6 +229,10 @@ class Exporter {
       final tables = d.select("SELECT name FROM sqlite_master WHERE type='table'").map((r) => r['name']).toSet();
       if (!tables.containsAll(['books', 'reads'])) return const RestoreCheck.fail('This is not a Pagemark database.');
       final ver = d.select('PRAGMA user_version').first.values.first as int;
+      Set<Object?> cols(String t) => d!.select('PRAGMA table_info($t)').map((r) => r['name']).toSet();
+      if (ver < 1 || !cols('books').containsAll(['id', 'title']) || !cols('reads').containsAll(['id', 'book_id', 'status'])) {
+        return const RestoreCheck.fail('This is not a Pagemark database.');
+      }
       if (ver > AppDb.currentSchema) {
         return RestoreCheck.fail('This backup is from a newer Pagemark (schema $ver). Update the app first.');
       }
@@ -242,7 +254,7 @@ class Exporter {
   static Future<File> safetyCopy(AppDb db, String tag) async {
     final dir = (await AppDb.file()).parent;
     final snap = await snapshotDb(db, name: 'pagemark-$tag.sqlite');
-    final kept = File('${dir.path}/$tag-${_stamp()}.sqlite');
+    final kept = File('${dir.path}/$tag-${_stamp(seconds: true)}.sqlite');
     await snap.copy(kept.path);
     await snap.delete();
     final old = dir.listSync().whereType<File>().where((f) => f.uri.pathSegments.last.startsWith('$tag-')).toList()..sort((a, b) => b.path.compareTo(a.path));
@@ -250,6 +262,17 @@ class Exporter {
       await f.delete();
     }
     return kept;
+  }
+
+  /// Restore points kept in app storage (before a restore or an import), newest first.
+  static Future<List<File>> restorePoints() async {
+    final dir = (await AppDb.file()).parent;
+    final all = dir.listSync().whereType<File>().where((f) {
+      final n = f.uri.pathSegments.last;
+      return n.endsWith('.sqlite') && (n.startsWith('pre-restore-') || n.startsWith('pre-import-'));
+    }).toList()
+      ..sort((a, b) => b.uri.pathSegments.last.split('-').skip(2).join('-').compareTo(a.uri.pathSegments.last.split('-').skip(2).join('-')));
+    return all;
   }
 
   /// Make [src] (already decrypted) the live database. Validates first, keeps a safety copy of the
@@ -265,13 +288,18 @@ class Exporter {
     final dest = await AppDb.file();
     final dir = dest.parent;
     final safety = await snapshotDb(db, name: 'pagemark-prerestore.sqlite');
-    final kept = File('${dir.path}/pre-restore-${_stamp()}.sqlite');
+    final kept = File('${dir.path}/pre-restore-${_stamp(seconds: true)}.sqlite');
     await safety.copy(kept.path);
     await safety.delete();
     final old = dir.listSync().whereType<File>().where((f) => f.uri.pathSegments.last.startsWith('pre-restore-')).toList()
       ..sort((a, b) => b.path.compareTo(a.path));
     for (final f in old.skip(3)) {
       await f.delete();
+    }
+    if (unpacked.covers != null && CoverStore.ready) {
+      try {
+        await CoverStore.importFrom(unpacked.covers!); // before the swap: a failure here can no longer leave a half-restored library
+      } catch (_) {/* covers can be re-downloaded; never block the restore on them */}
     }
     await db.close();
     final staged = File('${dest.path}.incoming');
@@ -281,7 +309,6 @@ class Exporter {
       if (await side.exists()) await side.delete();
     }
     await staged.rename(dest.path);
-    if (unpacked.covers != null && CoverStore.ready) await CoverStore.importFrom(unpacked.covers!);
     await unpacked.cleanup();
     return kept;
   }

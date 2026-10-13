@@ -225,8 +225,11 @@ class AppDb extends _$AppDb {
     return null;
   }
 
+  /// Tests point the live database at a temp folder (the path plugin has no implementation on the test VM).
+  static Directory? debugDir;
+
   static Future<File> file() async {
-    final dir = await getApplicationDocumentsDirectory();
+    final dir = debugDir ?? await getApplicationDocumentsDirectory();
     return File(p.join(dir.path, 'pagemark.sqlite'));
   }
 

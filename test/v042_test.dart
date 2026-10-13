@@ -36,7 +36,7 @@ void main() {
     test('lockedBooks counts vault rows so the UI can mention the PIN', () {
       final f = File('${dir.path}/b.sqlite');
       final d = sql.sqlite3.open(f.path);
-      d.execute('CREATE TABLE books (id INTEGER PRIMARY KEY, locked INTEGER NOT NULL DEFAULT 0); CREATE TABLE reads (id INTEGER PRIMARY KEY);'
+      d.execute('CREATE TABLE books (id INTEGER PRIMARY KEY, title TEXT, locked INTEGER NOT NULL DEFAULT 0); CREATE TABLE reads (id INTEGER PRIMARY KEY, book_id INTEGER, status TEXT);'
           'INSERT INTO books (locked) VALUES (0),(1),(1); PRAGMA user_version = ${AppDb.currentSchema};');
       d.close();
       final r = Exporter.inspect(f);

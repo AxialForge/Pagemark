@@ -70,6 +70,52 @@ Future<void> restoreFlow(BuildContext context, File picked) async {
   );
 }
 
+/// Lists the restore points Pagemark kept before a restore or an import, and lets the user go back to one.
+class RestorePointsPage extends StatefulWidget {
+  const RestorePointsPage({super.key});
+  @override
+  State<RestorePointsPage> createState() => _RestorePointsPageState();
+}
+
+class _RestorePointsPageState extends State<RestorePointsPage> {
+  List<File>? files;
+
+  @override
+  void initState() {
+    super.initState();
+    Exporter.restorePoints().then((v) {
+      if (mounted) setState(() => files = v);
+    });
+  }
+
+  String _label(File f) {
+    final n = f.uri.pathSegments.last;
+    final kind = n.startsWith('pre-import-') ? 'Before an import' : 'Before a restore';
+    final m = RegExp(r'(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})?').firstMatch(n);
+    if (m == null) return kind;
+    final t = DateTime(int.parse(m[1]!), int.parse(m[2]!), int.parse(m[3]!), int.parse(m[4]!), int.parse(m[5]!));
+    return '$kind - ${DateFormat.yMMMd().add_jm().format(t)}';
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('Restore points')),
+        body: files == null
+            ? const Center(child: CircularProgressIndicator())
+            : files!.isEmpty
+                ? const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('No restore points yet. Pagemark saves one before every restore and import (newest 3 of each kind).', textAlign: TextAlign.center)))
+                : ListView(children: [
+                    for (final f in files!)
+                      ListTile(
+                        leading: const Icon(Icons.history),
+                        title: Text(_label(f)),
+                        subtitle: Text('${(f.lengthSync() / 1024).round()} KB'),
+                        onTap: () => restoreFlow(context, f),
+                      ),
+                  ]),
+      );
+}
+
 class BackupPage extends StatefulWidget {
   const BackupPage({super.key});
   @override

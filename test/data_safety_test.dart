@@ -109,7 +109,11 @@ void main() {
       final f = File('${dir.path}/$name');
       final d = sql.sqlite3.open(f.path);
       for (final t in tables) {
-        d.execute('CREATE TABLE $t (id INTEGER PRIMARY KEY)');
+        d.execute(switch (t) {
+          'books' => 'CREATE TABLE books (id INTEGER PRIMARY KEY, title TEXT)',
+          'reads' => 'CREATE TABLE reads (id INTEGER PRIMARY KEY, book_id INTEGER, status TEXT)',
+          _ => 'CREATE TABLE $t (id INTEGER PRIMARY KEY)',
+        });
       }
       d.execute('PRAGMA user_version = $version');
       d.close();

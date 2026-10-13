@@ -1284,6 +1284,8 @@ class SettingsPage extends StatelessWidget {
             if (path == null || !context.mounted) return;
             await restoreFlow(context, File(path));
           }),
+          ListTile(leading: const Icon(Icons.history), title: const Text('Restore points'), subtitle: const Text('Copies Pagemark kept before a restore or import'),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RestorePointsPage()))),
           ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Covers'), subtitle: const Text('Save covers on this phone for offline use and backups'),
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CoversPage()))),
           ListTile(leading: const Icon(Icons.delete_sweep_outlined), title: const Text('Trash'), subtitle: const Text('Deleted books are kept for 30 days'),
