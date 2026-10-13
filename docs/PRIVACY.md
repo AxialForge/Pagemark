@@ -11,7 +11,7 @@ Pagemark is a private reading log. It has no accounts, no servers of its own, no
 - **A backup passphrase (if you set one)** in Android's secure storage, so scheduled backups can encrypt without you.
 - **Reminders and widget:** the reminder is a notification scheduled on your phone and never names a book. The widget is drawn from the main library only (never the locked library) and shows counts only when the whole-app lock is on.
 - **Share target:** text another app shares with Pagemark only fills the search box; it is never saved or sent anywhere until you pick a result, and then only the usual Open Library lookup happens.
-- **A small event log** (Settings → Diagnostics): error messages and backup run results. Database error details are removed before anything is written, so it does not keep book titles or your writing.
+- **A small event log** (Settings → Help and about → Problem report): error messages and backup run results. Database error details are removed before anything is written, so it does not keep book titles or your writing.
 - **Cached cover images.** Covers of locked books use a separate cache that is erased when the locked library closes.
 
 Android's own cloud backup and device-transfer are switched off for this app, so Google does not receive this data through Android.
@@ -33,7 +33,7 @@ Locked books stay in the same database but are hidden from the main library, Sta
 Internet (lookup, updates, backup) · Camera (barcode scanner, only when you open it) · Biometric (fingerprint/device unlock) · Install packages (to install a downloaded update) · Notifications (a warning when scheduled backups keep failing) · Background work and network state (scheduled backups).
 
 ## Your control
-- Export everything any time (Settings → Export), or back it up yourself.
+- Export everything any time (Settings → Import and export), or back it up yourself.
 - Delete everything by uninstalling the app. Backups you made to Google Drive are managed in your Google account (Drive → Settings → Manage apps → Pagemark → Delete hidden app data).
 - Turn off automatic update checks and automatic backups in Settings.
 

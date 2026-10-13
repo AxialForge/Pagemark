@@ -157,7 +157,7 @@ In **Edit**, **Books in the series** records how long the series is. The Series 
 
 ### Heat and content notes (optional)
 
-Settings → Privacy → **Heat level and content notes** adds two private fields to each read: a 0–5 flame rating and a content-notes line. They show on the book page, add a **Heat** chart to Stats, and are *left out* of CSV/JSON exports unless this switch is on. It is off by default.
+Settings → Your library → **Heat level and content notes** adds two private fields to each read: a 0–5 flame rating and a content-notes line. They show on the book page, add a **Heat** chart to Stats, and are *left out* of CSV/JSON exports unless this switch is on. It is off by default.
 
 ## 6b. Selecting many books, and swiping
 
@@ -209,7 +209,7 @@ Enter the PIN (or use the fingerprint button). Add books while the Locked tab is
 
 ### Lock the whole app, and how long it waits
 
-Settings → Privacy has two more options:
+Settings → Privacy and lock has two more options:
 
 - **Lock after leaving the app** — *Immediately* (default), *After 1 / 5 / 15 minutes*. This is how long Pagemark may sit in the background before it asks again. It applies to the locked library and to the whole-app lock below.
 - **Lock the whole app** — Pagemark asks for your PIN or fingerprint every time it opens, and when you return after the delay. It uses the same PIN as the locked library (turning it on walks you through setting one). While it is showing, screenshots and the app-switcher thumbnail are blocked, nothing can be opened over it, and Back leaves the app.
@@ -226,7 +226,7 @@ Settings → Privacy has two more options:
 ### Forgot your PIN?
 On the lock screen tap **Forgot PIN?**, enter the recovery code and a new PIN. You'll receive a **new** recovery code; the old one stops working.
 
-### Settings → Privacy
+### Settings → Privacy and lock
 **Lock now**, **Set or change PIN**, and **Remove lock** (which asks for the current PIN first; locked books stay in the locked library, and the whole-app lock switches off because it needs a PIN). If Android ever clears Pagemark's saved lock, the library stays closed until you confirm with your phone's screen lock and set a new PIN.
 
 ## 8b. Reminders, widget, sharing and shortcuts
@@ -241,7 +241,7 @@ On the lock screen tap **Forgot PIN?**, enter the recovery code and a new PIN. Y
 
 ## 9. Themes
 
-Settings → **Theme** offers six looks, each named for its mood:
+Settings → **Appearance** offers six looks, each named for its mood:
 
 | Theme | Mode | Feel |
 |---|---|---|
@@ -260,23 +260,23 @@ Your choice is remembered. The Library styles pick up the theme too: the bookcas
 
 ## 10. Exporting your data
 
-Settings → Export (main library only — locked books are never included):
+Settings → Import and export (main library only — locked books are never included):
 
 - **CSV** — opens in Excel, Numbers or Sheets (accents display correctly; cells that look like formulas are made safe).
 - **JSON** — structured, with a format version.
 
-Settings → Database (**includes locked books**):
+Settings → Backup and restore (**includes locked books**):
 
 - **Export database file** — a complete copy you can restore on another device. You'll be asked for a **passphrase**; leave it empty only if you understand the file will be readable by anyone who gets it.
 - **Restore from database file** — see §12.
 
 ## 10b. Importing your reading history
 
-Settings → **Import** brings books in from another app or from a Pagemark export:
+Settings → Import and export → **Bring in books from another app** brings books in from another app or from a Pagemark export:
 
 - **Goodreads** — on the Goodreads website: My Books → Import and export → *Export Library*.
 - **StoryGraph** — Manage Account → Manage Your Data → *Export*.
-- **Pagemark** — a CSV or JSON file made by Settings → Export (also handy for moving to a new phone's main library).
+- **Pagemark** — a CSV or JSON file made by Settings → Import and export (also handy for moving to a new phone's main library).
 
 Choose the file and Pagemark shows what it found: how many books and reads, how many are **new** and how many you **already have**, which shelves it would create, and any rows it had to skip (for example a row with no title). For books you already own you choose to **skip** them, **add the file's reads** to your existing entry, or import them as **separate copies**. Press **Import**: a safety copy of your library is saved first, and everything is added in one step — if anything goes wrong, nothing changes. Afterwards **Undo import** moves the new books to Trash.
 
@@ -286,7 +286,7 @@ What gets mapped: statuses (read, currently reading, to-read, did-not-finish), r
 
 ## 11. Google Drive backup
 
-Settings → **Google Drive backup**. One-time setup (a free Google Cloud project) is described in `docs/DRIVE_SETUP.md`. After that:
+Settings → Backup and restore → **Back up to Google Drive**. One-time setup (a free Google Cloud project) is described in `docs/DRIVE_SETUP.md`. After that:
 
 1. Paste your **Web client ID** and tap **Sign in**.
 2. Turn on **Encrypt backups with a passphrase** (recommended — your locked books are inside every backup). **Remember the passphrase:** without it a backup can't be opened by anyone.
@@ -302,13 +302,13 @@ Android decides exactly when scheduled work runs, so a "daily" backup may be a f
 
 ## 12. Restoring
 
-**From a file** (Settings → Restore from database file) or **from Drive** (Backup page → Restore from Drive…):
+**From a file** (Settings → Backup and restore → Restore from a file) or **from Drive** (Backup page → Restore from Drive…):
 
 1. Pick the backup. If it is encrypted you'll be asked for its passphrase.
 2. Pagemark checks it is a healthy Pagemark database from this or an older version, and tells you how many books and reads it holds.
 3. It keeps a **restore point of your current library** (the newest 3 of each kind are retained inside the app), then replaces the library and asks you to close and reopen the app.
 
-**Going back:** Settings → **Restore points** lists the copies Pagemark kept before each restore and import. Tap one to restore it the same way.
+**Going back:** Settings → Backup and restore → **Go back to an earlier copy** lists the copies Pagemark kept before each restore and import. Tap one to restore it the same way.
 
 If the backup holds locked books, Pagemark reminds you that your **PIN is not part of backups** — open the Locked tab and set a new PIN afterwards.
 
@@ -329,11 +329,11 @@ Settings → **Updates** (or the dot on the Settings tab).
 
 ## 14. Trash
 
-Deleting a book moves it to **Settings → Trash**. Restore it, or delete it forever; anything left is removed automatically after **30 days**. Books deleted from the **locked** library have their own Trash: unlock the vault, then choose **⋮ → Trash**. They wait the same 30 days, and the main Trash never lists them.
+Deleting a book moves it to **Settings → Your library → Deleted books**. Restore it, or delete it forever; anything left is removed automatically after **30 days**. Books deleted from the **locked** library have their own Trash: unlock the vault, then choose **⋮ → Trash**. They wait the same 30 days, and the main Trash never lists them.
 
 ## 15. Diagnostics
 
-Settings → **Diagnostics** shows a small rolling event log (errors, background backup runs, lookup problems). Database error details are removed before anything is written, so it does not keep your titles or thoughts. **Copy** it when asking for help; **Clear** it when done.
+Settings → Help and about → **Problem report** shows a small rolling event log (errors, background backup runs, lookup problems). Database error details are removed before anything is written, so it does not keep your titles or thoughts. **Copy** it when asking for help; **Clear** it when done.
 
 ## 16. Your privacy, in plain terms
 
@@ -351,7 +351,7 @@ Settings → **Diagnostics** shows a small rolling event log (errors, background
 | Covers are blank offline | Covers are downloaded on demand and cached; they appear once they've loaded online. |
 | Forgot the PIN and lost the recovery code | The locked library can't be opened — that is the point of the lock. Removing the lock also needs the PIN, and the PIN is not part of backups, so a restore won't help. Keep the recovery code safe. |
 | Drive sign-in fails | Check the Web client ID, and that the Android OAuth client matches your app's signing key (see DRIVE_SETUP). After changing the client ID, close and reopen Pagemark. |
-| Backup shows FAILED | Open the backup page for the message; also see Settings → Diagnostics. |
+| Backup shows FAILED | Open the backup page for the message; also see Settings → Help and about → Problem report. |
 | Update says no releases found | The project's releases page must be public. Check your connection. |
 | "App not installed" during an update | Usually a different signing key (e.g. a debug build over a release build). Back up, uninstall, and install the release APK. |
 

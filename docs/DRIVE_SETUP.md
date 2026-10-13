@@ -15,7 +15,7 @@ register the app once. No billing is needed.
      Debug key SHA-1 on this PC: `49:F9:4A:A8:40:A7:EE:01:D1:B0:06:2E:9B:5C:35:4B:52:10:FC:CB`
      (a release key will have a different SHA-1 — add another Android client for it).
    - **Web application**: no redirect URIs needed. Copy its **Client ID**.
-5. In Pagemark: **Settings → Google Drive backup**, paste the **Web client ID**, tap **Sign in**,
+5. In Pagemark: **Settings → Backup and restore → Back up to Google Drive**, paste the **Web client ID**, tap **Sign in**,
    then turn on **Automatic backup**.
 
 Notes

@@ -1237,170 +1237,256 @@ class _ReadEditorState extends State<ReadEditor> {
 }
 
 // ───────────────────────── Settings ─────────────────────────
+/// Settings: a short home list in plain words. Each row opens one small page, so nothing is buried in one long scroll.
 class SettingsPage extends StatelessWidget {
   final VoidCallback onLockNow;
   const SettingsPage({super.key, required this.onLockNow});
+
+  Widget _row(BuildContext context, IconData icon, String title, String subtitle, Widget Function() page) => ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+        leading: CircleAvatar(
+          radius: 22,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          child: Icon(icon, color: Theme.of(context).colorScheme.onPrimaryContainer),
+        ),
+        title: Text(title, style: Theme.of(context).textTheme.titleMedium),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => page())),
+      );
 
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text('Settings')),
         body: ListView(children: [
           const AppHeader(),
-          const Divider(),
           const UpdateTile(),
           const Divider(),
-          const ListTile(title: Text('Theme', style: TextStyle(fontWeight: FontWeight.bold))),
-          ValueListenableBuilder<String>(
-            valueListenable: themeId,
-            builder: (_, id, _) => Column(children: [
-              for (final t in themes)
-                ListTile(
-                  leading: CircleAvatar(backgroundColor: t.seed, radius: 12),
-                  title: Text(t.name),
-                  subtitle: Text(t.mode),
-                  trailing: id == t.id ? const Icon(Icons.check) : null,
-                  onTap: () => themeId.value = t.id,
-                ),
-            ]),
-          ),
-          const Divider(),
-          const ListTile(title: Text('Reminders and widget', style: TextStyle(fontWeight: FontWeight.bold))),
-          const _ReminderTiles(),
-          ValueListenableBuilder<bool>(
-            valueListenable: WidgetSync.showTitles,
-            builder: (_, on, _) => SwitchListTile(
-              secondary: const Icon(Icons.widgets_outlined),
-              title: const Text('Show book titles on the home-screen widget'),
-              subtitle: const Text('Add the widget from your launcher (long-press the home screen, then Widgets, then Pagemark). It shows what you are reading and your yearly goal, never the locked library. With the whole-app lock on it shows counts only.'),
-              value: on,
-              onChanged: (v) => WidgetSync.showTitles.value = v,
-            ),
-          ),
-          const Divider(),
-          ListTile(leading: const Icon(Icons.upload_file), title: const Text('Import'), subtitle: const Text('From Goodreads, StoryGraph, or a Pagemark export'),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ImportPage()))),
-          const Divider(),
-          const ListTile(title: Text('Export (main library only)', style: TextStyle(fontWeight: FontWeight.bold))),
-          ListTile(leading: const Icon(Icons.table_chart), title: const Text('Library log as CSV'), subtitle: const Text('Includes your notes and thoughts'), onTap: () => Exporter.shareCsv(db, includePrivateFields: adultFieldsOn())),
-          ListTile(leading: const Icon(Icons.data_object), title: const Text('Library log as JSON'), subtitle: const Text('Includes your notes and thoughts'), onTap: () => Exporter.shareJson(db, includePrivateFields: adultFieldsOn())),
-          const Divider(),
-          FutureBuilder<BackupSettings>(
-            future: BackupSettings.load(),
-            builder: (_, snap) {
-              final st = snap.data;
-              final sub = st == null
-                  ? 'Scheduled automatic backups'
-                  : st.lastError != null
-                      ? 'Last backup FAILED - tap for details'
-                      : st.lastOk != null
-                          ? 'Last backup ${_date.format(DateTime.parse(st.lastOk!))}${st.enabled ? ' - automatic ${st.frequency}' : ''}'
-                          : st.account == null ? 'Not set up' : 'No backup yet';
-              return ListTile(
-                leading: Icon(Icons.cloud_sync, color: st?.lastError != null ? Theme.of(context).colorScheme.error : null),
-                title: const Text('Google Drive backup'), subtitle: Text(sub),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BackupPage())),
-              );
-            },
-          ),
-          const Divider(),
-          const ListTile(title: Text('Database (includes locked books)', style: TextStyle(fontWeight: FontWeight.bold))),
-          ListTile(leading: const Icon(Icons.storage), title: const Text('Export database file'), subtitle: const Text('Includes locked books - protect it with a passphrase'), onTap: () async {
-            final pass = await ask(context, 'Passphrase to encrypt the file (leave empty for none)', '', false, true);
-            if (pass == null || !context.mounted) return;
-            if (pass.isEmpty) {
-              final go = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
-                title: const Text('Share without encryption?'), content: const Text('This file contains your locked books and private notes in plain form. Anyone who receives it can read them.'),
-                actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Share anyway'))]));
-              if (go != true) return;
-            } else if (pass.length < 8) {
-              snack(context, 'Use at least 8 characters');
-              return;
-            }
-            await Exporter.shareDb(db, passphrase: pass);
-          }),
-          ListTile(leading: const Icon(Icons.restore), title: const Text('Restore from database file'), onTap: () async {
-            final r = await FilePicker.pickFile();
-            final path = r?.path;
-            if (path == null || !context.mounted) return;
-            await restoreFlow(context, File(path));
-          }),
-          ListTile(leading: const Icon(Icons.history), title: const Text('Restore points'), subtitle: const Text('Copies Pagemark kept before a restore or import'),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RestorePointsPage()))),
-          ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Covers'), subtitle: const Text('Save covers on this phone for offline use and backups'),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CoversPage()))),
-          ListTile(leading: const Icon(Icons.delete_sweep_outlined), title: const Text('Trash'), subtitle: const Text('Deleted books are kept for 30 days'),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TrashPage()))),
-          const Divider(),
-          const ListTile(title: Text('Privacy', style: TextStyle(fontWeight: FontWeight.bold))),
-          ListTile(leading: const Icon(Icons.lock_clock), title: const Text('Lock now'), onTap: onLockNow),
-          ValueListenableBuilder<int>(
-            valueListenable: lockDelay,
-            builder: (context, secs, _) => ListTile(
-              leading: const Icon(Icons.timer_outlined),
-              title: const Text('Lock after leaving the app'),
-              subtitle: const Text('How long Pagemark may stay in the background before the locked library (and the app lock, if on) ask again.'),
-              trailing: DropdownButton<int>(
-                value: lockDelayChoices.containsKey(secs) ? secs : 0,
-                items: [for (final e in lockDelayChoices.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
-                onChanged: (v) => lockDelay.value = v ?? 0,
-              ),
-            ),
-          ),
-          ValueListenableBuilder<bool>(
-            valueListenable: appLockEnabled,
-            builder: (context, on, _) => SwitchListTile(
-              secondary: const Icon(Icons.phonelink_lock_outlined),
-              title: const Text('Lock the whole app'),
-              subtitle: const Text('Ask for your PIN or fingerprint every time Pagemark opens, and when you come back after the delay above. Uses the same PIN as the locked library.'),
-              value: on,
-              onChanged: (v) async {
-                if (v && !await enableAppLock(context)) return;
-                appLockEnabled.value = v;
-              },
-            ),
-          ),
-          ValueListenableBuilder<bool>(
-            valueListenable: adultFields,
-            builder: (context, on, _) => SwitchListTile(
-              secondary: const Icon(Icons.local_fire_department_outlined),
-              title: const Text('Heat level and content notes'),
-              subtitle: const Text('Adds private heat (0-5) and content-note fields to each read, and a Heat chart in Stats. Left out of CSV/JSON exports unless this is on.'),
-              value: on,
-              onChanged: (v) => adultFields.value = v,
-            ),
-          ),
-          ValueListenableBuilder<bool>(
-            valueListenable: hideLockedTab,
-            builder: (context, hidden, _) => SwitchListTile(
-              secondary: const Icon(Icons.visibility_off_outlined),
-              title: const Text('Hide the Locked tab'),
-              subtitle: const Text('Nothing shows that a private library exists. To open it, long-press the word "Library" at the top of the Library screen.'),
-              value: hidden,
-              onChanged: (v) {
-                hideLockedTab.value = v;
-                if (v) snack(context, 'Locked tab hidden. Long-press "Library" at the top to open it.');
-              },
-            ),
-          ),
-          ListTile(leading: const Icon(Icons.pin), title: const Text('Set or change PIN'), onTap: () async {
-            if (!await confirmCurrent(context) || !context.mounted) return;
-            if (await setupPin(context) && context.mounted) snack(context, 'PIN updated');
-          }),
-          ListTile(
-            leading: const Icon(Icons.no_encryption), title: const Text('Remove lock'),
-            subtitle: const Text('Locked books stay in the locked library; anyone can then set a new lock'),
-            onTap: () async {
-              if (!await confirmCurrent(context) || !context.mounted) return;
-              await LockService.clear();
-              appLockEnabled.value = false; // the whole-app lock needs a PIN; without one it would leave the app open to anyone
-              if (context.mounted) snack(context, 'Lock removed');
-            },
-          ),
-          ListTile(leading: const Icon(Icons.bug_report_outlined), title: const Text('Diagnostics'), subtitle: const Text('Event log for troubleshooting (no book data)'),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DiagnosticsPage()))),
-          const ListTile(title: Text('All data stays on this device unless you export or back it up.'), dense: true),
+          _row(context, Icons.palette_outlined, 'Appearance', 'Choose your colours', () => const _AppearancePage()),
+          _row(context, Icons.notifications_active_outlined, 'Reminders and widget', 'A daily nudge to read, and a widget for your home screen', () => const _RemindersPage()),
+          _row(context, Icons.lock_outline, 'Privacy and lock', 'PIN, fingerprint and your private library', () => _PrivacyPage(onLockNow: onLockNow)),
+          _row(context, Icons.cloud_upload_outlined, 'Backup and restore', 'Keep your library safe, or bring it back', () => const _BackupPage()),
+          _row(context, Icons.swap_horiz, 'Import and export', 'Bring books in from another app, or take your list out', () => const _ImportExportPage()),
+          _row(context, Icons.collections_bookmark_outlined, 'Your library', 'Deleted books, cover pictures and extra notes', () => const _LibraryExtrasPage()),
+          _row(context, Icons.help_outline, 'Help and about', 'What is new, and fixing problems', () => const _HelpPage()),
+          const Padding(padding: EdgeInsets.fromLTRB(20, 16, 20, 24), child: Text('Everything stays on this phone unless you back it up or share it.')),
         ]),
       );
+}
+
+/// One settings page: a title and a list of rows.
+class _SettingsSub extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+  const _SettingsSub(this.title, this.children);
+  @override
+  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: Text(title)), body: ListView(children: children));
+}
+
+class _Hint extends StatelessWidget {
+  final String text;
+  const _Hint(this.text);
+  @override
+  Widget build(BuildContext context) => Padding(padding: const EdgeInsets.fromLTRB(20, 12, 20, 12), child: Text(text, style: Theme.of(context).textTheme.bodySmall));
+}
+
+class _AppearancePage extends StatelessWidget {
+  const _AppearancePage();
+  @override
+  Widget build(BuildContext context) => _SettingsSub('Appearance', [
+        const _Hint('Pick the colours you like. You can change this any time.'),
+        ValueListenableBuilder<String>(
+          valueListenable: themeId,
+          builder: (_, id, _) => Column(children: [
+            for (final t in themes)
+              ListTile(
+                leading: CircleAvatar(backgroundColor: t.seed, radius: 14),
+                title: Text(t.name),
+                subtitle: Text(t.mode),
+                trailing: id == t.id ? const Icon(Icons.check) : null,
+                onTap: () => themeId.value = t.id,
+              ),
+          ]),
+        ),
+      ]);
+}
+
+class _RemindersPage extends StatelessWidget {
+  const _RemindersPage();
+  @override
+  Widget build(BuildContext context) => _SettingsSub('Reminders and widget', [
+        const _ReminderTiles(),
+        const Divider(),
+        ValueListenableBuilder<bool>(
+          valueListenable: WidgetSync.showTitles,
+          builder: (_, on, _) => SwitchListTile(
+            secondary: const Icon(Icons.widgets_outlined),
+            title: const Text('Show book titles on the widget'),
+            subtitle: const Text('Off shows only how many books you are reading.'),
+            value: on,
+            onChanged: (v) => WidgetSync.showTitles.value = v,
+          ),
+        ),
+        const _Hint('To add the widget: press and hold an empty spot on your home screen, tap Widgets, then find Pagemark. '
+            'It shows what you are reading and your yearly goal, and never shows your locked books. If you ask for your PIN every time Pagemark opens, the widget shows only numbers.'),
+      ]);
+}
+
+class _PrivacyPage extends StatelessWidget {
+  final VoidCallback onLockNow;
+  const _PrivacyPage({required this.onLockNow});
+  @override
+  Widget build(BuildContext context) => _SettingsSub('Privacy and lock', [
+        const _Hint('Books you move to the Locked tab are hidden behind a PIN or your fingerprint.'),
+        ListTile(leading: const Icon(Icons.lock_clock), title: const Text('Lock now'), subtitle: const Text('Close your private library right away'), onTap: () { onLockNow(); Navigator.pop(context); }),
+        ValueListenableBuilder<int>(
+          valueListenable: lockDelay,
+          builder: (context, secs, _) => ListTile(
+            leading: const Icon(Icons.timer_outlined),
+            title: const Text('Lock when I leave Pagemark'),
+            subtitle: const Text('How long before it asks for your PIN again'),
+            trailing: DropdownButton<int>(
+              value: lockDelayChoices.containsKey(secs) ? secs : 0,
+              items: [for (final e in lockDelayChoices.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
+              onChanged: (v) => lockDelay.value = v ?? 0,
+            ),
+          ),
+        ),
+        ValueListenableBuilder<bool>(
+          valueListenable: appLockEnabled,
+          builder: (context, on, _) => SwitchListTile(
+            secondary: const Icon(Icons.phonelink_lock_outlined),
+            title: const Text('Ask for my PIN to open Pagemark'),
+            subtitle: const Text('Protects the whole app, not just the Locked tab. Uses the same PIN.'),
+            value: on,
+            onChanged: (v) async {
+              if (v && !await enableAppLock(context)) return;
+              appLockEnabled.value = v;
+            },
+          ),
+        ),
+        ValueListenableBuilder<bool>(
+          valueListenable: hideLockedTab,
+          builder: (context, hidden, _) => SwitchListTile(
+            secondary: const Icon(Icons.visibility_off_outlined),
+            title: const Text('Hide the Locked tab'),
+            subtitle: const Text('Nothing shows that you have a private library. To open it, press and hold the word "Library" at the top of the Library screen.'),
+            value: hidden,
+            onChanged: (v) {
+              hideLockedTab.value = v;
+              if (v) snack(context, 'Locked tab hidden. Press and hold "Library" at the top to open it.');
+            },
+          ),
+        ),
+        ListTile(leading: const Icon(Icons.pin_outlined), title: const Text('Change my PIN'), onTap: () async {
+          if (!await confirmCurrent(context) || !context.mounted) return;
+          if (await setupPin(context) && context.mounted) snack(context, 'PIN updated');
+        }),
+        ListTile(
+          leading: const Icon(Icons.no_encryption_outlined), title: const Text('Turn off the lock'),
+          subtitle: const Text('Your private books stay where they are, but anyone holding your phone could then set a new PIN.'),
+          onTap: () async {
+            if (!await confirmCurrent(context) || !context.mounted) return;
+            await LockService.clear();
+            appLockEnabled.value = false; // the whole-app lock needs a PIN; without one it would leave the app open to anyone
+            if (context.mounted) snack(context, 'Lock turned off');
+          },
+        ),
+      ]);
+}
+
+class _BackupPage extends StatelessWidget {
+  const _BackupPage();
+  @override
+  Widget build(BuildContext context) => _SettingsSub('Backup and restore', [
+        const _Hint('A backup is a safe copy of your whole library, including your locked books.'),
+        FutureBuilder<BackupSettings>(
+          future: BackupSettings.load(),
+          builder: (_, snap) {
+            final st = snap.data;
+            final sub = st == null
+                ? 'Automatic backups to your own Google Drive'
+                : st.lastError != null
+                    ? 'The last backup did not work - tap to see why'
+                    : st.lastOk != null
+                        ? 'Last backup ${_date.format(DateTime.parse(st.lastOk!))}${st.enabled ? ' - automatic ${st.frequency}' : ''}'
+                        : st.account == null ? 'Not set up yet' : 'No backup yet';
+            return ListTile(
+              leading: Icon(Icons.cloud_sync, color: st?.lastError != null ? Theme.of(context).colorScheme.error : null),
+              title: const Text('Back up to Google Drive'), subtitle: Text(sub),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BackupPage())),
+            );
+          },
+        ),
+        ListTile(leading: const Icon(Icons.save_alt), title: const Text('Save a copy as a file'), subtitle: const Text('Includes your locked books. You can protect the file with a password.'), onTap: () async {
+          final pass = await ask(context, 'Password to protect the file (leave empty for none)', '', false, true);
+          if (pass == null || !context.mounted) return;
+          if (pass.isEmpty) {
+            final go = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
+              title: const Text('Share without a password?'), content: const Text('This file contains your locked books and private notes. Anyone who receives it can read them.'),
+              actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Share anyway'))]));
+            if (go != true) return;
+          } else if (pass.length < 8) {
+            snack(context, 'Use at least 8 characters');
+            return;
+          }
+          await Exporter.shareDb(db, passphrase: pass);
+        }),
+        ListTile(leading: const Icon(Icons.restore), title: const Text('Restore from a file'), subtitle: const Text('Replace your library with a saved copy'), onTap: () async {
+          final r = await FilePicker.pickFile();
+          final path = r?.path;
+          if (path == null || !context.mounted) return;
+          await restoreFlow(context, File(path));
+        }),
+        ListTile(leading: const Icon(Icons.history), title: const Text('Go back to an earlier copy'), subtitle: const Text('Pagemark saves one before every restore and import'), trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RestorePointsPage()))),
+      ]);
+}
+
+class _ImportExportPage extends StatelessWidget {
+  const _ImportExportPage();
+  @override
+  Widget build(BuildContext context) => _SettingsSub('Import and export', [
+        ListTile(leading: const Icon(Icons.upload_file), title: const Text('Bring in books from another app'), subtitle: const Text('Goodreads, StoryGraph, or a Pagemark file'), trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ImportPage()))),
+        const Divider(),
+        const _Hint('Your list of books, to keep or use elsewhere. Your locked books are not included.'),
+        ListTile(leading: const Icon(Icons.table_chart_outlined), title: const Text('Save my list as a spreadsheet'), subtitle: const Text('Opens in Excel or Google Sheets, with your notes and thoughts'), onTap: () => Exporter.shareCsv(db, includePrivateFields: adultFieldsOn())),
+        ListTile(leading: const Icon(Icons.data_object), title: const Text('Save my list for other apps'), subtitle: const Text('A JSON file, for apps and developers'), onTap: () => Exporter.shareJson(db, includePrivateFields: adultFieldsOn())),
+      ]);
+}
+
+class _LibraryExtrasPage extends StatelessWidget {
+  const _LibraryExtrasPage();
+  @override
+  Widget build(BuildContext context) => _SettingsSub('Your library', [
+        ListTile(leading: const Icon(Icons.delete_sweep_outlined), title: const Text('Deleted books'), subtitle: const Text('Kept for 30 days, then removed for good'), trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TrashPage()))),
+        ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Cover pictures'), subtitle: const Text('Keep covers on this phone so they work without internet and are included in backups'), trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CoversPage()))),
+        ValueListenableBuilder<bool>(
+          valueListenable: adultFields,
+          builder: (context, on, _) => SwitchListTile(
+            secondary: const Icon(Icons.local_fire_department_outlined),
+            title: const Text('Heat level and content notes'),
+            subtitle: const Text('Adds private fields to each read (a heat level from 0 to 5, and content notes) and a chart in Stats. Left out of saved lists unless this is on.'),
+            value: on,
+            onChanged: (v) => adultFields.value = v,
+          ),
+        ),
+      ]);
+}
+
+class _HelpPage extends StatelessWidget {
+  const _HelpPage();
+  @override
+  Widget build(BuildContext context) => _SettingsSub('Help and about', [
+        ListTile(leading: const Icon(Icons.new_releases_outlined), title: const Text("What's new"), subtitle: const Text('Every change in every version'), trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangelogPage()))),
+        ListTile(leading: const Icon(Icons.bug_report_outlined), title: const Text('Problem report'), subtitle: const Text('Only needed if someone is helping you fix a problem. It contains no book titles.'), trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DiagnosticsPage()))),
+      ]);
 }
 
 

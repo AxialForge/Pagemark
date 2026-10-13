@@ -63,7 +63,7 @@ Your library, shelves, settings and PIN are all kept. **Make a backup first** if
 
 Uninstalling Pagemark **deletes your library** from the phone (Android's own backup is disabled on purpose). Before you uninstall or switch phones:
 
-1. Settings → **Export database file** (set a passphrase) and keep the file safely, **or** make sure a Google Drive backup is current.
+1. Settings → Backup and restore → **Save a copy as a file** (set a password) and keep the file safely, **or** make sure a Google Drive backup is current.
 2. On the new phone, install Pagemark and use **Restore** — a backup from an older Pagemark version restores fine; one from a newer version does not.
 
 The PIN is not stored in backups. After restoring, set a new PIN for the locked library.

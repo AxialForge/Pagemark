@@ -47,9 +47,18 @@ class UpdateTile extends StatelessWidget {
   Widget build(BuildContext context) => !selfUpdates ? const SizedBox.shrink() : ValueListenableBuilder<UpdateInfo?>(
         valueListenable: updateAvailable,
         builder: (_, info, _) => ListTile(
-          leading: Badge(isLabelVisible: info != null, child: const Icon(Icons.system_update_alt)),
-          title: const Text('Updates'),
-          subtitle: Text(info != null ? 'Pagemark ${info.latest} is available' : 'Check for a newer version'),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+          leading: Badge(
+            isLabelVisible: info != null,
+            child: CircleAvatar(
+              radius: 22,
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              child: Icon(Icons.system_update_alt, color: Theme.of(context).colorScheme.onPrimaryContainer),
+            ),
+          ),
+          title: Text('Updates', style: Theme.of(context).textTheme.titleMedium),
+          subtitle: Text(info != null ? 'Pagemark ${info.latest} is ready to install' : 'Check for a newer version'),
+          trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UpdatePage())),
         ),
       );

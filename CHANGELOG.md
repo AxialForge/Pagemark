@@ -6,6 +6,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-10-13
+
+Plain words, simpler Settings.
+
+### Changed
+- **Settings is now a short list of seven plain-language pages** (Appearance, Reminders and widget, Privacy and lock, Backup and restore, Import and export, Your library, Help and about) instead of one long scroll. Wording is simpler throughout: "Save a copy as a file" with a password, "Go back to an earlier copy", "Deleted books", "Problem report", "Turn off the lock".
+
+### Fixed
+- The dashes in the PIN screens ("4–12 digits") showed as garbled characters in 0.7.1 to 0.8.0.
+- Version history now shows bold text and code properly instead of asterisks and backticks.
+
 ## [0.8.0] - 2026-10-13
 
 Always at hand.
