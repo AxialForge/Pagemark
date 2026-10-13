@@ -416,7 +416,7 @@ class _LibraryState extends State<Library> {
           ),
         ),
         SizedBox(
-          height: 48,
+          height: 20 + MediaQuery.textScalerOf(context).scale(28), // grows with the system font size so chip text is never clipped
           child: ListView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 8), children: [
             for (final e in {'all': 'All', ...statuses}.entries)
               Padding(padding: const EdgeInsets.all(4), child: ChoiceChip(label: Text(e.value), selected: status == e.key, onSelected: (_) { setState(() => status = e.key); _save(); })),
@@ -460,9 +460,7 @@ class _LibraryState extends State<Library> {
                 final none = snap.data?.isEmpty ?? true;
                 return none
                     ? EmptyState(
-                        message: widget.locked ? 'Nothing in your locked library yet.' : 'Your shelf is empty.\nAdd your first book to start your log.',
-                        actionLabel: 'Add a book',
-                        onAction: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddBook(locked: widget.locked))),
+                        message: widget.locked ? 'Nothing in your locked library yet.\nTap Add book to start.' : 'Your shelf is empty.\nTap Add book to start your log.',
                       )
                     : const Center(child: Text('No matches.'));
               }
