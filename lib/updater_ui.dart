@@ -213,6 +213,24 @@ class _UpdatePageState extends State<UpdatePage> {
   }
 }
 
+/// The changelog's inline formatting: **bold** and `code` (everything else is plain text, so nothing can inject markup).
+TextSpan inlineMarkdown(String text) {
+  final spans = <InlineSpan>[];
+  final re = RegExp(r'\*\*(.+?)\*\*|`([^`]+)`');
+  var i = 0;
+  for (final m in re.allMatches(text)) {
+    if (m.start > i) spans.add(TextSpan(text: text.substring(i, m.start)));
+    if (m.group(1) != null) {
+      spans.add(TextSpan(text: m.group(1), style: const TextStyle(fontWeight: FontWeight.bold)));
+    } else {
+      spans.add(TextSpan(text: m.group(2), style: const TextStyle(fontFamily: 'monospace')));
+    }
+    i = m.end;
+  }
+  if (i < text.length) spans.add(TextSpan(text: text.substring(i)));
+  return TextSpan(children: spans);
+}
+
 class ChangelogPage extends StatelessWidget {
   const ChangelogPage({super.key});
   @override
@@ -229,9 +247,9 @@ class ChangelogPage extends StatelessWidget {
                 else if (line.startsWith('### '))
                   Padding(padding: const EdgeInsets.only(top: 8), child: Text(line.substring(4), style: Theme.of(context).textTheme.titleSmall))
                 else if (line.startsWith('- '))
-                  Padding(padding: const EdgeInsets.only(left: 8, top: 2), child: Text('•  ${line.substring(2)}'))
+                  Padding(padding: const EdgeInsets.only(left: 8, top: 2), child: Text.rich(inlineMarkdown('•  ${line.substring(2)}')))
                 else if (line.trim().isNotEmpty && !line.startsWith(' '))
-                  Text(line),
+                  Text.rich(inlineMarkdown(line)),
             ]);
           },
         ),

@@ -2,6 +2,7 @@
 import 'package:pagemark/db.dart';
 import 'package:pagemark/incoming.dart';
 import 'package:pagemark/reminders.dart';
+import 'package:pagemark/updater_ui.dart';
 import 'package:pagemark/widget_sync.dart';
 
 BookRow row(String title, {bool locked = false, String? status, DateTime? finished, bool trashed = false}) {
@@ -85,5 +86,13 @@ void main() {
       final many = [for (var i = 0; i < 5; i++) row('B$i', status: 'reading')];
       expect(WidgetSync.payload(many, year: 2026, goal: 0, titles: true)['w_reading']!.split('\n').length, 4);
     });
+  });
+
+  test('changelog bold and code markup is rendered, not shown as asterisks', () {
+    final span = inlineMarkdown('•  **Reading reminder** uses `home_widget` here');
+    final plain = span.toPlainText();
+    expect(plain, '•  Reading reminder uses home_widget here');
+    expect(plain.contains('*'), isFalse);
+    expect(plain.contains('`'), isFalse);
   });
 }

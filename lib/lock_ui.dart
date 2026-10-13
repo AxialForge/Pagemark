@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'lock.dart';
@@ -45,23 +45,23 @@ Future<bool> confirmCurrent(BuildContext c, {String title = 'Enter your current 
     case PinResult.lockedOut:
       final left = await LockService.lockoutRemaining();
       if (!c.mounted) return false;
-      _snack(c, 'Too many attempts â€” try again in ${_fmt(left)}');
+      _snack(c, 'Too many attempts — try again in ${_fmt(left)}');
   }
   return false;
 }
 
 /// New PIN entered twice, then a one-time recovery code the user must acknowledge.
 Future<bool> setupPin(BuildContext c) async {
-  final a = await _pinDialog(c, 'New PIN (4â€“12 digits)');
+  final a = await _pinDialog(c, 'New PIN (4–12 digits)');
   if (a == null || !c.mounted) return false;
   if (a.length < 4 || a.length > 12) {
-    _snack(c, 'PIN must be 4â€“12 digits');
+    _snack(c, 'PIN must be 4–12 digits');
     return false;
   }
   final b = await _pinDialog(c, 'Re-enter the PIN', hint: 'Confirm PIN');
   if (b == null || !c.mounted) return false;
   if (a != b) {
-    _snack(c, 'PINs did not match â€” nothing changed');
+    _snack(c, 'PINs did not match — nothing changed');
     return false;
   }
   final code = await LockService.setPin(a);
@@ -175,7 +175,7 @@ class _LockGateState extends State<LockGate> {
         title: const Text('Reset with recovery code'),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           TextField(controller: code, textCapitalization: TextCapitalization.characters, decoration: const InputDecoration(labelText: 'Recovery code')),
-          TextField(controller: np, obscureText: true, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'New PIN (4â€“12 digits)')),
+          TextField(controller: np, obscureText: true, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'New PIN (4–12 digits)')),
         ]),
         actions: [
           TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
@@ -185,7 +185,7 @@ class _LockGateState extends State<LockGate> {
     );
     if (ok != true || !mounted) return;
     if (np.text.length < 4 || np.text.length > 12) {
-      _snack(context, 'PIN must be 4â€“12 digits');
+      _snack(context, 'PIN must be 4–12 digits');
       return;
     }
     final fresh = await LockService.resetWithRecovery(code.text, np.text);
