@@ -28,8 +28,11 @@ import 'db.dart';
 import 'export.dart';
 import 'lock.dart';
 import 'isbn.dart';
+import 'incoming.dart';
 import 'log.dart';
 import 'lookup.dart';
+import 'reminders.dart';
+import 'widget_sync.dart';
 import 'backup.dart';
 import 'main.dart';
 import 'themes.dart';
@@ -65,7 +68,12 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
       if (CoverStore.ready) await CoverStore.removeUnused({for (final b in await db.select(db.books).get()) b.coverUrl});
     });
     autoCheckUpdates();
-    WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) announceNewVersion(context); });
+    Reminders.apply(); // tops up the next 3 weeks of reminders (no-op when they are off)
+    WidgetSync.start();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Incoming.start(); // a Share or shortcut that started the app
+      if (mounted) announceNewVersion(context);
+    });
   }
 
   @override
@@ -232,6 +240,13 @@ class _LibraryState extends State<Library> {
 
   String get _pk => 'lib_${widget.locked ? 'v' : 'm'}'; // sort/filters are remembered per library
 
+  /// The "Log progress" launcher shortcut: show only the books being read.
+  void _showReading() {
+    if (!mounted) return;
+    setState(() => status = 'reading');
+    _save();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -242,6 +257,7 @@ class _LibraryState extends State<Library> {
     skin = skinById(prefs.getString('${_pk}_skin'));
     groupShelves = prefs.getBool('${_pk}_group') ?? false;
     _quoteSub = db.watchQuoteText().listen((m) { if (mounted) setState(() => _quoteText = m); });
+    if (!widget.locked) Incoming.readingShortcut.addListener(_showReading);
     _shelfSub = db.watchShelves(locked: widget.locked).listen((v) {
       if (!mounted) return;
       setState(() {
@@ -262,6 +278,7 @@ class _LibraryState extends State<Library> {
     _quoteSub?.cancel();
     _shelfSub?.cancel();
     _linkSub?.cancel();
+    Incoming.readingShortcut.removeListener(_showReading);
     super.dispose();
   }
 
@@ -580,7 +597,9 @@ class BookTile extends StatelessWidget {
 // ───────────────────────── Add / edit ─────────────────────────
 class AddBook extends StatefulWidget {
   final bool locked;
-  const AddBook({super.key, required this.locked});
+  /// Pre-fills the search (from the Share sheet); it is searched right away, nothing is saved until you pick a result.
+  final String? initialQuery;
+  const AddBook({super.key, required this.locked, this.initialQuery});
   @override
   State<AddBook> createState() => _AddBookState();
 }
@@ -598,6 +617,16 @@ class _AddBookState extends State<AddBook> {
     return real.isEmpty ? results.take(_shown).toList() : real;
   }
   bool busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final q = widget.initialQuery;
+    if (q != null && q.isNotEmpty) {
+      qc.text = q;
+      WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) go(q); });
+    }
+  }
 
   @override
   void dispose() {
@@ -1235,6 +1264,19 @@ class SettingsPage extends StatelessWidget {
             ]),
           ),
           const Divider(),
+          const ListTile(title: Text('Reminders and widget', style: TextStyle(fontWeight: FontWeight.bold))),
+          const _ReminderTiles(),
+          ValueListenableBuilder<bool>(
+            valueListenable: WidgetSync.showTitles,
+            builder: (_, on, _) => SwitchListTile(
+              secondary: const Icon(Icons.widgets_outlined),
+              title: const Text('Show book titles on the home-screen widget'),
+              subtitle: const Text('Add the widget from your launcher (long-press the home screen, then Widgets, then Pagemark). It shows what you are reading and your yearly goal, never the locked library. With the whole-app lock on it shows counts only.'),
+              value: on,
+              onChanged: (v) => WidgetSync.showTitles.value = v,
+            ),
+          ),
+          const Divider(),
           ListTile(leading: const Icon(Icons.upload_file), title: const Text('Import'), subtitle: const Text('From Goodreads, StoryGraph, or a Pagemark export'),
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ImportPage()))),
           const Divider(),
@@ -1423,4 +1465,44 @@ class DiagnosticsPage extends StatelessWidget {
           },
         ),
       );
+}
+
+/// Settings rows for the daily reading reminder: a switch and a time.
+class _ReminderTiles extends StatefulWidget {
+  const _ReminderTiles();
+  @override
+  State<_ReminderTiles> createState() => _ReminderTilesState();
+}
+
+class _ReminderTilesState extends State<_ReminderTiles> {
+  @override
+  Widget build(BuildContext context) {
+    final on = Reminders.enabled;
+    final (h, m) = Reminders.parseTime(Reminders.timeText);
+    return Column(children: [
+      SwitchListTile(
+        secondary: const Icon(Icons.notifications_active_outlined),
+        title: const Text('Daily reading reminder'),
+        subtitle: const Text('A notification at the time you choose. It never names a book. Android may deliver it a few minutes late.'),
+        value: on,
+        onChanged: (v) async {
+          final ok = await Reminders.setEnabled(v);
+          if (!ok && context.mounted) snack(context, 'Allow notifications for Pagemark in Android settings to use reminders.');
+          if (mounted) setState(() {});
+        },
+      ),
+      if (on)
+        ListTile(
+          leading: const Icon(Icons.schedule),
+          title: const Text('Reminder time'),
+          subtitle: Text(TimeOfDay(hour: h, minute: m).format(context)),
+          onTap: () async {
+            final t = await showTimePicker(context: context, initialTime: TimeOfDay(hour: h, minute: m));
+            if (t == null) return;
+            await Reminders.setTime(t.hour, t.minute);
+            if (mounted) setState(() {});
+          },
+        ),
+    ]);
+  }
 }

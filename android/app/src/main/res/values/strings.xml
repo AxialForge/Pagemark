@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name_short">Pagemark</string>
+    <string name="widget_description">What you are reading and your yearly goal</string>
+    <string name="widget_empty_goal">Open Pagemark to start</string>
+    <string name="widget_empty_reading">Nothing in progress</string>
+    <string name="shortcut_add_short">Add book</string>
+    <string name="shortcut_add_long">Add a book</string>
+    <string name="shortcut_reading_short">Reading now</string>
+    <string name="shortcut_reading_long">Books I am reading</string>
+</resources>

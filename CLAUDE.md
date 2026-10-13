@@ -116,6 +116,10 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 - **Log scrubbing:** `Log.scrub` removes SQL details from exceptions (bound values can be titles). Keep logging through `Log`, never `print`.
 - **Shelves are visible per library:** `watchShelves(locked:)` hides shelves that only hold the other library's books.
 
+- **Widget never sees the vault:** `WidgetSync` reads `db.watchLibrary(locked: false)` only and `payload` re-checks `locked`/`deletedAt`; with `appLockEnabled` it sends counts only. Keep any new widget data going through `payload` and its test (`test/v080_test.dart`).
+- **Share/shortcut intents are untrusted text:** `MainActivity.describe` caps and whitelists them, `Incoming.queryFromShared` only produces a search string for `AddBook(initialQuery:)`, which saves nothing by itself. A fresh start reads the intent once (`savedInstanceState == null`) so process death cannot replay a share.
+- **Reminders are 21 separate inexact notifications** (ids 100-120, exact local times from `Reminders.upcoming`, so DST cannot shift them), rebuilt by `Reminders.apply()` at every start; no exact-alarm permission. Cancel with `Notifier.cancelReminders` (not `cancelAll`, which would drop the backup-problem notification).
+
 ## Docs & screenshots
 
 - Documentation lives in `docs/release-package/*.md`; `python docs/_tools/build_docs.py` builds the four PDFs plus the combined `Pagemark-Documentation.pdf` (needs Python `markdown` and Edge). Figures are inline HTML (`<div class="shots">`) pointing at `../screenshots/*.jpg`.

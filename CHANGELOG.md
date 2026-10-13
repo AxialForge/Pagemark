@@ -6,6 +6,19 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-13
+
+Always at hand.
+
+### Added
+- **Reading reminder** (Settings > Reminders and widget): an optional daily notification at the time you pick. Off by default, never names a book, scheduled on the phone only. Android may deliver it a few minutes late.
+- **Home-screen widget**: shows what you are reading (up to three titles) and your yearly goal. It reads only the main library, so locked books never appear. A switch hides the titles; with the whole-app lock on, the widget shows counts only.
+- **Share to Pagemark**: share an ISBN, a title, or a Goodreads or Open Library link from any app and Pagemark opens Add book with the search filled in and run. Nothing is saved until you pick a result.
+- **Launcher shortcuts** (long-press the app icon): "Add book" and "Reading now" (the Library with only the books you are reading).
+
+### Changed
+- Pagemark now includes the `home_widget` and `timezone` libraries. No new permissions.
+
 ## [0.7.2] - 2026-10-12
 
 The rest of the audit fixes.

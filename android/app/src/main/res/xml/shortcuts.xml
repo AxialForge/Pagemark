@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="add_book"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_add_short"
+        android:shortcutLongLabel="@string/shortcut_add_long">
+        <intent
+            android:action="com.axialforge.pagemark.ADD"
+            android:targetClass="com.axialforge.pagemark.MainActivity"
+            android:targetPackage="com.axialforge.pagemark" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="log_progress"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_reading_short"
+        android:shortcutLongLabel="@string/shortcut_reading_long">
+        <intent
+            android:action="com.axialforge.pagemark.READING"
+            android:targetClass="com.axialforge.pagemark.MainActivity"
+            android:targetPackage="com.axialforge.pagemark" />
+    </shortcut>
+</shortcuts>

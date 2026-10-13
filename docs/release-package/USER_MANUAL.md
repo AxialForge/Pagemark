@@ -1,6 +1,6 @@
 # Pagemark — User Manual
 
-**Version 0.7.1** · A private, fully local book tracker for Android
+**Version 0.8.0** · A private, fully local book tracker for Android
 
 *Screenshots show sample books and were captured from the Android app (0.7.0).*
 
@@ -228,6 +228,16 @@ On the lock screen tap **Forgot PIN?**, enter the recovery code and a new PIN. Y
 
 ### Settings → Privacy
 **Lock now**, **Set or change PIN**, and **Remove lock** (which asks for the current PIN first; locked books stay in the locked library, and the whole-app lock switches off because it needs a PIN). If Android ever clears Pagemark's saved lock, the library stays closed until you confirm with your phone's screen lock and set a new PIN.
+
+## 8b. Reminders, widget, sharing and shortcuts
+
+**Reading reminder.** Settings → *Reminders and widget* → **Daily reading reminder**. Android asks once for permission to send notifications. Pick the time; Pagemark schedules the next three weeks and tops them up every time you open it. The text never names a book. Android may deliver it a few minutes late when battery saver is on.
+
+**Home-screen widget.** Long-press the home screen, choose *Widgets*, then *Pagemark*. It shows up to three books you are reading and your yearly goal, and opens Pagemark when tapped. It is fed from the main library only, so the locked library never appears. Turn off **Show book titles on the home-screen widget** to show counts instead; with the whole-app lock on it always shows counts, because a widget can be seen without unlocking.
+
+**Share to Pagemark.** In any app, Share → Pagemark. An ISBN is looked up directly; a Goodreads or Open Library link is searched by the title in its address; other text is searched as typed. You land on *Add a book* with the results, and nothing is saved until you choose one.
+
+**Shortcuts.** Long-press the Pagemark icon: **Add book** and **Reading now**.
 
 ## 9. Themes
 
