@@ -87,7 +87,8 @@ Future<bool> setupPin(BuildContext c) async {
 
 class LockGate extends StatefulWidget {
   final VoidCallback onUnlock;
-  const LockGate({super.key, required this.onUnlock});
+  final String title;
+  const LockGate({super.key, required this.onUnlock, this.title = 'Locked library'});
   @override
   State<LockGate> createState() => _LockGateState();
 }
@@ -201,7 +202,7 @@ class _LockGateState extends State<LockGate> {
   Widget build(BuildContext context) {
     final locked = wait > Duration.zero;
     return Scaffold(
-      appBar: AppBar(title: const Text('Locked library')),
+      appBar: AppBar(title: Text(widget.title)),
       body: !loaded
           ? const SizedBox()
           : Center(

@@ -107,6 +107,9 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 - **Schema 4:** quotes table (`body`, not `text`: Drift's `text()` builder clashes), `books.series_total`, `reads.heat`, `reads.content_notes`. Heat/content notes are opt-in (`adultFields`) and excluded from exports unless that switch is on.
 - Tests that touch exports/covers use `Exporter.debugTmp` and `CoverStore.useDir`; image-decoding widget tests need `tester.runAsync` + a short real delay.
 
+- **Whole-app lock lives in `MaterialApp.builder`** (`AppLockOverlay`, app_lock.dart), above the Navigator, so no pushed route can cover it. The gate has its own `Navigator` wrapped in `HeroControllerScope.none` (sharing the app's Hero controller throws). `shouldRelock(away, delay)` is the single rule for both the vault and the app lock; delay 0 locks on `paused`/`hidden` (before the recents thumbnail), a delay is checked against a timestamp on `resumed` (timers don't run while backgrounded).
+- **Screenshots of locked screens are black by design** (FLAG_SECURE). For documentation builds use `--dart-define=PAGEMARK_SCREENSHOTS=true`; never ship it.
+
 ## Docs & screenshots
 
 - Documentation lives in `docs/release-package/*.md`; `python docs/_tools/build_docs.py` builds the four PDFs plus the combined `Pagemark-Documentation.pdf` (needs Python `markdown` and Edge). Figures are inline HTML (`<div class="shots">`) pointing at `../screenshots/*.jpg`.
@@ -117,7 +120,7 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 
 **Start here: [docs/ROADMAP.md](docs/ROADMAP.md)** - the planned releases 0.4.2 → 1.0 with self-contained task specs, how to work away from home, and a prompt to paste into a fresh Claude Code session. The list below is the older, shorter version.
 
-- Encrypted database at rest (SQLCipher), auto-lock timeout setting, whole-app lock.
+- (An encrypted database / SQLCipher was considered and **declined by the owner** on 2026-10-12 - do not re-propose; see docs/ROADMAP.md 0.7.0-A.)
 - A Flutter CI workflow (the template has none for Flutter). Release signing is local: `android/key.properties` (gitignored) points at `~/.android/pagemark-release.jks` — back that keystore up; losing it means users can't upgrade in place.
 - Reading goals/streaks, series grouping, CSV/Goodreads import, iOS build (needs a Mac).
 

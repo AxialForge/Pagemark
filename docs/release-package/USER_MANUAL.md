@@ -1,8 +1,8 @@
 # Pagemark — User Manual
 
-**Version 0.6.0** · A private, fully local book tracker for Android
+**Version 0.7.0** · A private, fully local book tracker for Android
 
-*Screenshots show sample books and were captured from the Android app (0.6.0).*
+*Screenshots show sample books and were captured from the Android app (0.7.0).*
 
 ---
 
@@ -205,6 +205,16 @@ Enter the PIN (or use the fingerprint button). Add books while the Locked tab is
 
 <div class="shots one"><figure><img src="../screenshots/lock-gate.jpg" alt="First visit to the Locked tab"><figcaption>First visit to the Locked tab</figcaption></figure></div>
 
+
+
+### Lock the whole app, and how long it waits
+
+Settings → Privacy has two more options:
+
+- **Lock after leaving the app** — *Immediately* (default), *After 1 / 5 / 15 minutes*. This is how long Pagemark may sit in the background before it asks again. It applies to the locked library and to the whole-app lock below.
+- **Lock the whole app** — Pagemark asks for your PIN or fingerprint every time it opens, and when you return after the delay. It uses the same PIN as the locked library (turning it on walks you through setting one). While it is showing, screenshots and the app-switcher thumbnail are blocked, nothing can be opened over it, and Back leaves the app.
+
+<div class="shots one"><figure><img src="../screenshots/app-locked.jpg" alt="The whole-app lock"><figcaption>The whole-app lock</figcaption></figure></div>
 
 
 ### Protection you can rely on

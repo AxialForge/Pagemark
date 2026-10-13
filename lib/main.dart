@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'app_lock.dart';
 import 'covers.dart';
 import 'log.dart';
 import 'privacy.dart';
@@ -24,6 +25,7 @@ Future<void> main() async {
   themeId.addListener(() => prefs.setString('theme', themeId.value));
   hideLockedTab.value = prefs.getBool('hide_locked') ?? false;
   hideLockedTab.addListener(() => prefs.setBool('hide_locked', hideLockedTab.value));
+  initAppLockSettings();
   adultFields.value = prefs.getBool('adult_fields') ?? false;
   adultFields.addListener(() => prefs.setBool('adult_fields', adultFields.value));
   runApp(const PagemarkApp());
@@ -39,6 +41,7 @@ class PagemarkApp extends StatelessWidget {
           title: 'Pagemark',
           debugShowCheckedModeBanner: false,
           theme: themeById(id).data,
+          builder: (context, child) => AppLockOverlay(child: child ?? const SizedBox.shrink()),
           home: const Home(),
         ),
       );

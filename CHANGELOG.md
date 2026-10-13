@@ -12,6 +12,24 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+## [0.7.0] - 2026-10-12
+
+Lock options.
+
+### Added
+
+- Lock the whole app (Settings > Privacy): Pagemark asks for your PIN or fingerprint every time it opens and when you come back after
+  the delay. The lock covers every screen (nothing can be opened over it), keeps your place underneath, blocks screenshots and the
+  recents thumbnail while it shows, and Back leaves the app instead of the lock. Turning it on walks you through setting a PIN first.
+- "Lock after leaving the app": Immediately (the default, as before), 1, 5 or 15 minutes. It applies to the locked library and to the
+  whole-app lock. A short trip to another app no longer forces you to unlock again if you choose a delay.
+- Documentation builds can switch off screen-capture blocking with `--dart-define=PAGEMARK_SCREENSHOTS=true` (never used for releases).
+
+### Decided
+
+- No encrypted database. Android already isolates and encrypts app storage, a key kept on the same phone adds little, and converting your
+  library carries real risk of data loss. Exports and Drive backups can still be passphrase-encrypted.
+
 ## [0.6.0] - 2026-10-12
 
 Keep more of what you read.

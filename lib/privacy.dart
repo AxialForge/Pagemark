@@ -14,7 +14,12 @@ class Secure {
   static const _ch = MethodChannel('pagemark/secure');
 
   /// Android FLAG_SECURE: blocks screenshots/screen recording and blanks the recents thumbnail.
+  /// Build-time switch for documentation builds only (`--dart-define=PAGEMARK_SCREENSHOTS=true`): lets the emulator capture the
+  /// locked screens. Never set for releases.
+  static const _docBuild = bool.fromEnvironment('PAGEMARK_SCREENSHOTS');
+
   static Future<void> set(bool on) async {
+    if (_docBuild) return;
     try {
       await _ch.invokeMethod('setSecure', on);
     } catch (_) {/* not Android / channel missing */}

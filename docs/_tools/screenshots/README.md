@@ -15,7 +15,8 @@ The screenshots in `docs/screenshots/` come from the app running in an Android e
    **Turn off stylus handwriting** (`adb shell settings put secure stylus_handwriting_enabled 0`) or its toolbar appears over text fields.
 5. **Drive the app** with `emu.ps1` (`Tap`, `Swipe`, `Txt`, `Shot "01_library"` ...) and save PNGs to `out/shots/`.
    The names `process.py` expects are listed at the top of that script.
-6. `python process.py` writes the 540 px JPEGs into `docs/screenshots/`; then `python docs/_tools/build_docs.py` rebuilds the PDFs.
+6. (Locked screens are black in screenshots by design - build with `--dart-define=PAGEMARK_SCREENSHOTS=true` to disable FLAG_SECURE for documentation builds only.)
+7. `python process.py` writes the 540 px JPEGs into `docs/screenshots/`; then `python docs/_tools/build_docs.py` rebuilds the PDFs.
 
 Gotchas: `FLAG_SECURE` makes screenshots of the *open* locked library black (by design - that screen isn't documented);
 pressing Back on the library root leaves the app; the Android `input text` command can't type some punctuation.

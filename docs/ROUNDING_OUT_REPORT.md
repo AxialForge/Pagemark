@@ -263,7 +263,7 @@ Written 2026-10-11 from a read-through of the 0.1.0 source (`lib/*.dart`, Androi
 - **IB-08** Stats screen counts locked books and their reads (`Stats` queries all tables) — leaks totals.
 - **IB-09** Covers of locked books are cached on disk by `cached_network_image` and remain after relock.
 - **IB-10** Share temp files (CSV, JSON, DB snapshot) stay in the cache dir indefinitely; the DB snapshot contains locked books.
-- **IB-11** Database is unencrypted at rest; rooted devices or backup tools can read locked books.
+- **IB-11** ~~Database is unencrypted at rest; rooted devices or backup tools can read locked books.~~ **Won't fix (owner decision 2026-10-12):** the risk/benefit is poor; see ROADMAP 0.7.0-A.
 - **IB-12** Android `allowBackup` is on by default, so system auto-backup/adb can copy the database to the cloud — contradicts "fully local".
 - **IB-13** Drive backups are unencrypted and include locked books in the user's Google account.
 - **IB-14** Whole-DB share (`Exporter.shareDb`) has only a label warning; no confirm that locked books are included.

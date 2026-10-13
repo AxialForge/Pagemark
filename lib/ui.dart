@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'app_lock.dart';
 import 'backup_page.dart';
 import 'book_extras.dart';
 import 'covers.dart';
@@ -86,10 +87,19 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     }
   }
 
+  DateTime? _leftAt;
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) _lock(); // leave FLAG_SECURE on so the recents card stays blank
-    if (state == AppLifecycleState.resumed && !unlocked) Secure.set(false);
+    if (state == AppLifecycleState.paused) {
+      _leftAt ??= DateTime.now();
+      if (lockDelay.value == 0) _lock(); // leave FLAG_SECURE on so the recents card stays blank
+    } else if (state == AppLifecycleState.resumed) {
+      final away = _leftAt == null ? Duration.zero : DateTime.now().difference(_leftAt!);
+      _leftAt = null;
+      if (unlocked && shouldRelock(away, lockDelay.value)) _lock(); // the delay has run out while you were away
+      if (!unlocked && !appLocked.value) Secure.set(false);
+    }
   }
 
   @override
@@ -167,9 +177,19 @@ class _VaultPageState extends State<VaultPage> with WidgetsBindingObserver {
     super.dispose();
   }
 
+  DateTime? _leftAt;
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused && unlocked) wipeLockedTraces(); // pops back to the main library
+    if (!unlocked) return;
+    if (state == AppLifecycleState.paused) {
+      _leftAt ??= DateTime.now();
+      if (lockDelay.value == 0) wipeLockedTraces(); // pops back to the main library
+    } else if (state == AppLifecycleState.resumed) {
+      final away = _leftAt == null ? Duration.zero : DateTime.now().difference(_leftAt!);
+      _leftAt = null;
+      if (shouldRelock(away, lockDelay.value)) wipeLockedTraces();
+    }
   }
 
   @override
@@ -1268,6 +1288,32 @@ class SettingsPage extends StatelessWidget {
           const Divider(),
           const ListTile(title: Text('Privacy', style: TextStyle(fontWeight: FontWeight.bold))),
           ListTile(leading: const Icon(Icons.lock_clock), title: const Text('Lock now'), onTap: onLockNow),
+          ValueListenableBuilder<int>(
+            valueListenable: lockDelay,
+            builder: (context, secs, _) => ListTile(
+              leading: const Icon(Icons.timer_outlined),
+              title: const Text('Lock after leaving the app'),
+              subtitle: const Text('How long Pagemark may stay in the background before the locked library (and the app lock, if on) ask again.'),
+              trailing: DropdownButton<int>(
+                value: lockDelayChoices.containsKey(secs) ? secs : 0,
+                items: [for (final e in lockDelayChoices.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
+                onChanged: (v) => lockDelay.value = v ?? 0,
+              ),
+            ),
+          ),
+          ValueListenableBuilder<bool>(
+            valueListenable: appLockEnabled,
+            builder: (context, on, _) => SwitchListTile(
+              secondary: const Icon(Icons.phonelink_lock_outlined),
+              title: const Text('Lock the whole app'),
+              subtitle: const Text('Ask for your PIN or fingerprint every time Pagemark opens, and when you come back after the delay above. Uses the same PIN as the locked library.'),
+              value: on,
+              onChanged: (v) async {
+                if (v && !await enableAppLock(context)) return;
+                appLockEnabled.value = v;
+              },
+            ),
+          ),
           ValueListenableBuilder<bool>(
             valueListenable: adultFields,
             builder: (context, on, _) => SwitchListTile(

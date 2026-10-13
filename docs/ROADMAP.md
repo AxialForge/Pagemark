@@ -57,7 +57,7 @@ missing the job must fail loudly rather than fall back to debug signing (a debug
 
 ---
 
-> **Status (2026-10-12):** v0.6.0 prepared on `main` (quotes 0.6.0-A, local covers + bundled backups 0.6.0-B, optional heat/content fields 0.6.0-C, author pages + series totals 0.6.0-D; sub-ratings 0.6.0-E NOT done); v0.5.0 prepared on `main` (import: 0.5.0-A/B/C done; multi-select, swipe and undo: 0.5.0-E done; grid view done earlier); v0.4.2 and v0.4.3 are done and shipped/prepared; start from section 2 (0.5.0) unless the owner says otherwise.
+> **Status (2026-10-12):** v0.7.0 prepared on `main` (auto-lock delay + whole-app lock = 0.7.0-B; 0.7.0-A encrypted DB DROPPED by the owner; 0.7.0-C notifications shipped in 0.4.3; 0.7.0-D R8 was already on; 0.7.0-E privacy doc shipped in 0.4.3); v0.6.0 prepared on `main` (quotes 0.6.0-A, local covers + bundled backups 0.6.0-B, optional heat/content fields 0.6.0-C, author pages + series totals 0.6.0-D; sub-ratings 0.6.0-E NOT done); v0.5.0 prepared on `main` (import: 0.5.0-A/B/C done; multi-select, swipe and undo: 0.5.0-E done; grid view done earlier); v0.4.2 and v0.4.3 are done and shipped/prepared; start from section 2 (0.5.0) unless the owner says otherwise.
 
 ## 1. v0.4.2 — "Close the gaps" (small, high value)
 
@@ -169,7 +169,10 @@ Theme: getting existing history in, and a nicer way to browse.
 
 ## 4. v0.7.0 — "Security depth"
 
-### 0.7.0-A Encrypted database at rest (IB-11)
+### 0.7.0-A Encrypted database at rest (IB-11) — **DROPPED**
+> **Decision (2026-10-12, owner): no encrypted database.** Android already isolates app storage and encrypts it with the screen lock; an on-device key would sit on the same phone, so it only raises the bar against root-level attackers, while the one-time conversion risks the user's data and adds APK size, plugin and test complexity. Exports and Drive backups can already be passphrase-encrypted. Only reopen if the owner asks for it as an opt-in setting.
+
+*(original plan, kept for reference)*
 - Replace `NativeDatabase` with SQLCipher (`sqlcipher_flutter_libs` + `drift`'s `sqlite3` override). Key = random 32 bytes in `flutter_secure_storage`.
   **Migration:** on first launch of this version, `sqlcipher_export` the old plaintext DB into an encrypted one, verify row counts, keep a
   `pre-encrypt-*.sqlite` safety copy in app storage for one release, then delete. The background backup isolate needs the same key.

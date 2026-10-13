@@ -49,6 +49,6 @@ Questions or concerns: open an issue at https://github.com/AxialForge/Pagemark/i
 # Google Play "Data safety" cheat-sheet (if you ever publish there)
 - **Data collected:** none by the developer. (Data is processed on-device; Open Library receives search text, GitHub receives update-check requests, and Google Drive stores backups the user chooses to make — all user-initiated, none developer-collected.)
 - **Data shared:** none.
-- **Encryption in transit:** yes (HTTPS). **Encryption at rest:** the app database is not yet encrypted on the device (planned); backups are encrypted when the user sets a passphrase.
+- **Encryption in transit:** yes (HTTPS). **Encryption at rest:** the library file is not separately encrypted by the app; it lives in Android's private app storage, which Android encrypts with the screen lock. Backups and database exports are encrypted when the user sets a passphrase.
 - **Deletion:** uninstall; Drive backups deletable by the user.
 - **Permissions justification:** see the Permissions section above.
