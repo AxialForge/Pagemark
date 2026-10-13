@@ -26,7 +26,7 @@ class Lookup {
   static Duration retryDelay = const Duration(milliseconds: 700);
 
   // Open Library asks API users to identify themselves.
-  static const _headers = {'User-Agent': 'Pagemark/0.3 (personal book tracker; https://github.com/AxialForge/Pagemark)'};
+  static const _headers = {'User-Agent': 'Pagemark (personal book tracker; https://github.com/AxialForge/Pagemark)'};
 
   /// Subjects that describe the edition/accessibility, not the book.
   static final _noisy = RegExp(r'accessible book|protected daisy|in library|large type|internet archive|open library|lending library|^fiction$', caseSensitive: false);

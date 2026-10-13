@@ -1,6 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pagemark/backup.dart';
+import 'package:pagemark/importer.dart';
 import 'package:pagemark/lock.dart';
 import 'package:pagemark/log.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -66,6 +67,25 @@ void main() {
     });
     test('long messages are capped', () {
       expect(Log.scrub('x' * 5000).length, lessThan(700));
+    });
+  });
+
+  group('PGM-112/113/120 importer survives hostile cells', () {
+    test('impossible dates are rejected, not rolled over', () {
+      expect(Importer.parseDate('2024-02-30'), isNull);
+      expect(Importer.parseDate('2024-13-01'), isNull);
+      expect(Importer.parseDate('2024-02-29'), DateTime(2024, 2, 29));
+      expect(Importer.parseDate('0001-01-01'), isNull);
+    });
+    test('NaN and Infinity in rating cells are ignored', () {
+      expect(Importer.halfStars('NaN'), isNull);
+      expect(Importer.halfStars('Infinity'), isNull);
+      expect(Importer.halfStars('4.2'), 4.0);
+    });
+    test('odd JSON shapes give a clear ImportException', () {
+      expect(() => Importer.parse('{"pagemark_export": "x", "books": []}'), throwsA(isA<ImportException>()));
+      expect(() => Importer.parse('{"pagemark_export": 2, "books": 7}'), returnsNormally);
+      expect(() => Importer.parse('{"pagemark_export": 9}'), throwsA(isA<ImportException>()));
     });
   });
 }

@@ -77,7 +77,7 @@ void main() {
     final bytes = List<int>.generate(2000, (i) => i % 256);
 
     UpdateInfo info({int? size, String? sha}) => UpdateInfo(
-        current: '0.3.0', latest: '0.5.0', notes: const [], assetName: 'a.apk', assetUrl: 'https://x/a.apk', assetBytes: size ?? bytes.length, sha256: sha);
+        current: '0.3.0', latest: '0.5.0', notes: const [], assetName: 'a.apk', assetUrl: 'https://github.com/AxialForge/Pagemark/releases/download/v0.5.0/a.apk', assetBytes: size ?? bytes.length, sha256: sha);
 
     test('good file passes; progress reaches 1', () async {
       Updater.client = MockClient((_) async => http.Response.bytes(bytes, 200));
@@ -100,6 +100,15 @@ void main() {
     test('HTTP errors surface', () async {
       Updater.client = MockClient((_) async => http.Response('no', 404));
       await expectLater(Updater.download(info(), (_) {}, to: File('${dir.path}/c.apk')), throwsA(isA<UpdateException>()));
+    });
+  });
+
+  group('version compare edge cases (PGM-121)', () {
+    test('0.9 < 0.10, huge parts do not overflow, release candidates sort below the release', () {
+      expect(compareVersions('0.9.0', '0.10.0'), lessThan(0));
+      expect(compareVersions('99999999999999999999.0.0', '1.0.0'), greaterThan(0));
+      expect(compareVersions('1.0.0-rc1', '1.0.0'), lessThan(0));
+      expect(compareVersions('v1.2.3+7', '1.2.3'), 0);
     });
   });
 }

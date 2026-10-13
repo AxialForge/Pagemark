@@ -28,7 +28,7 @@ class ImportQuote {
 class ImportBook {
   final List<ImportQuote> quotes = [];
   int? seriesTotal;
-  String title, author, isbn, genre, series, publisher, tags, notes, coverUrl;
+  String title, author, isbn, genre, series, publisher, tags, notes, coverUrl, description = '';
   double? seriesNumber;
   int? year, pages;
   final List<ImportRead> reads = [];
@@ -78,8 +78,14 @@ class Importer {
   static DateTime? parseDate(String raw) {
     final s = raw.trim();
     if (s.isEmpty) return null;
+    final plain = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch(s);
+    if (plain != null) {
+      // DateTime.tryParse rolls 02-30 over to 03-02; only a date that really exists is accepted
+      final d = _valid(int.parse(plain[1]!), int.parse(plain[2]!), int.parse(plain[3]!));
+      return d != null && d.month == int.parse(plain[2]!) ? d : null;
+    }
     final iso = DateTime.tryParse(s);
-    if (iso != null) return DateTime(iso.year, iso.month, iso.day);
+    if (iso != null) return _valid(iso.year, iso.month, iso.day);
     final ymd = RegExp(r'^(\d{4})[/.-](\d{1,2})[/.-](\d{1,2})').firstMatch(s);
     if (ymd != null) return _valid(int.parse(ymd[1]!), int.parse(ymd[2]!), int.parse(ymd[3]!));
     final mdy = RegExp(r'^(\d{1,2})/(\d{1,2})/(\d{4})$').firstMatch(s);
@@ -95,13 +101,13 @@ class Importer {
   /// Nearest half star between 0.5 and 5, or null for "no rating".
   static double? halfStars(Object? v) {
     final d = double.tryParse(_s(v));
-    if (d == null || d <= 0) return null;
+    if (d == null || !d.isFinite || d <= 0) return null;
     return ((d.clamp(0.5, 5.0)) * 2).round() / 2;
   }
 
   static int? _int(Object? v) {
     final d = double.tryParse(_s(v).replaceAll(',', ''));
-    return d == null || d <= 0 ? null : d.round();
+    return d == null || !d.isFinite || d <= 0 || d > 1e9 ? null : d.round();
   }
 
   /// CSV text -> list of maps keyed by (trimmed) header. Tolerates a BOM and ragged rows.
@@ -138,6 +144,17 @@ class Importer {
   }
 
   static ImportParse parse(String text) {
+    try {
+      return _parse(text);
+    } on ImportException {
+      rethrow;
+    } catch (_) {
+      // odd shapes (a number where a list should be, NaN cells...) are a bad file, not an app crash
+      throw ImportException('This file could not be read. It looks like a Pagemark, Goodreads or StoryGraph export, but its contents are not in the expected shape.');
+    }
+  }
+
+  static ImportParse _parse(String text) {
     final src = detect(text);
     if (src == null) {
       throw ImportException('This file is not one Pagemark recognises. It can import Pagemark CSV/JSON exports, Goodreads library exports and StoryGraph exports.');
@@ -146,12 +163,12 @@ class Importer {
       case ImportSource.pagemarkJson:
         final j = jsonDecode(text) as Map;
         final v = j['pagemark_export'];
-        if (v is int && v > 2) throw ImportException('This export is from a newer Pagemark (format $v). Update the app first.');
+        if (v != null && (v is! int || v > 2)) throw ImportException('This export is from a newer Pagemark (format $v). Update the app first.');
         final rows = [
-          for (final r in (j['books'] as List? ?? const [])) if (r is Map) {for (final e in r.entries) '${e.key}': e.value == null ? '' : '${e.value}'},
+          for (final r in (j['books'] is List ? j['books'] as List : const [])) if (r is Map) {for (final e in r.entries) '${e.key}': e.value == null ? '' : '${e.value}'},
         ];
         final parsed = _fromPagemarkRows(src, rows);
-        for (final q in (j['quotes'] as List? ?? const [])) {
+        for (final q in (j['quotes'] is List ? j['quotes'] as List : const [])) {
           if (q is! Map) continue;
           final text = _s(q['quote']);
           if (text.isEmpty) continue;
@@ -187,6 +204,9 @@ class Importer {
         publisher: _unsafe(_s(r['publisher'])), year: _int(r['year']), pages: _int(r['pages']), tags: normalizeTags(_unsafe(_s(r['tags']))), notes: _unsafe(_s(r['notes'])),
       );
       b.seriesTotal = _int(r['series_total']);
+      final sn = double.tryParse(_s(r['series_number']));
+      b.seriesNumber = sn != null && sn.isFinite && sn > 0 && sn < 100000 ? sn : null;
+      b.description = _unsafe(_s(r['description']));
       final book = byKey.putIfAbsent(b.key, () => b);
       final status = _s(r['status']);
       if (status.isNotEmpty) {
@@ -339,7 +359,7 @@ class ImportRunner {
 
       Future<int> addBook(ImportBook b) async {
         final id = await db.into(db.books).insert(BooksCompanion.insert(
-              title: b.title, author: Value(b.author), isbn: Value(b.isbn), genre: Value(b.genre), series: Value(b.series), seriesNumber: Value(b.seriesNumber),
+              title: b.title, author: Value(b.author), isbn: Value(b.isbn), genre: Value(b.genre), series: Value(b.series), seriesNumber: Value(b.seriesNumber), description: Value(b.description),
               publisher: Value(b.publisher), year: Value(b.year), pages: Value(b.pages), tags: Value(b.tags), notes: Value(b.notes), coverUrl: Value(b.coverUrl),
               seriesTotal: Value(b.seriesTotal),
             ));

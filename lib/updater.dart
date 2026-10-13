@@ -10,23 +10,28 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'log.dart';
 
-/// Compare "1.2.3" style versions (a leading "v" and any "+build" / "-pre" suffix are ignored).
+/// Compare "1.2.3" style versions. A leading "v" and a "+build" suffix are ignored; a "-rc1" style suffix makes a version
+/// sort just below the same number without it (1.0.0-rc1 < 1.0.0). Parts too large for an int still compare correctly.
 int compareVersions(String a, String b) {
-  List<int> parse(String v) {
-    final core = v.trim().replaceFirst(RegExp(r'^[vV]'), '').split(RegExp(r'[+-]')).first;
-    final parts = core.split('.').map((p) => int.tryParse(p) ?? 0).toList();
+  (List<BigInt>, bool) parse(String v) {
+    final noBuild = v.trim().replaceFirst(RegExp(r'^[vV]'), '').split('+').first;
+    final dash = noBuild.indexOf('-');
+    final core = dash < 0 ? noBuild : noBuild.substring(0, dash);
+    final parts = core.split('.').map((p) => BigInt.tryParse(p) ?? BigInt.zero).toList();
     while (parts.length < 3) {
-      parts.add(0);
+      parts.add(BigInt.zero);
     }
-    return parts;
+    return (parts, dash >= 0);
   }
 
-  final x = parse(a), y = parse(b);
+  final (x, xPre) = parse(a);
+  final (y, yPre) = parse(b);
   final n = x.length > y.length ? x.length : y.length;
   for (var i = 0; i < n; i++) {
-    final xi = i < x.length ? x[i] : 0, yi = i < y.length ? y[i] : 0;
+    final xi = i < x.length ? x[i] : BigInt.zero, yi = i < y.length ? y[i] : BigInt.zero;
     if (xi != yi) return xi.compareTo(yi);
   }
+  if (xPre != yPre) return xPre ? -1 : 1;
   return 0;
 }
 
@@ -105,13 +110,13 @@ class Updater {
     final list = jsonDecode(utf8.decode(r.bodyBytes));
     final releases = [
       for (final x in (list is List ? list : const []))
-        if (x is Map<String, Object?> && x['draft'] != true && x['prerelease'] != true && '${x['tag_name']}'.isNotEmpty) x,
+        if (x is Map<String, Object?> && x['draft'] != true && x['prerelease'] != true && x['tag_name'] is String && (x['tag_name'] as String).isNotEmpty) x,
     ]..sort((a, b) => compareVersions('${b['tag_name']}', '${a['tag_name']}'));
     if (releases.isEmpty) return UpdateInfo(current: current, latest: current, notes: const []);
 
     final newer = releases.where((x) => compareVersions('${x['tag_name']}', current) > 0).toList();
     final top = releases.first;
-    final asset = pickAsset((top['assets'] as List?) ?? const [], abis ?? await _abis());
+    final asset = pickAsset(top['assets'] is List ? top['assets'] as List : const [], abis ?? await _abis());
     final digest = asset?['digest'];
     return UpdateInfo(
       current: current,
@@ -130,9 +135,17 @@ class Updater {
 
   /// Download with progress; verifies size and (when GitHub provides it) SHA-256 before returning the file.
   static Future<File> download(UpdateInfo info, void Function(double) onProgress, {File? to}) async {
+    final uri = Uri.tryParse(info.assetUrl ?? '');
+    const hosts = {'github.com', 'objects.githubusercontent.com', 'github-releases.githubusercontent.com'};
+    if (uri == null || uri.scheme != 'https' || !hosts.contains(uri.host)) {
+      throw UpdateException('The update is not hosted on GitHub, so Pagemark will not download it.');
+    }
+    if (info.sha256 == null && info.assetBytes == null) {
+      throw UpdateException('GitHub did not say how large or which file this update should be, so it cannot be checked. Not downloaded.');
+    }
     final file = to ?? File('${(await getTemporaryDirectory()).path}/pagemark-update.apk');
     if (await file.exists()) await file.delete();
-    final req = http.Request('GET', Uri.parse(info.assetUrl!))..headers['User-Agent'] = 'Pagemark-updater';
+    final req = http.Request('GET', uri)..headers['User-Agent'] = 'Pagemark-updater';
     final resp = await client.send(req).timeout(const Duration(seconds: 20));
     if (resp.statusCode != 200) throw UpdateException('Download failed (HTTP ${resp.statusCode}).');
     final total = resp.contentLength ?? info.assetBytes ?? 0;

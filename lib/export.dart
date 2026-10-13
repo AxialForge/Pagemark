@@ -75,7 +75,7 @@ class Exporter {
           'locked': b.locked, 'format': r?.format, 'status': r?.status,
           'started': r?.started?.toIso8601String(), 'finished': r?.finished?.toIso8601String(),
           'rating': r?.rating, 'thoughts': r?.thoughts, 'narrator': r?.narrator, 'minutes': r?.minutes,
-          'series_total': b.seriesTotal,
+          'series_total': b.seriesTotal, 'series_number': b.seriesNumber, 'description': b.description,
           if (includePrivateFields) ...{'heat': r?.heat, 'content_notes': r?.contentNotes},
         });
       }
