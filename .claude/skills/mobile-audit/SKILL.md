@@ -29,7 +29,13 @@ Work phase by phase. Each phase writes evidence to `audit/` (create it in the re
 The user may ask for one section or one domain ("just the security section", "just Google Play compliance"). Run what was asked, still do Phase 0-1 (they are cheap and everything depends on them), and mark everything else NOT TESTED in the report instead of omitting it.
 
 ### Phase 0 - Initialization
-1. Ask or detect: platforms in scope, the artifact under audit (path/hash of APK/AAB/IPA, or "source only"), target environment, threat model/data sensitivity, and what the user wants (full audit vs section).
+0. **Adapt to the project and the request before asking anything.** Detect from the repo, then confirm in one line and proceed unless something is ambiguous:
+   - *Platforms:* `android/` + Gradle/manifest -> Android; `ios/` + Xcode project/Info.plist -> iOS; both -> both; Flutter/RN projects usually have both folders, so check whether each is actually configured (bundle ID, signing, entitlements) or just scaffolding. A platform the user says is "later" or that is only scaffolding is out of scope; note it in the report instead of auditing it.
+   - *Domains that don't apply:* no backend/network calls -> 13-14 N/A; no accounts -> 15 and account-deletion checks N/A; no payments -> billing checks N/A; no UGC -> moderation N/A; no ads/analytics -> verify by dependency search, then N/A. Mark each N/A with the evidence that showed it, so the claim can be checked.
+   - *Request scope overrides defaults:* honor "just security", "skip store stuff", "Android only", "no performance". Skipped domains are listed NOT TESTED (user-excluded) in the report, not dropped.
+   - *Depth follows the threat model:* a local-only app with a PIN needs strong storage/crypto/lock checks and little RESILIENCE; a networked app with accounts needs API/authz depth.
+   Then state the resulting scope (platforms, active domains, N/A domains, excluded domains) in two or three lines before starting.
+1. Ask or detect: the artifact under audit (path/hash of APK/AAB/IPA, or "source only"), target environment, threat model/data sensitivity, and what the user wants (full audit vs section).
 2. Choose an **evidence mode** and state it up front:
    - **Source-only** - repo access, no build. Static findings only; runtime states become NOT TESTED or MANUAL REVIEW.
    - **Artifact** - APK/AAB/IPA inspected (`scripts/inspect_artifact.sh` for Android helpers). Verifies what actually ships.
