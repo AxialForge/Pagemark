@@ -57,6 +57,8 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 
 ## Gotchas / constraints
 
+- **Reading life (`lib/reading_life.dart`, `reading_life_ui.dart`, `report_pdf.dart`).** Everything that feeds a shared output (year card, calendar, PDF) takes `watchLibrary(locked: false)` / `watchSessions(locked: false)`; never pass the vault's rows. The timer's running state lives in prefs `timer_book` / `timer_start` (do not rename to `bk_*`, those are wiped). Loan reminder ids are `300000 + loanId`; their text must stay generic (lock screen). The built-in PDF fonts are Latin-1 only, so `ReportPdf.clean` swaps other letters for `?`.
+
 - **Wide screens go through `lib/adaptive.dart`.** Open a book with `openBookIn` and leave it with `closeBook` (never `Navigator.push/pop` directly for `BookPage`), or the two-pane layout (>=840 dp) breaks. Only the main Library gets the `DetailPane`; the locked library must never use it, so private books cannot linger in the pane.
 
 - **Gradle: "Unable to establish loopback connection".** Symptom: every Gradle/Flutter Android build fails instantly. Cause: JDK 25 (Android Studio JBR) creates a unix-domain-socket pipe in `java.io.tmpdir`, which here is the 8.3 short path `C:\Users\JOSEPH~1\...` and fails with `Invalid argument: connect` (plain `Selector.open()` reproduces it). NordVPN is *not* the cause. Fix: `-Djdk.net.unixdomain.tmpdir=C:/tmpj` via `JAVA_TOOL_OPTIONS` (the client JVM needs it; the daemon also gets it from `org.gradle.jvmargs` in `android/gradle.properties`). Overriding `java.io.tmpdir` alone does not help.

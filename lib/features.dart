@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'book_extras.dart' show heatStatsCard, adultFieldsOn;
 import 'detailed_ratings.dart';
+import 'reading_life.dart';
+import 'reading_life_ui.dart';
 import 'branding.dart';
 import 'db.dart';
 import 'main.dart';
@@ -426,6 +428,7 @@ class Stats extends StatefulWidget {
 
 class _StatsState extends State<Stats> {
   late final Stream<List<BookRow>> _stream = db.watchLibrary(locked: false).distinct();
+  late final Stream<List<ReadingSession>> _sessions = db.watchSessions(locked: false);
 
   static const _months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 
@@ -505,6 +508,11 @@ class _StatsState extends State<Stats> {
                 TextButton(onPressed: () => _setGoal(context, year, goal), child: Text(goal == 0 ? 'Set goal' : 'Change goal')),
               ])),
             ])),
+            section('$year in books', YearCard(s: yearSummary(rows, year))),
+            section('Days you read', StreamBuilder<List<ReadingSession>>(
+              stream: _sessions,
+              builder: (_, ss) => StreakCard(days: readingDays(ss.data ?? const [], reads), now: DateTime.now()),
+            )),
             section('Finished per month ($year)', BarChart(values: perMonth, labels: _months)),
             section('Your ratings', rated.isEmpty
                 ? const Text('Rate finished books to see the spread.')

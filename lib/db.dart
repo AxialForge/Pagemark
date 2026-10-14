@@ -27,6 +27,7 @@ class Books extends Table {
   BoolColumn get locked => boolean().withDefault(const Constant(false))();
   DateTimeColumn get added => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()(); // soft delete (Trash)
+  IntColumn get queuePos => integer().nullable()(); // place in the "read next" order (smaller first); null = not placed
 }
 
 @TableIndex(name: 'reads_book', columns: {#bookId})
@@ -52,6 +53,27 @@ class Reads extends Table {
   RealColumn get ratingPace => real().nullable()();
   RealColumn get ratingFeeling => real().nullable()();
   RealColumn get ratingNarrator => real().nullable()();
+}
+
+/// One sitting of reading, from the reading timer.
+@TableIndex(name: 'sessions_book', columns: {#bookId})
+class ReadingSessions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get bookId => integer().references(Books, #id, onDelete: KeyAction.cascade)();
+  DateTimeColumn get day => dateTime()(); // the calendar day it counts for (midnight, local)
+  IntColumn get minutes => integer()();
+  IntColumn get pages => integer().nullable()(); // pages read in the sitting, when known
+}
+
+/// A book lent to someone.
+@TableIndex(name: 'loans_book', columns: {#bookId})
+class Loans extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get bookId => integer().references(Books, #id, onDelete: KeyAction.cascade)();
+  TextColumn get person => text()();
+  DateTimeColumn get lentOn => dateTime()();
+  DateTimeColumn get remindOn => dateTime().nullable()();
+  DateTimeColumn get returnedOn => dateTime().nullable()();
 }
 
 /// A passage you want to keep from a book.
@@ -80,12 +102,12 @@ class BookShelves extends Table {
   Set<Column> get primaryKey => {bookId, shelfId};
 }
 
-@DriftDatabase(tables: [Books, Reads, Shelves, BookShelves, Quotes])
+@DriftDatabase(tables: [Books, Reads, Shelves, BookShelves, Quotes, ReadingSessions, Loans])
 class AppDb extends _$AppDb {
   AppDb() : super(_open());
   AppDb.forFile(File f) : super(NativeDatabase(f, setup: _pragmas));
   AppDb.memory() : super(NativeDatabase.memory());
-  static const currentSchema = 5;
+  static const currentSchema = 6;
   @override
   int get schemaVersion => currentSchema;
 
@@ -120,6 +142,11 @@ class AppDb extends _$AppDb {
             await m.addColumn(reads, reads.ratingNarrator);
             // a database older than 4 just had the quotes table created (with this column) in the step above
             if (from >= 4) await m.addColumn(quotes, quotes.rating);
+          }
+          if (from < 6) {
+            await m.addColumn(books, books.queuePos);
+            await m.createTable(readingSessions);
+            await m.createTable(loans);
           }
         },
         beforeOpen: (details) async {

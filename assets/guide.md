@@ -76,6 +76,15 @@ Go to Settings → Widget and shortcuts to choose whether the widget shows book 
 ## Quick ways in
 Press and hold the Pagemark icon on your home screen for two shortcuts: **Add book** and **Reading now** (only the books you are reading).
 
+## Time your reading
+On a book you are reading, tap **Start** under its progress and **Stop** when you put it down. Pagemark asks which page you are on, then adds the time to your reading log and to your calendar. If you close the app while the timer runs, it keeps counting.
+
+## Put your next books in order
+In the Library, tap the three dots, then **Read next order**. Press and hold a book, then drag it. Books you want to read are listed in the order you choose.
+
+## Lend a book
+Open the book and tap **Lend this book**. Type who has it and choose whether to be reminded to ask for it back. The reminder never names the book or the person. When it comes home, tap **Got it back**.
+
 ## See how you are doing
 The **Stats** tab shows how many books you finished each month, your ratings, your pages and your favourite genres and authors. Tap **Set goal** to choose how many books you want to read this year. Stats never include your locked books.
 

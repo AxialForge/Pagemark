@@ -80,6 +80,8 @@ class BookPage extends StatelessWidget {
             const Divider(height: 32),
             QuotesSection(book: b),
             const Divider(height: 32),
+            LoansSection(book: b),
+            const Divider(height: 32),
             Text('Reading log', style: Theme.of(context).textTheme.titleMedium),
             StreamBuilder<List<Read>>(
               stream: db.watchReads(b.id),
@@ -89,6 +91,7 @@ class BookPage extends StatelessWidget {
                 final active = list.where((r) => r.status == 'reading').firstOrNull;
                 return Column(children: [
                   if (active != null) ProgressCard(book: b, read: active),
+                  if (active != null) ReadingTimerCard(book: b, read: active),
                   for (final r in list)
                     Card(child: ListTile(
                       leading: Icon(r.format == 'audio' ? Icons.headphones : r.format == 'ebook' ? Icons.tablet_android : Icons.menu_book),

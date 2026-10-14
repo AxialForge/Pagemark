@@ -200,6 +200,17 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _queuePosMeta = const VerificationMeta(
+    'queuePos',
+  );
+  @override
+  late final GeneratedColumn<int> queuePos = GeneratedColumn<int>(
+    'queue_pos',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -220,6 +231,7 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
     locked,
     added,
     deletedAt,
+    queuePos,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -349,6 +361,12 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
         deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
       );
     }
+    if (data.containsKey('queue_pos')) {
+      context.handle(
+        _queuePosMeta,
+        queuePos.isAcceptableOrUnknown(data['queue_pos']!, _queuePosMeta),
+      );
+    }
     return context;
   }
 
@@ -430,6 +448,10 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}deleted_at'],
       ),
+      queuePos: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}queue_pos'],
+      ),
     );
   }
 
@@ -458,6 +480,7 @@ class Book extends DataClass implements Insertable<Book> {
   final bool locked;
   final DateTime added;
   final DateTime? deletedAt;
+  final int? queuePos;
   const Book({
     required this.id,
     required this.title,
@@ -477,6 +500,7 @@ class Book extends DataClass implements Insertable<Book> {
     required this.locked,
     required this.added,
     this.deletedAt,
+    this.queuePos,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -509,6 +533,9 @@ class Book extends DataClass implements Insertable<Book> {
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
+    if (!nullToAbsent || queuePos != null) {
+      map['queue_pos'] = Variable<int>(queuePos);
+    }
     return map;
   }
 
@@ -540,6 +567,9 @@ class Book extends DataClass implements Insertable<Book> {
       deletedAt: deletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(deletedAt),
+      queuePos: queuePos == null && nullToAbsent
+          ? const Value.absent()
+          : Value(queuePos),
     );
   }
 
@@ -567,6 +597,7 @@ class Book extends DataClass implements Insertable<Book> {
       locked: serializer.fromJson<bool>(json['locked']),
       added: serializer.fromJson<DateTime>(json['added']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      queuePos: serializer.fromJson<int?>(json['queuePos']),
     );
   }
   @override
@@ -591,6 +622,7 @@ class Book extends DataClass implements Insertable<Book> {
       'locked': serializer.toJson<bool>(locked),
       'added': serializer.toJson<DateTime>(added),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'queuePos': serializer.toJson<int?>(queuePos),
     };
   }
 
@@ -613,6 +645,7 @@ class Book extends DataClass implements Insertable<Book> {
     bool? locked,
     DateTime? added,
     Value<DateTime?> deletedAt = const Value.absent(),
+    Value<int?> queuePos = const Value.absent(),
   }) => Book(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -632,6 +665,7 @@ class Book extends DataClass implements Insertable<Book> {
     locked: locked ?? this.locked,
     added: added ?? this.added,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    queuePos: queuePos.present ? queuePos.value : this.queuePos,
   );
   Book copyWithCompanion(BooksCompanion data) {
     return Book(
@@ -659,6 +693,7 @@ class Book extends DataClass implements Insertable<Book> {
       locked: data.locked.present ? data.locked.value : this.locked,
       added: data.added.present ? data.added.value : this.added,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      queuePos: data.queuePos.present ? data.queuePos.value : this.queuePos,
     );
   }
 
@@ -682,7 +717,8 @@ class Book extends DataClass implements Insertable<Book> {
           ..write('notes: $notes, ')
           ..write('locked: $locked, ')
           ..write('added: $added, ')
-          ..write('deletedAt: $deletedAt')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('queuePos: $queuePos')
           ..write(')'))
         .toString();
   }
@@ -707,6 +743,7 @@ class Book extends DataClass implements Insertable<Book> {
     locked,
     added,
     deletedAt,
+    queuePos,
   );
   @override
   bool operator ==(Object other) =>
@@ -729,7 +766,8 @@ class Book extends DataClass implements Insertable<Book> {
           other.notes == this.notes &&
           other.locked == this.locked &&
           other.added == this.added &&
-          other.deletedAt == this.deletedAt);
+          other.deletedAt == this.deletedAt &&
+          other.queuePos == this.queuePos);
 }
 
 class BooksCompanion extends UpdateCompanion<Book> {
@@ -751,6 +789,7 @@ class BooksCompanion extends UpdateCompanion<Book> {
   final Value<bool> locked;
   final Value<DateTime> added;
   final Value<DateTime?> deletedAt;
+  final Value<int?> queuePos;
   const BooksCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -770,6 +809,7 @@ class BooksCompanion extends UpdateCompanion<Book> {
     this.locked = const Value.absent(),
     this.added = const Value.absent(),
     this.deletedAt = const Value.absent(),
+    this.queuePos = const Value.absent(),
   });
   BooksCompanion.insert({
     this.id = const Value.absent(),
@@ -790,6 +830,7 @@ class BooksCompanion extends UpdateCompanion<Book> {
     this.locked = const Value.absent(),
     this.added = const Value.absent(),
     this.deletedAt = const Value.absent(),
+    this.queuePos = const Value.absent(),
   }) : title = Value(title);
   static Insertable<Book> custom({
     Expression<int>? id,
@@ -810,6 +851,7 @@ class BooksCompanion extends UpdateCompanion<Book> {
     Expression<bool>? locked,
     Expression<DateTime>? added,
     Expression<DateTime>? deletedAt,
+    Expression<int>? queuePos,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -830,6 +872,7 @@ class BooksCompanion extends UpdateCompanion<Book> {
       if (locked != null) 'locked': locked,
       if (added != null) 'added': added,
       if (deletedAt != null) 'deleted_at': deletedAt,
+      if (queuePos != null) 'queue_pos': queuePos,
     });
   }
 
@@ -852,6 +895,7 @@ class BooksCompanion extends UpdateCompanion<Book> {
     Value<bool>? locked,
     Value<DateTime>? added,
     Value<DateTime?>? deletedAt,
+    Value<int?>? queuePos,
   }) {
     return BooksCompanion(
       id: id ?? this.id,
@@ -872,6 +916,7 @@ class BooksCompanion extends UpdateCompanion<Book> {
       locked: locked ?? this.locked,
       added: added ?? this.added,
       deletedAt: deletedAt ?? this.deletedAt,
+      queuePos: queuePos ?? this.queuePos,
     );
   }
 
@@ -932,6 +977,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
     if (deletedAt.present) {
       map['deleted_at'] = Variable<DateTime>(deletedAt.value);
     }
+    if (queuePos.present) {
+      map['queue_pos'] = Variable<int>(queuePos.value);
+    }
     return map;
   }
 
@@ -955,7 +1003,8 @@ class BooksCompanion extends UpdateCompanion<Book> {
           ..write('notes: $notes, ')
           ..write('locked: $locked, ')
           ..write('added: $added, ')
-          ..write('deletedAt: $deletedAt')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('queuePos: $queuePos')
           ..write(')'))
         .toString();
   }
@@ -2868,6 +2917,750 @@ class QuotesCompanion extends UpdateCompanion<Quote> {
   }
 }
 
+class $ReadingSessionsTable extends ReadingSessions
+    with TableInfo<$ReadingSessionsTable, ReadingSession> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ReadingSessionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _bookIdMeta = const VerificationMeta('bookId');
+  @override
+  late final GeneratedColumn<int> bookId = GeneratedColumn<int>(
+    'book_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES books (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _dayMeta = const VerificationMeta('day');
+  @override
+  late final GeneratedColumn<DateTime> day = GeneratedColumn<DateTime>(
+    'day',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _minutesMeta = const VerificationMeta(
+    'minutes',
+  );
+  @override
+  late final GeneratedColumn<int> minutes = GeneratedColumn<int>(
+    'minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _pagesMeta = const VerificationMeta('pages');
+  @override
+  late final GeneratedColumn<int> pages = GeneratedColumn<int>(
+    'pages',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, bookId, day, minutes, pages];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'reading_sessions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ReadingSession> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('book_id')) {
+      context.handle(
+        _bookIdMeta,
+        bookId.isAcceptableOrUnknown(data['book_id']!, _bookIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bookIdMeta);
+    }
+    if (data.containsKey('day')) {
+      context.handle(
+        _dayMeta,
+        day.isAcceptableOrUnknown(data['day']!, _dayMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dayMeta);
+    }
+    if (data.containsKey('minutes')) {
+      context.handle(
+        _minutesMeta,
+        minutes.isAcceptableOrUnknown(data['minutes']!, _minutesMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_minutesMeta);
+    }
+    if (data.containsKey('pages')) {
+      context.handle(
+        _pagesMeta,
+        pages.isAcceptableOrUnknown(data['pages']!, _pagesMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ReadingSession map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ReadingSession(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      bookId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}book_id'],
+      )!,
+      day: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}day'],
+      )!,
+      minutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}minutes'],
+      )!,
+      pages: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pages'],
+      ),
+    );
+  }
+
+  @override
+  $ReadingSessionsTable createAlias(String alias) {
+    return $ReadingSessionsTable(attachedDatabase, alias);
+  }
+}
+
+class ReadingSession extends DataClass implements Insertable<ReadingSession> {
+  final int id;
+  final int bookId;
+  final DateTime day;
+  final int minutes;
+  final int? pages;
+  const ReadingSession({
+    required this.id,
+    required this.bookId,
+    required this.day,
+    required this.minutes,
+    this.pages,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['book_id'] = Variable<int>(bookId);
+    map['day'] = Variable<DateTime>(day);
+    map['minutes'] = Variable<int>(minutes);
+    if (!nullToAbsent || pages != null) {
+      map['pages'] = Variable<int>(pages);
+    }
+    return map;
+  }
+
+  ReadingSessionsCompanion toCompanion(bool nullToAbsent) {
+    return ReadingSessionsCompanion(
+      id: Value(id),
+      bookId: Value(bookId),
+      day: Value(day),
+      minutes: Value(minutes),
+      pages: pages == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pages),
+    );
+  }
+
+  factory ReadingSession.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ReadingSession(
+      id: serializer.fromJson<int>(json['id']),
+      bookId: serializer.fromJson<int>(json['bookId']),
+      day: serializer.fromJson<DateTime>(json['day']),
+      minutes: serializer.fromJson<int>(json['minutes']),
+      pages: serializer.fromJson<int?>(json['pages']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'bookId': serializer.toJson<int>(bookId),
+      'day': serializer.toJson<DateTime>(day),
+      'minutes': serializer.toJson<int>(minutes),
+      'pages': serializer.toJson<int?>(pages),
+    };
+  }
+
+  ReadingSession copyWith({
+    int? id,
+    int? bookId,
+    DateTime? day,
+    int? minutes,
+    Value<int?> pages = const Value.absent(),
+  }) => ReadingSession(
+    id: id ?? this.id,
+    bookId: bookId ?? this.bookId,
+    day: day ?? this.day,
+    minutes: minutes ?? this.minutes,
+    pages: pages.present ? pages.value : this.pages,
+  );
+  ReadingSession copyWithCompanion(ReadingSessionsCompanion data) {
+    return ReadingSession(
+      id: data.id.present ? data.id.value : this.id,
+      bookId: data.bookId.present ? data.bookId.value : this.bookId,
+      day: data.day.present ? data.day.value : this.day,
+      minutes: data.minutes.present ? data.minutes.value : this.minutes,
+      pages: data.pages.present ? data.pages.value : this.pages,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReadingSession(')
+          ..write('id: $id, ')
+          ..write('bookId: $bookId, ')
+          ..write('day: $day, ')
+          ..write('minutes: $minutes, ')
+          ..write('pages: $pages')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, bookId, day, minutes, pages);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ReadingSession &&
+          other.id == this.id &&
+          other.bookId == this.bookId &&
+          other.day == this.day &&
+          other.minutes == this.minutes &&
+          other.pages == this.pages);
+}
+
+class ReadingSessionsCompanion extends UpdateCompanion<ReadingSession> {
+  final Value<int> id;
+  final Value<int> bookId;
+  final Value<DateTime> day;
+  final Value<int> minutes;
+  final Value<int?> pages;
+  const ReadingSessionsCompanion({
+    this.id = const Value.absent(),
+    this.bookId = const Value.absent(),
+    this.day = const Value.absent(),
+    this.minutes = const Value.absent(),
+    this.pages = const Value.absent(),
+  });
+  ReadingSessionsCompanion.insert({
+    this.id = const Value.absent(),
+    required int bookId,
+    required DateTime day,
+    required int minutes,
+    this.pages = const Value.absent(),
+  }) : bookId = Value(bookId),
+       day = Value(day),
+       minutes = Value(minutes);
+  static Insertable<ReadingSession> custom({
+    Expression<int>? id,
+    Expression<int>? bookId,
+    Expression<DateTime>? day,
+    Expression<int>? minutes,
+    Expression<int>? pages,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (bookId != null) 'book_id': bookId,
+      if (day != null) 'day': day,
+      if (minutes != null) 'minutes': minutes,
+      if (pages != null) 'pages': pages,
+    });
+  }
+
+  ReadingSessionsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? bookId,
+    Value<DateTime>? day,
+    Value<int>? minutes,
+    Value<int?>? pages,
+  }) {
+    return ReadingSessionsCompanion(
+      id: id ?? this.id,
+      bookId: bookId ?? this.bookId,
+      day: day ?? this.day,
+      minutes: minutes ?? this.minutes,
+      pages: pages ?? this.pages,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (bookId.present) {
+      map['book_id'] = Variable<int>(bookId.value);
+    }
+    if (day.present) {
+      map['day'] = Variable<DateTime>(day.value);
+    }
+    if (minutes.present) {
+      map['minutes'] = Variable<int>(minutes.value);
+    }
+    if (pages.present) {
+      map['pages'] = Variable<int>(pages.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReadingSessionsCompanion(')
+          ..write('id: $id, ')
+          ..write('bookId: $bookId, ')
+          ..write('day: $day, ')
+          ..write('minutes: $minutes, ')
+          ..write('pages: $pages')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $LoansTable extends Loans with TableInfo<$LoansTable, Loan> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LoansTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _bookIdMeta = const VerificationMeta('bookId');
+  @override
+  late final GeneratedColumn<int> bookId = GeneratedColumn<int>(
+    'book_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES books (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _personMeta = const VerificationMeta('person');
+  @override
+  late final GeneratedColumn<String> person = GeneratedColumn<String>(
+    'person',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lentOnMeta = const VerificationMeta('lentOn');
+  @override
+  late final GeneratedColumn<DateTime> lentOn = GeneratedColumn<DateTime>(
+    'lent_on',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _remindOnMeta = const VerificationMeta(
+    'remindOn',
+  );
+  @override
+  late final GeneratedColumn<DateTime> remindOn = GeneratedColumn<DateTime>(
+    'remind_on',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _returnedOnMeta = const VerificationMeta(
+    'returnedOn',
+  );
+  @override
+  late final GeneratedColumn<DateTime> returnedOn = GeneratedColumn<DateTime>(
+    'returned_on',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    bookId,
+    person,
+    lentOn,
+    remindOn,
+    returnedOn,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'loans';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Loan> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('book_id')) {
+      context.handle(
+        _bookIdMeta,
+        bookId.isAcceptableOrUnknown(data['book_id']!, _bookIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bookIdMeta);
+    }
+    if (data.containsKey('person')) {
+      context.handle(
+        _personMeta,
+        person.isAcceptableOrUnknown(data['person']!, _personMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_personMeta);
+    }
+    if (data.containsKey('lent_on')) {
+      context.handle(
+        _lentOnMeta,
+        lentOn.isAcceptableOrUnknown(data['lent_on']!, _lentOnMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lentOnMeta);
+    }
+    if (data.containsKey('remind_on')) {
+      context.handle(
+        _remindOnMeta,
+        remindOn.isAcceptableOrUnknown(data['remind_on']!, _remindOnMeta),
+      );
+    }
+    if (data.containsKey('returned_on')) {
+      context.handle(
+        _returnedOnMeta,
+        returnedOn.isAcceptableOrUnknown(data['returned_on']!, _returnedOnMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Loan map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Loan(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      bookId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}book_id'],
+      )!,
+      person: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person'],
+      )!,
+      lentOn: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}lent_on'],
+      )!,
+      remindOn: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}remind_on'],
+      ),
+      returnedOn: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}returned_on'],
+      ),
+    );
+  }
+
+  @override
+  $LoansTable createAlias(String alias) {
+    return $LoansTable(attachedDatabase, alias);
+  }
+}
+
+class Loan extends DataClass implements Insertable<Loan> {
+  final int id;
+  final int bookId;
+  final String person;
+  final DateTime lentOn;
+  final DateTime? remindOn;
+  final DateTime? returnedOn;
+  const Loan({
+    required this.id,
+    required this.bookId,
+    required this.person,
+    required this.lentOn,
+    this.remindOn,
+    this.returnedOn,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['book_id'] = Variable<int>(bookId);
+    map['person'] = Variable<String>(person);
+    map['lent_on'] = Variable<DateTime>(lentOn);
+    if (!nullToAbsent || remindOn != null) {
+      map['remind_on'] = Variable<DateTime>(remindOn);
+    }
+    if (!nullToAbsent || returnedOn != null) {
+      map['returned_on'] = Variable<DateTime>(returnedOn);
+    }
+    return map;
+  }
+
+  LoansCompanion toCompanion(bool nullToAbsent) {
+    return LoansCompanion(
+      id: Value(id),
+      bookId: Value(bookId),
+      person: Value(person),
+      lentOn: Value(lentOn),
+      remindOn: remindOn == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remindOn),
+      returnedOn: returnedOn == null && nullToAbsent
+          ? const Value.absent()
+          : Value(returnedOn),
+    );
+  }
+
+  factory Loan.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Loan(
+      id: serializer.fromJson<int>(json['id']),
+      bookId: serializer.fromJson<int>(json['bookId']),
+      person: serializer.fromJson<String>(json['person']),
+      lentOn: serializer.fromJson<DateTime>(json['lentOn']),
+      remindOn: serializer.fromJson<DateTime?>(json['remindOn']),
+      returnedOn: serializer.fromJson<DateTime?>(json['returnedOn']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'bookId': serializer.toJson<int>(bookId),
+      'person': serializer.toJson<String>(person),
+      'lentOn': serializer.toJson<DateTime>(lentOn),
+      'remindOn': serializer.toJson<DateTime?>(remindOn),
+      'returnedOn': serializer.toJson<DateTime?>(returnedOn),
+    };
+  }
+
+  Loan copyWith({
+    int? id,
+    int? bookId,
+    String? person,
+    DateTime? lentOn,
+    Value<DateTime?> remindOn = const Value.absent(),
+    Value<DateTime?> returnedOn = const Value.absent(),
+  }) => Loan(
+    id: id ?? this.id,
+    bookId: bookId ?? this.bookId,
+    person: person ?? this.person,
+    lentOn: lentOn ?? this.lentOn,
+    remindOn: remindOn.present ? remindOn.value : this.remindOn,
+    returnedOn: returnedOn.present ? returnedOn.value : this.returnedOn,
+  );
+  Loan copyWithCompanion(LoansCompanion data) {
+    return Loan(
+      id: data.id.present ? data.id.value : this.id,
+      bookId: data.bookId.present ? data.bookId.value : this.bookId,
+      person: data.person.present ? data.person.value : this.person,
+      lentOn: data.lentOn.present ? data.lentOn.value : this.lentOn,
+      remindOn: data.remindOn.present ? data.remindOn.value : this.remindOn,
+      returnedOn: data.returnedOn.present
+          ? data.returnedOn.value
+          : this.returnedOn,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Loan(')
+          ..write('id: $id, ')
+          ..write('bookId: $bookId, ')
+          ..write('person: $person, ')
+          ..write('lentOn: $lentOn, ')
+          ..write('remindOn: $remindOn, ')
+          ..write('returnedOn: $returnedOn')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, bookId, person, lentOn, remindOn, returnedOn);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Loan &&
+          other.id == this.id &&
+          other.bookId == this.bookId &&
+          other.person == this.person &&
+          other.lentOn == this.lentOn &&
+          other.remindOn == this.remindOn &&
+          other.returnedOn == this.returnedOn);
+}
+
+class LoansCompanion extends UpdateCompanion<Loan> {
+  final Value<int> id;
+  final Value<int> bookId;
+  final Value<String> person;
+  final Value<DateTime> lentOn;
+  final Value<DateTime?> remindOn;
+  final Value<DateTime?> returnedOn;
+  const LoansCompanion({
+    this.id = const Value.absent(),
+    this.bookId = const Value.absent(),
+    this.person = const Value.absent(),
+    this.lentOn = const Value.absent(),
+    this.remindOn = const Value.absent(),
+    this.returnedOn = const Value.absent(),
+  });
+  LoansCompanion.insert({
+    this.id = const Value.absent(),
+    required int bookId,
+    required String person,
+    required DateTime lentOn,
+    this.remindOn = const Value.absent(),
+    this.returnedOn = const Value.absent(),
+  }) : bookId = Value(bookId),
+       person = Value(person),
+       lentOn = Value(lentOn);
+  static Insertable<Loan> custom({
+    Expression<int>? id,
+    Expression<int>? bookId,
+    Expression<String>? person,
+    Expression<DateTime>? lentOn,
+    Expression<DateTime>? remindOn,
+    Expression<DateTime>? returnedOn,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (bookId != null) 'book_id': bookId,
+      if (person != null) 'person': person,
+      if (lentOn != null) 'lent_on': lentOn,
+      if (remindOn != null) 'remind_on': remindOn,
+      if (returnedOn != null) 'returned_on': returnedOn,
+    });
+  }
+
+  LoansCompanion copyWith({
+    Value<int>? id,
+    Value<int>? bookId,
+    Value<String>? person,
+    Value<DateTime>? lentOn,
+    Value<DateTime?>? remindOn,
+    Value<DateTime?>? returnedOn,
+  }) {
+    return LoansCompanion(
+      id: id ?? this.id,
+      bookId: bookId ?? this.bookId,
+      person: person ?? this.person,
+      lentOn: lentOn ?? this.lentOn,
+      remindOn: remindOn ?? this.remindOn,
+      returnedOn: returnedOn ?? this.returnedOn,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (bookId.present) {
+      map['book_id'] = Variable<int>(bookId.value);
+    }
+    if (person.present) {
+      map['person'] = Variable<String>(person.value);
+    }
+    if (lentOn.present) {
+      map['lent_on'] = Variable<DateTime>(lentOn.value);
+    }
+    if (remindOn.present) {
+      map['remind_on'] = Variable<DateTime>(remindOn.value);
+    }
+    if (returnedOn.present) {
+      map['returned_on'] = Variable<DateTime>(returnedOn.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LoansCompanion(')
+          ..write('id: $id, ')
+          ..write('bookId: $bookId, ')
+          ..write('person: $person, ')
+          ..write('lentOn: $lentOn, ')
+          ..write('remindOn: $remindOn, ')
+          ..write('returnedOn: $returnedOn')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDb extends GeneratedDatabase {
   _$AppDb(QueryExecutor e) : super(e);
   $AppDbManager get managers => $AppDbManager(this);
@@ -2876,6 +3669,10 @@ abstract class _$AppDb extends GeneratedDatabase {
   late final $ShelvesTable shelves = $ShelvesTable(this);
   late final $BookShelvesTable bookShelves = $BookShelvesTable(this);
   late final $QuotesTable quotes = $QuotesTable(this);
+  late final $ReadingSessionsTable readingSessions = $ReadingSessionsTable(
+    this,
+  );
+  late final $LoansTable loans = $LoansTable(this);
   late final Index booksLocked = Index(
     'books_locked',
     'CREATE INDEX books_locked ON books (locked)',
@@ -2888,6 +3685,14 @@ abstract class _$AppDb extends GeneratedDatabase {
     'reads_book',
     'CREATE INDEX reads_book ON reads (book_id)',
   );
+  late final Index sessionsBook = Index(
+    'sessions_book',
+    'CREATE INDEX sessions_book ON reading_sessions (book_id)',
+  );
+  late final Index loansBook = Index(
+    'loans_book',
+    'CREATE INDEX loans_book ON loans (book_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2898,9 +3703,13 @@ abstract class _$AppDb extends GeneratedDatabase {
     shelves,
     bookShelves,
     quotes,
+    readingSessions,
+    loans,
     booksLocked,
     booksTitle,
     readsBook,
+    sessionsBook,
+    loansBook,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -2932,6 +3741,20 @@ abstract class _$AppDb extends GeneratedDatabase {
       ),
       result: [TableUpdate('quotes', kind: UpdateKind.delete)],
     ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'books',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('reading_sessions', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'books',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('loans', kind: UpdateKind.delete)],
+    ),
   ]);
 }
 
@@ -2954,6 +3777,7 @@ typedef $$BooksTableCreateCompanionBuilder = BooksCompanion Function({
   Value<bool> locked,
   Value<DateTime> added,
   Value<DateTime?> deletedAt,
+  Value<int?> queuePos,
 });
 typedef $$BooksTableUpdateCompanionBuilder = BooksCompanion Function({
   Value<int> id,
@@ -2974,6 +3798,7 @@ typedef $$BooksTableUpdateCompanionBuilder = BooksCompanion Function({
   Value<bool> locked,
   Value<DateTime> added,
   Value<DateTime?> deletedAt,
+  Value<int?> queuePos,
 });
 
 final class $$BooksTableReferences
@@ -3031,6 +3856,45 @@ final class $$BooksTableReferences
     ).filter((f) => f.bookId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_quotesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$ReadingSessionsTable, List<ReadingSession>>
+  _readingSessionsRefsTable(_$AppDb db) => MultiTypedResultKey.fromTable(
+    db.readingSessions,
+    aliasName: 'books__id__reading_sessions__book_id',
+  );
+
+  $$ReadingSessionsTableProcessedTableManager get readingSessionsRefs {
+    final manager = $$ReadingSessionsTableTableManager(
+      $_db,
+      $_db.readingSessions,
+    ).filter((f) => f.bookId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _readingSessionsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$LoansTable, List<Loan>> _loansRefsTable(
+    _$AppDb db,
+  ) => MultiTypedResultKey.fromTable(
+    db.loans,
+    aliasName: 'books__id__loans__book_id',
+  );
+
+  $$LoansTableProcessedTableManager get loansRefs {
+    final manager = $$LoansTableTableManager(
+      $_db,
+      $_db.loans,
+    ).filter((f) => f.bookId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_loansRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -3135,6 +3999,11 @@ class $$BooksTableFilterComposer extends Composer<_$AppDb, $BooksTable> {
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get queuePos => $composableBuilder(
+    column: $table.queuePos,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> readsRefs(
     Expression<bool> Function($$ReadsTableFilterComposer f) f,
   ) {
@@ -3201,6 +4070,56 @@ class $$BooksTableFilterComposer extends Composer<_$AppDb, $BooksTable> {
           }) => $$QuotesTableFilterComposer(
             $db: $db,
             $table: $db.quotes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> readingSessionsRefs(
+    Expression<bool> Function($$ReadingSessionsTableFilterComposer f) f,
+  ) {
+    final $$ReadingSessionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.readingSessions,
+      getReferencedColumn: (t) => t.bookId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReadingSessionsTableFilterComposer(
+            $db: $db,
+            $table: $db.readingSessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> loansRefs(
+    Expression<bool> Function($$LoansTableFilterComposer f) f,
+  ) {
+    final $$LoansTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.loans,
+      getReferencedColumn: (t) => t.bookId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LoansTableFilterComposer(
+            $db: $db,
+            $table: $db.loans,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -3308,6 +4227,11 @@ class $$BooksTableOrderingComposer extends Composer<_$AppDb, $BooksTable> {
     column: $table.deletedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get queuePos => $composableBuilder(
+    column: $table.queuePos,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$BooksTableAnnotationComposer extends Composer<_$AppDb, $BooksTable> {
@@ -3377,6 +4301,9 @@ class $$BooksTableAnnotationComposer extends Composer<_$AppDb, $BooksTable> {
 
   GeneratedColumn<DateTime> get deletedAt =>
       $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get queuePos =>
+      $composableBuilder(column: $table.queuePos, builder: (column) => column);
 
   Expression<T> readsRefs<T extends Object>(
     Expression<T> Function($$ReadsTableAnnotationComposer a) f,
@@ -3452,6 +4379,56 @@ class $$BooksTableAnnotationComposer extends Composer<_$AppDb, $BooksTable> {
     );
     return f(composer);
   }
+
+  Expression<T> readingSessionsRefs<T extends Object>(
+    Expression<T> Function($$ReadingSessionsTableAnnotationComposer a) f,
+  ) {
+    final $$ReadingSessionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.readingSessions,
+      getReferencedColumn: (t) => t.bookId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReadingSessionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.readingSessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> loansRefs<T extends Object>(
+    Expression<T> Function($$LoansTableAnnotationComposer a) f,
+  ) {
+    final $$LoansTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.loans,
+      getReferencedColumn: (t) => t.bookId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LoansTableAnnotationComposer(
+            $db: $db,
+            $table: $db.loans,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$BooksTableTableManager
@@ -3471,6 +4448,8 @@ class $$BooksTableTableManager
             bool readsRefs,
             bool bookShelvesRefs,
             bool quotesRefs,
+            bool readingSessionsRefs,
+            bool loansRefs,
           })
         > {
   $$BooksTableTableManager(_$AppDb db, $BooksTable table)
@@ -3504,6 +4483,7 @@ class $$BooksTableTableManager
                 Value<bool> locked = const Value.absent(),
                 Value<DateTime> added = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int?> queuePos = const Value.absent(),
               }) => BooksCompanion(
                 id: id,
                 title: title,
@@ -3523,6 +4503,7 @@ class $$BooksTableTableManager
                 locked: locked,
                 added: added,
                 deletedAt: deletedAt,
+                queuePos: queuePos,
               ),
           createCompanionCallback:
               ({
@@ -3544,6 +4525,7 @@ class $$BooksTableTableManager
                 Value<bool> locked = const Value.absent(),
                 Value<DateTime> added = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int?> queuePos = const Value.absent(),
               }) => BooksCompanion.insert(
                 id: id,
                 title: title,
@@ -3563,6 +4545,7 @@ class $$BooksTableTableManager
                 locked: locked,
                 added: added,
                 deletedAt: deletedAt,
+                queuePos: queuePos,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -3577,6 +4560,8 @@ class $$BooksTableTableManager
                 readsRefs = false,
                 bookShelvesRefs = false,
                 quotesRefs = false,
+                readingSessionsRefs = false,
+                loansRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -3584,6 +4569,8 @@ class $$BooksTableTableManager
                     if (readsRefs) db.reads,
                     if (bookShelvesRefs) db.bookShelves,
                     if (quotesRefs) db.quotes,
+                    if (readingSessionsRefs) db.readingSessions,
+                    if (loansRefs) db.loans,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -3631,6 +4618,40 @@ class $$BooksTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (readingSessionsRefs)
+                        await $_getPrefetchedData<
+                          Book,
+                          $BooksTable,
+                          ReadingSession
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BooksTableReferences
+                              ._readingSessionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BooksTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).readingSessionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.bookId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (loansRefs)
+                        await $_getPrefetchedData<Book, $BooksTable, Loan>(
+                          currentTable: table,
+                          referencedTable: $$BooksTableReferences
+                              ._loansRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BooksTableReferences(db, table, p0).loansRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.bookId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -3655,6 +4676,8 @@ typedef $$BooksTableProcessedTableManager =
         bool readsRefs,
         bool bookShelvesRefs,
         bool quotesRefs,
+        bool readingSessionsRefs,
+        bool loansRefs,
       })
     >;
 typedef $$ReadsTableCreateCompanionBuilder = ReadsCompanion Function({
@@ -5150,6 +6173,645 @@ typedef $$QuotesTableProcessedTableManager =
       Quote,
       PrefetchHooks Function({bool bookId})
     >;
+typedef $$ReadingSessionsTableCreateCompanionBuilder =
+    ReadingSessionsCompanion Function({
+      Value<int> id,
+      required int bookId,
+      required DateTime day,
+      required int minutes,
+      Value<int?> pages,
+    });
+typedef $$ReadingSessionsTableUpdateCompanionBuilder =
+    ReadingSessionsCompanion Function({
+      Value<int> id,
+      Value<int> bookId,
+      Value<DateTime> day,
+      Value<int> minutes,
+      Value<int?> pages,
+    });
+
+final class $$ReadingSessionsTableReferences
+    extends BaseReferences<_$AppDb, $ReadingSessionsTable, ReadingSession> {
+  $$ReadingSessionsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $BooksTable _bookIdTable(_$AppDb db) =>
+      db.books.createAlias('reading_sessions__book_id__books__id');
+
+  $$BooksTableProcessedTableManager get bookId {
+    final $_column = $_itemColumn<int>('book_id')!;
+
+    final manager = $$BooksTableTableManager(
+      $_db,
+      $_db.books,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_bookIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ReadingSessionsTableFilterComposer
+    extends Composer<_$AppDb, $ReadingSessionsTable> {
+  $$ReadingSessionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get minutes => $composableBuilder(
+    column: $table.minutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pages => $composableBuilder(
+    column: $table.pages,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$BooksTableFilterComposer get bookId {
+    final $$BooksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.bookId,
+      referencedTable: $db.books,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BooksTableFilterComposer(
+            $db: $db,
+            $table: $db.books,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ReadingSessionsTableOrderingComposer
+    extends Composer<_$AppDb, $ReadingSessionsTable> {
+  $$ReadingSessionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get minutes => $composableBuilder(
+    column: $table.minutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pages => $composableBuilder(
+    column: $table.pages,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$BooksTableOrderingComposer get bookId {
+    final $$BooksTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.bookId,
+      referencedTable: $db.books,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BooksTableOrderingComposer(
+            $db: $db,
+            $table: $db.books,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ReadingSessionsTableAnnotationComposer
+    extends Composer<_$AppDb, $ReadingSessionsTable> {
+  $$ReadingSessionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get day =>
+      $composableBuilder(column: $table.day, builder: (column) => column);
+
+  GeneratedColumn<int> get minutes =>
+      $composableBuilder(column: $table.minutes, builder: (column) => column);
+
+  GeneratedColumn<int> get pages =>
+      $composableBuilder(column: $table.pages, builder: (column) => column);
+
+  $$BooksTableAnnotationComposer get bookId {
+    final $$BooksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.bookId,
+      referencedTable: $db.books,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BooksTableAnnotationComposer(
+            $db: $db,
+            $table: $db.books,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ReadingSessionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDb,
+          $ReadingSessionsTable,
+          ReadingSession,
+          $$ReadingSessionsTableFilterComposer,
+          $$ReadingSessionsTableOrderingComposer,
+          $$ReadingSessionsTableAnnotationComposer,
+          $$ReadingSessionsTableCreateCompanionBuilder,
+          $$ReadingSessionsTableUpdateCompanionBuilder,
+          (ReadingSession, $$ReadingSessionsTableReferences),
+          ReadingSession,
+          PrefetchHooks Function({bool bookId})
+        > {
+  $$ReadingSessionsTableTableManager(_$AppDb db, $ReadingSessionsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ReadingSessionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ReadingSessionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ReadingSessionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> bookId = const Value.absent(),
+                Value<DateTime> day = const Value.absent(),
+                Value<int> minutes = const Value.absent(),
+                Value<int?> pages = const Value.absent(),
+              }) => ReadingSessionsCompanion(
+                id: id,
+                bookId: bookId,
+                day: day,
+                minutes: minutes,
+                pages: pages,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int bookId,
+                required DateTime day,
+                required int minutes,
+                Value<int?> pages = const Value.absent(),
+              }) => ReadingSessionsCompanion.insert(
+                id: id,
+                bookId: bookId,
+                day: day,
+                minutes: minutes,
+                pages: pages,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ReadingSessionsTable, ReadingSession>(table),
+                  $$ReadingSessionsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({bookId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (bookId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.bookId,
+                        referencedTable: $$ReadingSessionsTableReferences
+                            ._bookIdTable(db),
+                        referencedColumn: $$ReadingSessionsTableReferences
+                            ._bookIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ReadingSessionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDb,
+      $ReadingSessionsTable,
+      ReadingSession,
+      $$ReadingSessionsTableFilterComposer,
+      $$ReadingSessionsTableOrderingComposer,
+      $$ReadingSessionsTableAnnotationComposer,
+      $$ReadingSessionsTableCreateCompanionBuilder,
+      $$ReadingSessionsTableUpdateCompanionBuilder,
+      (ReadingSession, $$ReadingSessionsTableReferences),
+      ReadingSession,
+      PrefetchHooks Function({bool bookId})
+    >;
+typedef $$LoansTableCreateCompanionBuilder = LoansCompanion Function({
+  Value<int> id,
+  required int bookId,
+  required String person,
+  required DateTime lentOn,
+  Value<DateTime?> remindOn,
+  Value<DateTime?> returnedOn,
+});
+typedef $$LoansTableUpdateCompanionBuilder = LoansCompanion Function({
+  Value<int> id,
+  Value<int> bookId,
+  Value<String> person,
+  Value<DateTime> lentOn,
+  Value<DateTime?> remindOn,
+  Value<DateTime?> returnedOn,
+});
+
+final class $$LoansTableReferences
+    extends BaseReferences<_$AppDb, $LoansTable, Loan> {
+  $$LoansTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $BooksTable _bookIdTable(_$AppDb db) =>
+      db.books.createAlias('loans__book_id__books__id');
+
+  $$BooksTableProcessedTableManager get bookId {
+    final $_column = $_itemColumn<int>('book_id')!;
+
+    final manager = $$BooksTableTableManager(
+      $_db,
+      $_db.books,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_bookIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$LoansTableFilterComposer extends Composer<_$AppDb, $LoansTable> {
+  $$LoansTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get person => $composableBuilder(
+    column: $table.person,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lentOn => $composableBuilder(
+    column: $table.lentOn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get remindOn => $composableBuilder(
+    column: $table.remindOn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get returnedOn => $composableBuilder(
+    column: $table.returnedOn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$BooksTableFilterComposer get bookId {
+    final $$BooksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.bookId,
+      referencedTable: $db.books,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BooksTableFilterComposer(
+            $db: $db,
+            $table: $db.books,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$LoansTableOrderingComposer extends Composer<_$AppDb, $LoansTable> {
+  $$LoansTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get person => $composableBuilder(
+    column: $table.person,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lentOn => $composableBuilder(
+    column: $table.lentOn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get remindOn => $composableBuilder(
+    column: $table.remindOn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get returnedOn => $composableBuilder(
+    column: $table.returnedOn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$BooksTableOrderingComposer get bookId {
+    final $$BooksTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.bookId,
+      referencedTable: $db.books,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BooksTableOrderingComposer(
+            $db: $db,
+            $table: $db.books,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$LoansTableAnnotationComposer extends Composer<_$AppDb, $LoansTable> {
+  $$LoansTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get person =>
+      $composableBuilder(column: $table.person, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lentOn =>
+      $composableBuilder(column: $table.lentOn, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get remindOn =>
+      $composableBuilder(column: $table.remindOn, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get returnedOn => $composableBuilder(
+    column: $table.returnedOn,
+    builder: (column) => column,
+  );
+
+  $$BooksTableAnnotationComposer get bookId {
+    final $$BooksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.bookId,
+      referencedTable: $db.books,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BooksTableAnnotationComposer(
+            $db: $db,
+            $table: $db.books,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$LoansTableTableManager
+    extends
+        RootTableManager<
+          _$AppDb,
+          $LoansTable,
+          Loan,
+          $$LoansTableFilterComposer,
+          $$LoansTableOrderingComposer,
+          $$LoansTableAnnotationComposer,
+          $$LoansTableCreateCompanionBuilder,
+          $$LoansTableUpdateCompanionBuilder,
+          (Loan, $$LoansTableReferences),
+          Loan,
+          PrefetchHooks Function({bool bookId})
+        > {
+  $$LoansTableTableManager(_$AppDb db, $LoansTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LoansTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LoansTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LoansTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> bookId = const Value.absent(),
+                Value<String> person = const Value.absent(),
+                Value<DateTime> lentOn = const Value.absent(),
+                Value<DateTime?> remindOn = const Value.absent(),
+                Value<DateTime?> returnedOn = const Value.absent(),
+              }) => LoansCompanion(
+                id: id,
+                bookId: bookId,
+                person: person,
+                lentOn: lentOn,
+                remindOn: remindOn,
+                returnedOn: returnedOn,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int bookId,
+                required String person,
+                required DateTime lentOn,
+                Value<DateTime?> remindOn = const Value.absent(),
+                Value<DateTime?> returnedOn = const Value.absent(),
+              }) => LoansCompanion.insert(
+                id: id,
+                bookId: bookId,
+                person: person,
+                lentOn: lentOn,
+                remindOn: remindOn,
+                returnedOn: returnedOn,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$LoansTable, Loan>(table),
+                  $$LoansTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({bookId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (bookId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.bookId,
+                        referencedTable: $$LoansTableReferences._bookIdTable(
+                          db,
+                        ),
+                        referencedColumn: $$LoansTableReferences
+                            ._bookIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$LoansTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDb,
+      $LoansTable,
+      Loan,
+      $$LoansTableFilterComposer,
+      $$LoansTableOrderingComposer,
+      $$LoansTableAnnotationComposer,
+      $$LoansTableCreateCompanionBuilder,
+      $$LoansTableUpdateCompanionBuilder,
+      (Loan, $$LoansTableReferences),
+      Loan,
+      PrefetchHooks Function({bool bookId})
+    >;
 
 class $AppDbManager {
   final _$AppDb _db;
@@ -5164,4 +6826,8 @@ class $AppDbManager {
       $$BookShelvesTableTableManager(_db, _db.bookShelves);
   $$QuotesTableTableManager get quotes =>
       $$QuotesTableTableManager(_db, _db.quotes);
+  $$ReadingSessionsTableTableManager get readingSessions =>
+      $$ReadingSessionsTableTableManager(_db, _db.readingSessions);
+  $$LoansTableTableManager get loans =>
+      $$LoansTableTableManager(_db, _db.loans);
 }

@@ -6,6 +6,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-14
+
+### Added
+- Reading timer on a book you are reading: Start, Stop, then say which page you are on. Time goes into the read and onto the calendar.
+- "Days you read" calendar in Stats, month by month, with a gentle streak line (shown from two days in a row, never a guilt message).
+- "Year in books" card in Stats (books, pages, hours, favourite genre, most-read author, average rating, top rated) to share as a picture, and a printable PDF report of the year's finished books.
+- Read next order: drag the books you want to read into the order you will read them (Library menu).
+- Lending: note who has a book, with an optional reminder to ask for it back. The notification names neither book nor person.
+
+### Notes
+- New database tables (schema 6). Older saved copies still restore. The spreadsheet export does not include sessions or loans; the full saved copy does.
+- The PDF report uses the built-in fonts, so letters outside Western European ones print as ?.
+- Locked books are never counted in the card, calendar or report.
+
 ## [0.11.0] - 2026-10-14
 
 ### Added

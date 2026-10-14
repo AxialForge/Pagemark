@@ -172,11 +172,13 @@ class _LibraryState extends State<Library> {
           onSelected: (v) => Navigator.push(context, MaterialPageRoute(builder: (_) => switch (v) {
                 'series' => SeriesPage(locked: widget.locked),
                 'trash' => const TrashPage(locked: true),
+                'queue' => const QueuePage(),
                 'help' => const GuidePage(),
                 _ => ShelvesPage(locked: widget.locked),
               })),
           itemBuilder: (_) => [
             const PopupMenuItem(value: 'series', child: ListTile(leading: Icon(Icons.layers_outlined), title: Text('Series'))),
+            if (!widget.locked) const PopupMenuItem(value: 'queue', child: ListTile(leading: Icon(Icons.format_list_numbered), title: Text('Read next order'))),
             const PopupMenuItem(value: 'shelves', child: ListTile(leading: Icon(Icons.collections_bookmark_outlined), title: Text('Manage shelves'))),
             if (widget.locked) const PopupMenuItem(value: 'trash', child: ListTile(leading: Icon(Icons.delete_sweep_outlined), title: Text('Deleted books'))),
             const PopupMenuItem(value: 'help', child: ListTile(leading: Icon(Icons.menu_book_outlined), title: Text('How to use Pagemark'))),
