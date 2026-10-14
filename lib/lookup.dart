@@ -69,8 +69,35 @@ class Lookup {
   static int? _int(Object? v) => v is int ? v : (v is num ? v.toInt() : int.tryParse('$v'));
   static List<Object?> _list(Object? v) => v is List ? v : const [];
 
-  static String genres(Iterable<Object?> subjects) =>
-      subjects.whereType<String>().where((s) => s.length < 40 && !_noisy.hasMatch(s)).take(3).join(', ');
+  /// Library-catalogue labels that say nothing about the kind of book.
+  static final _labels = RegExp(r'^(general|nyt:.*|reading level.*|new york times.*|bestsellers?|fiction in english|english fiction|large print.*)$|\((imaginary|fictitious)[^)]*\)|\bfictitious\b',
+      caseSensitive: false);
+
+  /// Up to three tidy genres from a list of subjects: each subject is split on commas ("Fiction, science fiction, general" is three
+  /// subjects), labels, places, characters and edition notes are dropped, repeats ignoring case are dropped, first letter capitalised.
+  static String genres(Iterable<Object?> subjects) {
+    final seen = <String>{}, out = <String>[];
+    for (final subject in subjects.whereType<String>()) {
+      for (final raw in subject.split(RegExp(r'[,/]'))) {
+        final g = raw.trim();
+        if (g.isEmpty || g.length >= 40 || _noisy.hasMatch(g) || _labels.hasMatch(g) || !seen.add(g.toLowerCase())) continue;
+        out.add(g[0].toUpperCase() + g.substring(1));
+        if (out.length == 3) return out.join(', ');
+      }
+    }
+    return out.join(', ');
+  }
+
+  /// A believable page count (1 to 20,000) or null; a negative or absurd number from a catalogue is not stored.
+  static int? _pages(Object? v) {
+    final n = _int(v);
+    return n != null && n >= 1 && n <= 20000 ? n : null;
+  }
+
+  static int? _year(Object? v) {
+    final n = _int(v);
+    return n != null && n >= 1000 && n <= 2100 ? n : null;
+  }
 
   /// One failing record never fails the whole list.
   static BookMeta? _parseDoc(Object? d) {
@@ -86,8 +113,8 @@ class Lookup {
         author: _list(d['author_name']).whereType<String>().join(', '),
         isbn: isbns.isNotEmpty ? isbns.first : '',
         coverUrl: cover != null ? 'https://covers.openlibrary.org/b/id/$cover-L.jpg' : '',
-        year: _int(d['first_publish_year']),
-        pages: _int(d['number_of_pages_median']),
+        year: _year(d['first_publish_year']),
+        pages: _pages(d['number_of_pages_median']),
         publisher: pubs.isNotEmpty ? pubs.first : '',
         genre: genres(_list(d['subject'])),
         workKey: _str(d['key']),
@@ -158,7 +185,7 @@ class Lookup {
         author: _list(d['authors']).map((a) => a is Map ? _str(a['name']) : '').where((s) => s.isNotEmpty).join(', '),
         isbn: isbn,
         coverUrl: d['cover'] is Map && _str(d['cover']['large']).isNotEmpty ? _str(d['cover']['large']) : 'https://covers.openlibrary.org/b/isbn/$isbn-L.jpg',
-        pages: _int(d['number_of_pages']),
+        pages: _pages(d['number_of_pages']),
         publisher: _list(d['publishers']).map((a) => a is Map ? _str(a['name']) : '').where((s) => s.isNotEmpty).join(', '),
         genre: genres(subjects),
         year: _int(RegExp(r'(1[5-9]\d{2}|20\d{2})').firstMatch(pd)?.group(1)),
@@ -195,11 +222,11 @@ class Lookup {
         author: _list(info['authors']).whereType<String>().join(', '),
         isbn: isbn,
         coverUrl: thumb.isEmpty ? '' : _https(thumb).replaceAll('&edge=curl', ''),
-        genre: cats.toSet().take(3).join(', '),
+        genre: genres(cats),
         publisher: _str(info['publisher']),
         description: _str(info['description']).trim(),
         year: _int(RegExp(r'(1[5-9]\d{2}|20\d{2})').firstMatch(_str(info['publishedDate']))?.group(1)),
-        pages: _int(info['pageCount']) == 0 ? null : _int(info['pageCount']),
+        pages: _pages(info['pageCount']),
       );
     } catch (e) {
       Log.w('lookup', 'skipped malformed Google record: $e');
@@ -297,7 +324,7 @@ class Lookup {
           coverUrl: covers.isNotEmpty ? 'https://covers.openlibrary.org/b/id/${covers.first}-L.jpg' : '',
           publisher: pubs.isNotEmpty ? pubs.first : '',
           year: _int(RegExp(r'(1[5-9]\d{2}|20\d{2})').firstMatch(_str(e['publish_date']))?.group(1)),
-          pages: _int(e['number_of_pages']),
+          pages: _pages(e['number_of_pages']),
           workKey: workKey,
         ));
       } catch (_) {}

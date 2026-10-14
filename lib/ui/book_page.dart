@@ -31,7 +31,11 @@ class BookPage extends StatelessWidget {
             PopupMenuButton<String>(
               onSelected: (v) async {
                 if (v == 'refresh') await refreshDetails(context, b);
-                if (v == 'lock') await (db.update(db.books)..where((x) => x.id.equals(b.id))).write(BooksCompanion(locked: Value(!b.locked)));
+                if (v == 'lock') {
+                  await (db.update(db.books)..where((x) => x.id.equals(b.id))).write(BooksCompanion(locked: Value(!b.locked)));
+                  // a book moved into the locked library must not stay on show beside the main list
+                  if (!b.locked && context.mounted && DetailPane.active(context)) closeBook(context);
+                }
                 if (v.startsWith('cover_')) {
                   final msg = await coverAction(b, v.substring(6));
                   if (msg != null && context.mounted) snack(context, msg);

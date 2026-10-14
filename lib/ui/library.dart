@@ -270,6 +270,7 @@ class _LibraryState extends State<Library> {
                     ? EmptyState(
                         message: widget.locked ? 'Nothing in your locked library yet.\nTap Add book to start.' : 'Your shelf is empty.\nTap Add book to start your log.',
                         actionLabel: widget.locked ? null : 'See how Pagemark works',
+                        actionIcon: Icons.help_outline,
                         onAction: widget.locked ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GuidePage())),
                       )
                     : const Center(child: Text('No matches.'));

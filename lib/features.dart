@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'adaptive.dart';
 import 'book_extras.dart' show heatStatsCard, adultFieldsOn;
 import 'detailed_ratings.dart';
 import 'reading_life.dart';
@@ -498,7 +499,7 @@ class _StatsState extends State<Stats> {
               );
 
           if (rows.isEmpty) return const EmptyState(message: 'Add and finish some books to see your stats.');
-          return ListView(padding: const EdgeInsets.all(12), children: [
+          return NarrowColumn(child: ListView(padding: const EdgeInsets.all(12), children: [
             section('$year reading goal', Row(children: [
               GoalRing(done: thisYear.length, goal: goal),
               const SizedBox(width: 16),
@@ -533,7 +534,7 @@ class _StatsState extends State<Stats> {
             if (adultFieldsOn()) heatStatsCard(context, done),
             section('Top genres', RankBars(top(genres))),
             section('Top authors', RankBars(top(authors))),
-          ]);
+          ]));
         },
       ),
     );

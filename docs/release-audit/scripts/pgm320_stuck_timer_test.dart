@@ -1,6 +1,6 @@
 // PGM-320: the reading timer can get stuck. Start the timer on book 1, then finish (or delete) book 1: its timer card disappears, but the
 // saved timer keeps blocking every other book ("running for another book") with no Stop button anywhere.
-// Run: copy to the project's test folder, `flutter test test/pgm320_stuck_timer_test.dart`  (EXPECTED TO FAIL until fixed).
+// Run: copy to the project's test folder, `flutter test test/pgm320_stuck_timer_test.dart`  (failed before 0.13.1; passes since the fix).
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pagemark/db.dart';
@@ -16,6 +16,6 @@ void main() {
     final read = Read(id: 9, bookId: 2, format: 'print', status: 'reading', thoughts: '', narrator: '', contentNotes: '');
     await t.pumpWidget(MaterialApp(home: Scaffold(body: ReadingTimerCard(book: other, read: read))));
     expect(find.text('The reading timer is running for another book.'), findsOneWidget, reason: 'precondition: blocked by the stale timer');
-    expect(find.text('Stop'), findsOneWidget, reason: 'there must be a way to stop a stale timer');
+    expect(find.text('Stop it'), findsOneWidget, reason: 'there must be a way to stop a stale timer (fixed in 0.13.1)');
   });
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show appFlavor, rootBundle;
+import 'adaptive.dart';
 import 'updater_ui.dart';
 
 /// One topic of the in-app guide (a "## " section of assets/guide.md).
@@ -80,7 +81,8 @@ class _GuidePageState extends State<GuidePage> {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text('How to use Pagemark')),
-        body: FutureBuilder<List<GuideTopic>>(
+        body: NarrowColumn(
+          child: FutureBuilder<List<GuideTopic>>(
           future: _topics,
           builder: (_, snap) {
             if (!snap.hasData) return const Center(child: CircularProgressIndicator());
@@ -107,6 +109,7 @@ class _GuidePageState extends State<GuidePage> {
                 ),
             ]);
           },
+        ),
         ),
       );
 

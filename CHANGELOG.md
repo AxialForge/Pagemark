@@ -6,6 +6,19 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-10-14
+
+Fixes from the 1.0.0 gate audit (PGM-300 to PGM-322).
+
+### Fixed
+- A reading timer left running for a book you had finished or deleted blocked the timer on every other book. Those books now show "Stop it", which saves the time to that book or throws it away.
+- Stats no longer stretches on tablets and wide screens: the page keeps a reading width and the calendar's days are a fixed height, so a month fits on one screen.
+- Genres from a lookup are cleaned: split on commas, repeats and labels such as "General" dropped, places and characters (for example "Dune (Imaginary place)") dropped, so Stats, the year card and suggestions show real genres. Use Refresh details on a book you already added to tidy it.
+- A page count that is negative or absurd (or a year outside 1000 to 2100) from a lookup is no longer saved.
+- The guide and Add a book keep a reading width on tablets.
+- Moving the open book to the locked library on a tablet now closes it in the side pane, so it does not stay on show beside the main list.
+- The empty library's "See how Pagemark works" button shows a help icon instead of a plus.
+
 ## [0.13.0] - 2026-10-14
 
 ### Added

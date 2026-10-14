@@ -169,7 +169,7 @@ class _AddBookState extends State<AddBook> {
         appBar: AppBar(title: const Text('Add a book'), actions: [IconButton(icon: const Icon(Icons.qr_code_scanner), tooltip: 'Scan a barcode', onPressed: scan),
           IconButton(icon: const Icon(Icons.library_add_check_outlined), tooltip: 'Scan many books', onPressed: scanMany),
         ]),
-        body: Column(children: [
+        body: NarrowColumn(child: Column(children: [
           Padding(
             padding: const EdgeInsets.all(12),
             child: TextField(
@@ -205,7 +205,7 @@ class _AddBookState extends State<AddBook> {
               ),
             ]),
           ),
-        ]),
+        ])),
       );
 }
 

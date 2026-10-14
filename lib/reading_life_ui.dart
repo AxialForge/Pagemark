@@ -87,6 +87,39 @@ class _ReadingTimerCardState extends State<ReadingTimerCard> {
     if (mounted) snack(context, 'Saved $minutes min of reading.');
   }
 
+  /// A timer left running for a book that is no longer being read (finished, deleted) would block every other book, so it can be
+  /// stopped from here: save the time to that book, or throw it away. The dialog names no book (it may be in the locked library).
+  Future<void> _stopOther() async {
+    final start = _start, id = _runningFor;
+    if (start == null || id == null) return;
+    final secs = DateTime.now().difference(start).inSeconds;
+    final minutes = (secs / 60).round().clamp(1, 24 * 60);
+    final choice = await showDialog<String>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Stop the other timer?'),
+        content: Text('A reading timer for another book has been running for $minutes ${minutes == 1 ? 'minute' : 'minutes'}.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Keep it running')),
+          TextButton(onPressed: () => Navigator.pop(c, 'discard'), child: const Text('Throw it away')),
+          if (secs >= 30) FilledButton(onPressed: () => Navigator.pop(c, 'save'), child: const Text('Save the time')),
+        ],
+      ),
+    );
+    if (choice == null) return;
+    await prefs.remove('timer_start');
+    await prefs.remove('timer_book');
+    if (choice == 'save') {
+      final rs = await (db.select(db.reads)..where((r) => r.bookId.equals(id))).get();
+      final target = rs.where((r) => r.status == 'reading').lastOrNull ?? rs.lastOrNull;
+      if (target != null) {
+        await db.addSession(id, minutes);
+        await (db.update(db.reads)..where((r) => r.id.equals(target.id))).write(ReadsCompanion(minutes: Value((target.minutes ?? 0) + minutes)));
+      }
+    }
+    if (mounted) setState(() {});
+  }
+
   String _clock(Duration d) {
     String two(int n) => n.toString().padLeft(2, '0');
     return '${d.inHours > 0 ? '${d.inHours}:' : ''}${two(d.inMinutes % 60)}:${two(d.inSeconds % 60)}';
@@ -108,7 +141,12 @@ class _ReadingTimerCardState extends State<ReadingTimerCard> {
               style: Theme.of(context).textTheme.titleSmall,
             ),
           ),
-          if (_mine) FilledButton(onPressed: _stop, child: const Text('Stop')) else if (!_other) FilledButton.tonal(onPressed: _begin, child: const Text('Start')),
+          if (_mine)
+            FilledButton(onPressed: _stop, child: const Text('Stop'))
+          else if (_other)
+            TextButton(onPressed: _stopOther, child: const Text('Stop it'))
+          else
+            FilledButton.tonal(onPressed: _begin, child: const Text('Start')),
         ]),
       ),
     );
@@ -166,7 +204,13 @@ class _StreakCardState extends State<StreakCard> {
         Expanded(child: Text(DateFormat.yMMMM().format(month), textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleSmall)),
         IconButton(icon: const Icon(Icons.chevron_right), tooltip: 'Later month', onPressed: _offset == 0 ? null : () => setState(() => _offset--)),
       ]),
-      GridView.count(crossAxisCount: 7, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), children: cells),
+      // a fixed row height keeps a month one screen tall on tablets, where the width (and so a square cell) would be huge
+      GridView(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7, mainAxisExtent: 44),
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        children: cells,
+      ),
       const SizedBox(height: 6),
       Text(readDays == 0 ? 'No reading logged this month.' : 'You read on $readDays ${readDays == 1 ? 'day' : 'days'} this month.', style: Theme.of(context).textTheme.bodySmall),
       if (_offset == 0 && streak >= 2) Text('$streak days in a row. Lovely.', style: Theme.of(context).textTheme.bodySmall),
