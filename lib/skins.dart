@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'db.dart';
 import 'features.dart';
 import 'main.dart';
+import 'adaptive.dart';
 import 'selection.dart';
 import 'ui.dart';
 
@@ -124,7 +125,7 @@ void _open(BuildContext context, BookRow r) {
   if (s != null && s.active) {
     s.onToggle(r);
   } else {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: r.book.id)));
+    openBookIn(context, r.book.id, () => BookPage(bookId: r.book.id));
   }
 }
 

@@ -6,6 +6,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-14
+
+### Added
+- Tablet and landscape layouts: from 600 dp wide the bottom bar becomes a side bar; from 840 dp the Library and the open book sit side by side. Settings pages stay a comfortable reading width.
+- Screen-reader and touch-target fixes: star ratings read "3 of 5 stars" and can be swiped in half-star steps, covers and icon buttons have spoken names, welcome screens scroll at large text sizes.
+
+### Changed
+- `lib/ui.dart` split into part files under `lib/ui/`.
+
+
 ## [0.10.1] - 2026-10-14
 
 ### Added

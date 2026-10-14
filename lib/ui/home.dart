@@ -106,35 +106,71 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
             _Tab.stats => const Stats(),
             _Tab.settings => SettingsPage(onLockNow: () => setState(() { _lock(); cur = _Tab.library; })),
           };
-          return Scaffold(
-            body: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 250),
-              switchInCurve: Curves.easeOutCubic,
-              transitionBuilder: (child, anim) => FadeTransition(
-                opacity: anim,
-                child: SlideTransition(position: Tween(begin: const Offset(0, 0.02), end: Offset.zero).animate(anim), child: child),
-              ),
-              child: KeyedSubtree(key: ValueKey(shown), child: page),
-            ),
-            bottomNavigationBar: NavigationBar(
-              selectedIndex: visible.indexOf(shown),
-              onDestinationSelected: (i) => setState(() {
+          final wide = useRail(context);
+          final twoPane = useTwoPane(context);
+          void select(int i) => setState(() {
                 final next = visible[i];
                 if (shown == _Tab.locked && next != _Tab.locked) _lock(); // re-lock when leaving the locked tab
                 cur = next;
-              }),
-              destinations: [
-                for (final t in visible)
-                  switch (t) {
-                    _Tab.library => const NavigationDestination(icon: Icon(Icons.menu_book_outlined), label: 'Library'),
-                    _Tab.locked => const NavigationDestination(icon: Icon(Icons.lock_outline), label: 'Locked'),
-                    _Tab.stats => const NavigationDestination(icon: Icon(Icons.bar_chart), label: 'Stats'),
-                    _Tab.settings => NavigationDestination(
-                        icon: ValueListenableBuilder<UpdateInfo?>(valueListenable: updateAvailable, builder: (_, u, _) => Badge(isLabelVisible: u != null, child: const Icon(Icons.settings_outlined))),
-                        label: 'Settings',
+              });
+          final content = AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            switchInCurve: Curves.easeOutCubic,
+            transitionBuilder: (child, anim) => FadeTransition(
+              opacity: anim,
+              child: SlideTransition(position: Tween(begin: const Offset(0, 0.02), end: Offset.zero).animate(anim), child: child),
+            ),
+            child: KeyedSubtree(
+              key: ValueKey(shown),
+              // wide screens: the main Library sits beside the open book (the locked library never uses the pane, so nothing private lingers on screen)
+              child: twoPane && shown == _Tab.library
+                  ? Row(children: [
+                      Expanded(flex: 5, child: DetailPane(child: page)),
+                      const VerticalDivider(width: 1),
+                      Expanded(
+                        flex: 6,
+                        child: ValueListenableBuilder<int?>(
+                          valueListenable: selectedBook,
+                          builder: (_, id, _) => id == null
+                              ? const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('Choose a book to see it here.', textAlign: TextAlign.center)))
+                              : DetailPane(child: BookPage(key: ValueKey(id), bookId: id)),
+                        ),
                       ),
-                  },
-              ],
+                    ])
+                  : page,
+            ),
+          );
+          final destinations = [
+            for (final t in visible)
+              switch (t) {
+                _Tab.library => (const Icon(Icons.menu_book_outlined), 'Library'),
+                _Tab.locked => (const Icon(Icons.lock_outline), 'Locked'),
+                _Tab.stats => (const Icon(Icons.bar_chart), 'Stats'),
+                _Tab.settings => (ValueListenableBuilder<UpdateInfo?>(valueListenable: updateAvailable, builder: (_, u, _) => Badge(isLabelVisible: u != null, child: const Icon(Icons.settings_outlined))), 'Settings'),
+              },
+          ];
+          if (wide) {
+            return Scaffold(
+              body: SafeArea(
+                child: Row(children: [
+                  NavigationRail(
+                    selectedIndex: visible.indexOf(shown),
+                    onDestinationSelected: select,
+                    labelType: NavigationRailLabelType.all,
+                    destinations: [for (final d in destinations) NavigationRailDestination(icon: d.$1, label: Text(d.$2))],
+                  ),
+                  const VerticalDivider(width: 1),
+                  Expanded(child: content),
+                ]),
+              ),
+            );
+          }
+          return Scaffold(
+            body: content,
+            bottomNavigationBar: NavigationBar(
+              selectedIndex: visible.indexOf(shown),
+              onDestinationSelected: select,
+              destinations: [for (final d in destinations) NavigationDestination(icon: d.$1, label: d.$2)],
             ),
           );
         },

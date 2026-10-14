@@ -112,6 +112,9 @@ Go to Settings → Your library. **How dates look** changes how dates are writte
 ## Change the look
 Go to Settings → Appearance and tap a colour theme. Three are light and three are dark.
 
+## Tablets and landscape
+On a tablet, or a phone turned sideways, the buttons move to the left side. On a large screen your Library and the book you tap sit side by side.
+
 ## Something is not working
 - Check your internet connection if a book search fails.
 [github] - Check for a new version in Settings, then **Updates**.

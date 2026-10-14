@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'adaptive.dart';
 import 'app_lock.dart';
 import 'backup_reminder.dart';
 import 'restore_ui.dart';

@@ -57,6 +57,8 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 
 ## Gotchas / constraints
 
+- **Wide screens go through `lib/adaptive.dart`.** Open a book with `openBookIn` and leave it with `closeBook` (never `Navigator.push/pop` directly for `BookPage`), or the two-pane layout (>=840 dp) breaks. Only the main Library gets the `DetailPane`; the locked library must never use it, so private books cannot linger in the pane.
+
 - **Gradle: "Unable to establish loopback connection".** Symptom: every Gradle/Flutter Android build fails instantly. Cause: JDK 25 (Android Studio JBR) creates a unix-domain-socket pipe in `java.io.tmpdir`, which here is the 8.3 short path `C:\Users\JOSEPH~1\...` and fails with `Invalid argument: connect` (plain `Selector.open()` reproduces it). NordVPN is *not* the cause. Fix: `-Djdk.net.unixdomain.tmpdir=C:/tmpj` via `JAVA_TOOL_OPTIONS` (the client JVM needs it; the daemon also gets it from `org.gradle.jvmargs` in `android/gradle.properties`). Overriding `java.io.tmpdir` alone does not help.
 - **Restore must delete `-wal`/`-shm`** next to `pagemark.sqlite` before copying the backup over, then the app exits (the open connection is stale). `restoreDb` does this.
 - **google_sign_in 7 on Android needs a *Web* client ID** (`serverClientId`) plus an *Android* client with the package name and signing SHA-1; a release key needs its own Android client.

@@ -48,7 +48,7 @@ class _SettingsSub extends StatelessWidget {
   final List<Widget> children;
   const _SettingsSub(this.title, this.children);
   @override
-  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: Text(title)), body: ListView(children: children));
+  Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: Text(title)), body: NarrowColumn(child: ListView(children: children)));
 }
 
 class _Hint extends StatelessWidget {

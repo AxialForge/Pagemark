@@ -288,7 +288,7 @@ class _LibraryState extends State<Library> {
                         label: 'Open ${r.book.title}, currently reading',
                         excludeSemantics: true,
                         child: GestureDetector(
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: r.book.id))),
+                        onTap: () => openBookIn(context, r.book.id, () => BookPage(bookId: r.book.id)),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: SizedBox(width: 72, child: Column(children: [
@@ -382,7 +382,7 @@ class BookTile extends StatelessWidget {
         if (row.progress != null) Padding(padding: const EdgeInsets.only(top: 6, right: 8), child: SlimProgress(row.progress!)),
       ]),
       trailing: r == null ? null : Semantics(label: 'Rated ${r.toStringAsFixed(1)} of 5', child: Text(starsText(r), style: TextStyle(color: Theme.of(context).colorScheme.tertiary, fontSize: 15))),
-      onTap: () => scope != null && scope.active ? scope.onToggle(row) : Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: b.id))),
+      onTap: () => scope != null && scope.active ? scope.onToggle(row) : openBookIn(context, b.id, () => BookPage(bookId: b.id)),
       onLongPress: scope == null ? null : () {
         HapticFeedback.mediumImpact();
         scope.onToggle(row);

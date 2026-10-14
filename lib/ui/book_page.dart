@@ -20,7 +20,7 @@ class BookPage extends StatelessWidget {
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
                       const Text('This book is no longer in your library.'),
                       const SizedBox(height: 12),
-                      FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Back')),
+                      FilledButton(onPressed: () => closeBook(context), child: const Text('Back')),
                     ]),
                   ),
           );
@@ -42,7 +42,7 @@ class BookPage extends StatelessWidget {
                     actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Move to Trash'))]));
                   if (ok == true) {
                     await db.softDelete(b.id);
-                    if (context.mounted) Navigator.pop(context);
+                    if (context.mounted) closeBook(context);
                   }
                 }
               },
