@@ -1,10 +1,15 @@
 # How to use Pagemark
 
+## Your first time
+The first time you open Pagemark you see three short screens. Tap **Skip** at any time. At the end you can add your first book, **Try it with 5 sample books**, restore a library you saved before, or **Just look around**.
+
+The sample books are well-known classics, there so you can see how everything looks. A card at the top of the Library says so. Tap **Remove** on it when you are ready to add your own books. Your own books are never touched.
+
 ## Add your first book
 Tap **Add book** on the Library screen (the round button at the bottom).
 1. Type a title, an author or a barcode number and tap the magnifier. Or tap the barcode icon at the top and point the camera at the barcode on the back of the book.
 2. Tap the book you want in the list. It is added and its page opens.
-3. Can't find it? Tap **Add by hand** and type the title yourself.
+3. Can't find it? Pagemark suggests shorter ways to ask (tap one to try it). You can also scan the barcode, or tap **Add by hand** and type the title yourself. If you typed a barcode number, it is kept with the book.
 
 Tip: if you share a book from a web page or another app (Share, then Pagemark), Pagemark opens with the search already filled in.
 
@@ -79,6 +84,8 @@ Your books live only on this phone. A backup is a safe copy you can bring back i
 - **Restore from a file** replaces your library with a saved copy. Pagemark closes afterwards. Open it again to see the restored library.
 - **Go back to an earlier copy** lists the copies Pagemark made on its own before each restore and import.
 
+If you have a few books and no backup yet, a card at the top of the Library offers to help: tap **Set up**, or **Not now** to hide it for a month.
+
 Pagemark can remind you now and then: turn on **Remind me to back up** and choose **How often** (every week, every 2 weeks or every month). The top of the page shows when you last saved a copy.
 
 Write your password down somewhere safe. If you lose it, nobody can open the backup, not even Pagemark.
@@ -95,6 +102,9 @@ Your locked books are never included in these lists.
 Deleting a book moves it to **Deleted books** for 30 days. To bring one back, go to Settings → Your library → **Deleted books** and tap the restore icon.
 
 Most big actions (deleting, moving, importing) show an **Undo** button right after.
+
+## Dates and defaults
+Go to Settings → Your library. **How dates look** changes how dates are written (for example 13 Oct 2026 or 13/10/2026). **New reads start as** sets whether a new read begins as Print, E-book or Audiobook, so you tap less.
 
 ## Change the look
 Go to Settings → Appearance and tap a colour theme. Three are light and three are dark.

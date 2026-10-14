@@ -6,6 +6,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-14
+
+First start, safer backups, fewer dead ends.
+
+### Added
+- **Welcome screens** on the very first start (three swipes, **Skip** any time), ending with a choice: add your first book, try it with **5 sample books**, restore a saved library, or just look around. Anyone who already has books never sees them.
+- **Sample books** (five public-domain classics with a mix of finished, reading, want and did-not-finish) with a card on the Library and a **Remove** button; they can also be removed from Settings > Your library. They never count towards the backup card.
+- **"Protect your books" card** on the Library for anyone with 5 or more books and no recent backup: **Set up** opens the backup page, **Not now** hides it for a month.
+- **When a book search finds nothing**, Pagemark now explains and suggests shorter searches (without a subtitle, brackets, punctuation or a leading "The", or just the first words). A barcode number you typed is kept when you add the book by hand.
+- **How dates look** and **New reads start as** (Settings > Your library).
+
 ## [0.9.1] - 2026-10-14
 
 ### Added

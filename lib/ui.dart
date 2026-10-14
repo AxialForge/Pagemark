@@ -29,19 +29,21 @@ import 'export.dart';
 import 'lock.dart';
 import 'isbn.dart';
 import 'detailed_ratings.dart';
+import 'firstrun.dart';
 import 'folder_backup.dart';
 import 'guide.dart';
 import 'incoming.dart';
 import 'log.dart';
 import 'lookup.dart';
 import 'reminders.dart';
+import 'welcome.dart';
 import 'widget_sync.dart';
 import 'main.dart';
 import 'themes.dart';
 
 const formats = {'print': 'Print', 'ebook': 'E-book', 'audio': 'Audiobook'};
 const statuses = {'want': 'Want to read', 'reading': 'Reading', 'finished': 'Finished', 'dnf': 'Did not finish'};
-final _date = DateFormat.yMMMd();
+DateFormat get _date => appDate(); // the style chosen in Settings > Your library
 
 void snack(BuildContext c, String m) => ScaffoldMessenger.of(c)
   ..clearSnackBars() // a new message replaces the old one instead of queueing
@@ -77,6 +79,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     WidgetSync.start();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Incoming.start(); // a Share or shortcut that started the app
+      _maybeWelcome();
       if (mounted) announceNewVersion(context);
     });
   }
@@ -101,6 +104,19 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   }
 
   DateTime? _leftAt;
+
+  /// First start with an empty library: the welcome screens, once. Anyone who already has books never sees them.
+  Future<void> _maybeWelcome() async {
+    if (prefs.getBool('welcome_seen') ?? false) return;
+    final n = (await db.select(db.books).get()).length;
+    if (n > 0) {
+      await prefs.setBool('welcome_seen', true);
+      return;
+    }
+    if (!mounted) return;
+    await Navigator.push(context, MaterialPageRoute(fullscreenDialog: true, builder: (_) => const WelcomePage()));
+    await prefs.setBool('welcome_seen', true);
+  }
 
   /// After a few books are in, ask once for permission to send reminders (Android 13+ shows its own question).
   Future<void> _askNotificationsOnce() async {
@@ -469,6 +485,7 @@ class _LibraryState extends State<Library> {
             ],
           ]),
         ),
+        if (!widget.locked) const LibraryBanners(),
         Expanded(
           child: StreamBuilder<List<BookRow>>(
             stream: _rowsStream,
@@ -637,6 +654,7 @@ class _AddBookState extends State<AddBook> {
     return real.isEmpty ? results.take(_shown).toList() : real;
   }
   bool busy = false;
+  bool searched = false;
 
   @override
   void initState() {
@@ -655,7 +673,7 @@ class _AddBookState extends State<AddBook> {
   }
 
   Future<void> run(Future<List<BookMeta>> Function() f) async {
-    setState(() { busy = true; showAll = false; });
+    setState(() { busy = true; showAll = false; searched = true; });
     try {
       results = await f();
     } catch (e) {
@@ -690,8 +708,31 @@ class _AddBookState extends State<AddBook> {
   }
 
   Future<void> manual() async {
-    final r = await _manualDialog(context, qc.text);
-    if (r != null) await save(BookMeta(title: r.$1, author: r.$2));
+    final typed = qc.text.trim();
+    final isCode = Isbn.looksLikeBookCode(typed);
+    final r = await _manualDialog(context, isCode ? '' : typed); // a barcode number is kept for the book, not typed into the title
+    if (r != null) await save(BookMeta(title: r.$1, author: r.$2, isbn: isCode ? (Isbn.to13(typed) ?? '') : ''));
+  }
+
+  /// Shown when a search finds nothing: other ways to ask, instead of a dead end.
+  Widget _noResults() {
+    final tips = searchSuggestions(qc.text);
+    return Card(
+      margin: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Nothing found for "${qc.text.trim()}"', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 6),
+          const Text('Check the spelling, or try just the title. You can also scan the barcode, or add the book by hand below.'),
+          if (tips.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            const Text('Try:'),
+            Wrap(spacing: 8, children: [for (final t in tips) ActionChip(label: Text(t), onPressed: () { qc.text = t; go(t); })]),
+          ],
+        ]),
+      ),
+    );
   }
 
   Future<void> _search(String q) => run(() async {
@@ -788,6 +829,7 @@ class _AddBookState extends State<AddBook> {
                   subtitle: const Text('Includes summaries and study guides'),
                   onTap: () => setState(() => showAll = true),
                 ),
+              if (searched && !busy && results.isEmpty && qc.text.trim().isNotEmpty) _noResults(),
               ListTile(
                 leading: const Icon(Icons.edit_note), title: const Text('Add by hand'),
                 subtitle: const Text('Not found? Enter the details yourself.'),
@@ -1110,7 +1152,7 @@ class ReadEditor extends StatefulWidget {
 }
 
 class _ReadEditorState extends State<ReadEditor> {
-  late String format = widget.read?.format ?? 'print';
+  late String format = widget.read?.format ?? defaultFormat();
   late String status = widget.read?.status ?? 'reading';
   late DateTime? started = widget.read?.started ?? DateTime.now();
   late DateTime? finished = widget.read?.finished;
@@ -1299,7 +1341,7 @@ class SettingsPage extends StatelessWidget {
           _row(context, Icons.notifications_active_outlined, SettingsTitles.notifications, 'Reading and backup reminders', () => const _NotificationsPage()),
           _row(context, Icons.widgets_outlined, SettingsTitles.widget, 'Home-screen widget and icon shortcuts', () => const _WidgetPage()),
           _row(context, Icons.lock_outline, SettingsTitles.privacy, 'PIN, fingerprint and your private library', () => _PrivacyPage(onLockNow: onLockNow)),
-          _row(context, Icons.cloud_upload_outlined, SettingsTitles.backup, 'Keep your library safe, or bring it back', () => const _BackupPage()),
+          _row(context, Icons.cloud_upload_outlined, SettingsTitles.backup, 'Keep your library safe, or bring it back', () => const BackupSettingsPage()),
           _row(context, Icons.swap_horiz, SettingsTitles.importExport, 'Bring books in from another app, or take your list out', () => const _ImportExportPage()),
           _row(context, Icons.collections_bookmark_outlined, SettingsTitles.library, 'Deleted books, cover pictures and extra notes', () => const _LibraryExtrasPage()),
           _row(context, Icons.help_outline, SettingsTitles.help, 'What is new, and fixing problems', () => const _HelpPage()),
@@ -1526,13 +1568,13 @@ class _PrivacyPage extends StatelessWidget {
       ]);
 }
 
-class _BackupPage extends StatefulWidget {
-  const _BackupPage();
+class BackupSettingsPage extends StatefulWidget {
+  const BackupSettingsPage({super.key});
   @override
-  State<_BackupPage> createState() => _BackupPageState();
+  State<BackupSettingsPage> createState() => _BackupSettingsPageState();
 }
 
-class _BackupPageState extends State<_BackupPage> {
+class _BackupSettingsPageState extends State<BackupSettingsPage> {
   @override
   void initState() {
     super.initState();
@@ -1753,6 +1795,8 @@ class _LibraryExtrasPage extends StatelessWidget {
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TrashPage()))),
         ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Cover pictures'), subtitle: const Text('Keep covers on this phone so they work without internet and are included in backups'), trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CoversPage()))),
+        const _DefaultsTiles(),
+        const Divider(),
         ValueListenableBuilder<bool>(
           valueListenable: detailedRatings,
           builder: (context, on, _) => SwitchListTile(
@@ -1773,6 +1817,64 @@ class _LibraryExtrasPage extends StatelessWidget {
             onChanged: (v) => adultFields.value = v,
           ),
         ),
+      ]);
+}
+
+/// Date style, the format a new read starts with, and removing the sample books.
+class _DefaultsTiles extends StatefulWidget {
+  const _DefaultsTiles();
+  @override
+  State<_DefaultsTiles> createState() => _DefaultsTilesState();
+}
+
+class _DefaultsTilesState extends State<_DefaultsTiles> {
+  bool samples = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Samples.present(db).then((v) { if (mounted) setState(() => samples = v); });
+  }
+
+  @override
+  Widget build(BuildContext context) => Column(children: [
+        ListTile(
+          leading: const Icon(Icons.event_outlined),
+          title: const Text('How dates look'),
+          trailing: DropdownButton<String>(
+            value: dateStyles.containsKey(prefs.getString('date_style')) ? prefs.getString('date_style') : 'mdy',
+            items: [for (final e in dateStyles.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
+            onChanged: (v) async {
+              if (v != null) await prefs.setString('date_style', v);
+              if (mounted) setState(() {});
+            },
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.menu_book_outlined),
+          title: const Text('New reads start as'),
+          subtitle: const Text('Print, e-book or audiobook: the one you use most.'),
+          trailing: DropdownButton<String>(
+            value: defaultFormat(),
+            items: [for (final e in formats.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
+            onChanged: (v) async {
+              if (v != null) await prefs.setString('default_format', v);
+              if (mounted) setState(() {});
+            },
+          ),
+        ),
+        if (samples)
+          ListTile(
+            leading: const Icon(Icons.auto_stories_outlined),
+            title: const Text('Remove the sample books'),
+            subtitle: const Text('The 5 example books from the welcome screen.'),
+            onTap: () async {
+              final n = await Samples.remove(db);
+              if (!context.mounted) return;
+              setState(() => samples = false);
+              snack(context, n == 0 ? 'The sample books were already gone' : 'Removed $n sample books');
+            },
+          ),
       ]);
 }
 

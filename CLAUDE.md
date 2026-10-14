@@ -122,6 +122,8 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 
 - **Migration trap:** `m.createTable(t)` in an old step builds the table from the CURRENT definition (new columns included), so a later `addColumn` for a column of a table created in the same upgrade throws "duplicate column". Guard later steps with `if (from >= N)` where N is the schema that created the table (see the quotes rating in the `from < 5` step).
 
+- **First start:** `WelcomePage` (welcome.dart) is pushed once from `Home` when the library is empty and `welcome_seen` is unset (existing users are marked seen silently). Sample books are tracked by id in prefs `sample_ids` (firstrun.dart) and must never count towards the backup card or the notification prompt. The date style is read through `appDate()` everywhere (`_date` in ui.dart is a getter), so new screens should use it too.
+
 ## The in-app guide (keep it true)
 
 `assets/guide.md` is the manual inside the app (Settings > How to use Pagemark, the Library three-dot menu and the empty-library screen). It is written for non-technical readers: short steps, plain words, the exact on-screen names in **bold**. **Whenever you change a screen, a button name, a setting or a behaviour a user can see, update `assets/guide.md` in the same commit** (and add a line to `CHANGELOG.md`). `test/guide_test.dart` fails if the guide names a Settings page or a **bold** label that no screen in the app contains, so a rename without a guide update breaks the build. Lines starting with `[github] ` appear only in the GitHub build (the Play build has no updater). The `SettingsTitles` constants in `lib/guide.dart` are the single source for the Settings page names.

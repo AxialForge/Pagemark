@@ -243,6 +243,10 @@ On the lock screen tap **Forgot PIN?**, enter the recovery code and a new PIN. Y
 
 **Shortcuts.** Long-press the Pagemark icon: **Add book** and **Reading now**.
 
+## 8c. First start, samples and defaults
+
+The first time you open Pagemark you see three welcome screens (**Skip** any time). At the end you can add your first book, **Try it with 5 sample books**, restore a saved library, or **Just look around**. Sample books are removed with the **Remove** button on the card at the top of the Library, or Settings → Your library → **Remove the sample books**. With a few books and no backup, the Library offers a **Set up** card for backups. When a search finds nothing, Pagemark suggests shorter searches. Settings → Your library also has **How dates look** and **New reads start as**.
+
 ## 9. Themes
 
 Settings → **Appearance** offers six looks, each named for its mood:
