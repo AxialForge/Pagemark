@@ -1,14 +1,14 @@
 # Pagemark — project guide for Claude Code
 
-Pagemark is a fully local book tracker for Android (iOS later): a log of what you read or listened to, with ratings and private thoughts, for any genre. Metadata and covers come from the free Open Library API; everything else lives in a SQLite file on the phone. It exports the log (CSV/JSON) and the whole database, and can back the database up to the user's own Google Drive on a schedule. It is not a social network, has no accounts of its own and no server.
+Pagemark is a fully local book tracker for Android (iOS later): a log of what you read or listened to, with ratings and private thoughts, for any genre. Metadata and covers come from the free Open Library API; everything else lives in a SQLite file on the phone. It exports the log (CSV/JSON) and the whole database, and reminds the user to save backups (the user saves the file wherever they like; there is no cloud sync). It is not a social network, has no accounts of its own and no server.
 
 ## Non-negotiables (don't regress these)
 
-- **Local-first.** The only network calls are Open Library lookups/covers, the user-initiated or scheduled Drive backup, and the update check against GitHub Releases (a plain release-list request; switchable off). No analytics, no telemetry, no backend.
-- **No paid services.** Open Library (no key) and Drive's free `appDataFolder` only. Don't add paid APIs or require code-signing certs.
-- **Locked library never leaks.** CSV/JSON exports exclude locked books; the locked tab re-locks when you leave it. The full database export and Drive backup *do* include them (documented in the UI).
-- **No secrets in source.** The Google Web client ID is typed into the app (SharedPreferences), never committed. PIN is PBKDF2-HMAC-SHA256 with a random salt in `flutter_secure_storage`.
-- **Android first, iOS later.** Keep code platform-neutral; Android-only calls (WorkManager) are guarded by `defaultTargetPlatform`.
+- **Local-first.** The only network calls are Open Library lookups/covers, and the update check against GitHub Releases (a plain release-list request; switchable off). No analytics, no telemetry, no backend.
+- **No paid services.** Open Library (no key) only. Don't add paid APIs or require code-signing certs.
+- **Locked library never leaks.** CSV/JSON exports exclude locked books; the locked tab re-locks when you leave it. The full database export (backup file) *does* include them (documented in the UI).
+- **No secrets in source.** PIN is PBKDF2-HMAC-SHA256 with a random salt in `flutter_secure_storage`.
+- **Android first, iOS later.** Keep code platform-neutral; Android-only calls (notifications) are guarded by `defaultTargetPlatform`.
 
 ## Commands
 
@@ -46,9 +46,8 @@ lib/
   privacy.dart      FLAG_SECURE channel, locked-cover cache, temp-export cleanup, navigator key
   crypto_backup.dart  AES-256-GCM passphrase container for backups/exports (PGMKENC1)
   export.dart       CSV/JSON of main library, VACUUM INTO db snapshot, restore
-  backup.dart       Google Drive appDataFolder backup, WorkManager schedule, background dispatcher
-  backup_page.dart  backup settings/restore UI
-docs/DRIVE_SETUP.md one-time Google Cloud OAuth setup for the user
+  backup_reminder.dart  the "time to back up" notification (counts from the last saved copy)
+  restore_ui.dart   restore flow and the Restore points page
 android/            MainActivity is FlutterFragmentActivity (needed by local_auth); manifest has INTERNET/USE_BIOMETRIC/CAMERA
 ```
 
@@ -59,7 +58,6 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 ## Gotchas / constraints
 
 - **Gradle: "Unable to establish loopback connection".** Symptom: every Gradle/Flutter Android build fails instantly. Cause: JDK 25 (Android Studio JBR) creates a unix-domain-socket pipe in `java.io.tmpdir`, which here is the 8.3 short path `C:\Users\JOSEPH~1\...` and fails with `Invalid argument: connect` (plain `Selector.open()` reproduces it). NordVPN is *not* the cause. Fix: `-Djdk.net.unixdomain.tmpdir=C:/tmpj` via `JAVA_TOOL_OPTIONS` (the client JVM needs it; the daemon also gets it from `org.gradle.jvmargs` in `android/gradle.properties`). Overriding `java.io.tmpdir` alone does not help.
-- **Background backups run in a separate isolate.** `backupDispatcher` opens its own `AppDb()`; never reuse the UI isolate's `db` there. Silent token refresh uses `attemptLightweightAuthentication` + `authorizationForScopes`, which only works after the user has signed in and granted the scope once in the foreground.
 - **Restore must delete `-wal`/`-shm`** next to `pagemark.sqlite` before copying the backup over, then the app exits (the open connection is stale). `restoreDb` does this.
 - **google_sign_in 7 on Android needs a *Web* client ID** (`serverClientId`) plus an *Android* client with the package name and signing SHA-1; a release key needs its own Android client.
 - `file_picker` 13 uses `FilePicker.pickFile()`, not `FilePicker.platform.pickFiles()`; `csv` 8 uses `csv.encode(rows)`.
@@ -69,7 +67,7 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 - **Locked-library traces.** Anything that shows locked content must (a) use `Cover(locked: true)` so images go to `lockedCache`, (b) be a route that `wipeLockedTraces()` can pop (it pops to the first route), (c) never be counted/listed outside the vault (Stats, Trash, duplicate check, exports all filter on `locked`).
 - **FLAG_SECURE ordering.** `Secure.set(true)` when unlocking; on `paused` the vault relocks but the flag stays on until `resumed`, otherwise the recents thumbnail is captured unprotected.
 - **Restore swaps the file under a closed connection.** `Exporter.restoreDb` validates, snapshots the current DB to `pre-restore-*.sqlite` (newest 3), closes the DB, deletes `-wal/-shm`, then renames a staged copy; the app must be restarted afterwards (the UI exits).
-- **Backup passphrase lives in secure storage** (`bk_pass`) so the background isolate can encrypt unattended. A new phone needs the passphrase typed again to restore.
+- **Backups are saved by the user, not uploaded.** Google Drive backup was removed in 0.8.2 (too hard for non-technical users to set up). `Exporter.onSaved` (set in main.dart) restarts the "time to back up" countdown whenever a copy or list is shared; `BackupReminder` schedules the next notifications (ids 200-205). Old `bk_*` prefs and the `bk_pass` secure value are cleaned at start.
 - **Tests use `AppDb.memory()`** and `FlutterSecureStorage.setMockInitialValues`; PBKDF2 at 150k iterations makes lock tests take a few seconds.
 
 - **Lookup tests inject `Lookup.client`** (a `MockClient`) and set `Lookup.retryDelay = Duration.zero`. Don't add a real network call to tests. Await each `expectLater` that uses the shared client - two unawaited expects race on it.
@@ -90,7 +88,6 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 - **Two Trashes:** `AppDb.watchTrash(locked:)` is per library; the vault's Trash is a route opened from the unlocked vault (so `wipeLockedTraces()` closes it).
 - **Search results are ranked and filtered client-side** (`Lookup.rank`, `Lookup.isJunk`); fixtures in `test/v042_test.dart`. Don't filter in `Lookup.search` itself beyond ordering - the UI decides what to hide.
 
-- **Backup failures are classified** in `backup_errors.dart` (`friendlyBackupError`, `isAuthProblem`, `shouldNotifyBackupFailure`). A failing run increments `bk_fail`; success resets it and clears the notification. Add new Drive/Google failure modes there, with a test.
 - **flutter_local_notifications needs core-library desugaring** (`isCoreLibraryDesugaringEnabled` + `desugar_jdk_libs` in `android/app/build.gradle.kts`) or the build fails at `checkAarMetadata`.
 - **`LockService.debugDeviceSupported`** lets tests fake a phone with/without a screen lock (the local_auth plugin has no test implementation).
 - **Large-text safety:** fixed-height rows must scale with `MediaQuery.textScalerOf(context)` (see Compact and BarChart); `test/v043_ui_test.dart` draws every Library style at 200%.

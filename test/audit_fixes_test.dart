@@ -1,7 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' show Value;
-import 'package:pagemark/backup.dart';
 import 'package:pagemark/db.dart';
 import 'package:pagemark/features.dart';
 import 'package:pagemark/importer.dart';
@@ -45,19 +44,6 @@ void main() {
       await LockService.setPin('1234');
       await LockService.clear();
       expect(await LockService.mode(), isNull);
-    });
-  });
-
-  group('PGM-102/202 backup passphrase', () {
-    test('setting a passphrase records it and forces the next backup to upload', () async {
-      SharedPreferences.setMockInitialValues({'bk_hash': 'old'});
-      FlutterSecureStorage.setMockInitialValues({});
-      await DriveBackup.setPassphrase('correct horse');
-      final p = await SharedPreferences.getInstance();
-      expect(p.getBool('bk_enc'), isTrue);
-      expect(p.getString('bk_hash'), isNull);
-      await DriveBackup.setPassphrase('');
-      expect(p.getBool('bk_enc'), isFalse);
     });
   });
 

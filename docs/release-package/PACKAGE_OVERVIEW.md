@@ -38,7 +38,7 @@
 | Import | Goodreads, StoryGraph and Pagemark files, with a preview, duplicate handling, a safety copy and Undo |
 | Bulk actions | Multi-select (finish, shelve, lock, trash) and swipe actions, all undoable |
 | Data portability | CSV and JSON export of the main library; whole-database export, optionally passphrase-encrypted |
-| Backup | Scheduled, verified backups to the user's own Google Drive; optional AES-256 encryption; safe restore with automatic safety copy |
+| Backup | Password-protected (AES-256) backup file or spreadsheet saved wherever the user chooses; a "time to back up" reminder; safe restore with automatic restore points |
 | Care | Trash with 30-day recovery, in-app updates with release notes, offline version history, diagnostics log |
 | Look | Six named themes (Harbor, Midnight Ink, Rosewater, Plum Velvet, Sage, Lamplight), animated transitions |
 
@@ -47,7 +47,7 @@
 
 
 
-**Principles.** No accounts, no analytics, no ads, no paid services. The network is used for exactly three things: book lookup (Open Library), update checks (GitHub Releases), and — only if configured — Drive backup.
+**Principles.** No accounts, no analytics, no ads, no paid services. The network is used for exactly two things: book lookup (Open Library) and update checks (GitHub Releases).
 
 **Who it's for.** Readers who want a durable, private record; people leaving other tracking sites; anyone who wants their data in a plain file they can open elsewhere.
 
@@ -84,7 +84,7 @@ Open Library search/ISBN/works endpoints with an identifying User-Agent, retry w
 
 ## Known limits (0.7.0)
 - The library file is not separately encrypted by the app (a deliberate choice: Android already isolates and encrypts app storage, and an on-phone key adds little); saved covers are plain files in app storage. Exports and backups can be passphrase-encrypted.
-- Scheduled backups depend on Android's WorkManager timing; OEM battery managers can delay them. Pagemark notifies you when a backup needs your attention or keeps failing.
+- Backups are saved by the user (no automatic cloud backup); Pagemark only reminds. Reminders are delivered about on time, and Android may delay them in battery saver.
 - No iOS build yet (project is configured; needs a Mac to build and sign).
 - Release builds are shrunk with R8; the mapping file stays with the owner.
 

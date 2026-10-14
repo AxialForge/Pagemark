@@ -13,13 +13,6 @@ void main() {
   });
 
   group('client id and sizes', () {
-    test('Google client id shape', () {
-      expect(looksLikeGoogleClientId('1234567890-abcdefg123.apps.googleusercontent.com'), isTrue);
-      expect(looksLikeGoogleClientId(' 1234567890-abcdefg123.apps.googleusercontent.com '), isTrue);
-      expect(looksLikeGoogleClientId('my-client-id'), isFalse);
-      expect(looksLikeGoogleClientId('1234567890-abc.apps.example.com'), isFalse);
-      expect(looksLikeGoogleClientId(''), isFalse);
-    });
     test('humanBytes', () {
       expect(humanBytes(512), '512 B');
       expect(humanBytes(412 * 1024), '412 KB');

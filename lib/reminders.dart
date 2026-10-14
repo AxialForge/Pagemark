@@ -39,10 +39,11 @@ class Reminders {
   /// (Re)builds the schedule from the saved settings. Never throws.
   static Future<void> apply() async {
     try {
-      await Notifier.cancelReminders(days);
+      await Notifier.cancelScheduled(100, days);
       if (!enabled) return;
       final (h, m) = parseTime(timeText);
-      await Notifier.scheduleReminders(upcoming(DateTime.now(), h, m), messages);
+      await Notifier.scheduleAt(100, upcoming(DateTime.now(), h, m),
+          title: 'Pagemark', messages: messages, channelId: 'reading_reminders', channelName: 'Reading reminders', channelDescription: 'Your daily reading reminder');
     } catch (e) {
       Log.w('reminders', 'could not schedule: $e');
     }

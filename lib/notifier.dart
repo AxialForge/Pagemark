@@ -1,9 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
-import 'log.dart';
 
-/// Local notifications (no push service, nothing leaves the phone). Used for backup problems only.
+/// Local notifications (no push service, nothing leaves the phone): the daily reading reminder and the backup reminder.
 class Notifier {
   static final _plugin = FlutterLocalNotificationsPlugin();
   static bool _ready = false;
@@ -22,50 +21,28 @@ class Notifier {
     return await android?.requestNotificationsPermission() ?? false;
   }
 
-  static Future<void> backupProblem(String message) async {
-    try {
-      await init();
-      await _plugin.show(
-        id: 1,
-        title: 'Pagemark backup needs attention',
-        body: message,
-        notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'backup_problems', 'Backup problems',
-            channelDescription: 'Tells you when scheduled Google Drive backups keep failing',
-            importance: Importance.defaultImportance, priority: Priority.defaultPriority,
-            styleInformation: BigTextStyleInformation(''),
-          ),
-        ),
-      );
-    } catch (e) {
-      Log.w('notify', 'could not show notification: $e'); // never let a notification failure break a backup run
-    }
-  }
-
-  static Future<void> clearBackupProblem() async {
-    try {
-      await init();
-      await _plugin.cancel(id: 1);
-    } catch (_) {}
-  }
-
-  static const _reminderBase = 100;
-
-  /// One notification per moment in [when] (local times), ids 100... Text never mentions a book. Inexact delivery, so no
-  /// special "exact alarm" permission is needed.
-  static Future<void> scheduleReminders(List<DateTime> when, List<String> messages) async {
+  /// One notification per moment in [when] (local times), ids [baseId], [baseId]+1... Text never mentions a book. Inexact delivery,
+  /// so no special "exact alarm" permission is needed.
+  static Future<void> scheduleAt(
+    int baseId,
+    List<DateTime> when, {
+    required String title,
+    required List<String> messages,
+    required String channelId,
+    required String channelName,
+    required String channelDescription,
+  }) async {
     await init();
     for (var i = 0; i < when.length; i++) {
       await _plugin.zonedSchedule(
-        id: _reminderBase + i,
-        title: 'Pagemark',
+        id: baseId + i,
+        title: title,
         body: messages[i % messages.length],
         scheduledDate: tz.TZDateTime.from(when[i], tz.UTC), // an exact instant; the UTC label only carries it
-        notificationDetails: const NotificationDetails(
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
-            'reading_reminders', 'Reading reminders',
-            channelDescription: 'Your daily reading reminder',
+            channelId, channelName,
+            channelDescription: channelDescription,
             importance: Importance.defaultImportance, priority: Priority.defaultPriority,
           ),
         ),
@@ -74,10 +51,18 @@ class Notifier {
     }
   }
 
-  static Future<void> cancelReminders(int count) async {
+  static Future<void> cancelScheduled(int baseId, int count) async {
     await init();
     for (var i = 0; i < count; i++) {
-      await _plugin.cancel(id: _reminderBase + i);
+      await _plugin.cancel(id: baseId + i);
     }
+  }
+
+  /// Notifications from older versions (the Google Drive backup problem alert, id 1) are cleared once.
+  static Future<void> clearLegacy() async {
+    try {
+      await init();
+      await _plugin.cancel(id: 1);
+    } catch (_) {}
   }
 }

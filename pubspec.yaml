@@ -49,9 +49,6 @@ dependencies:
   intl: ^0.20.3
   mobile_scanner: ^7.4.2
   crypto: ^3.0.7
-  google_sign_in: ^7.2.0
-  googleapis: ^17.0.0
-  workmanager: ^0.10.10
   cryptography: ^2.9.0
   cryptography_flutter: ^2.3.4
   sqlite3: ^3.7.0

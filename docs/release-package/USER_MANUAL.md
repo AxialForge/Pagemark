@@ -10,7 +10,7 @@
 
 Pagemark is a reading log that lives only on your phone. You record what you read or listen to — print, e-book or audiobook, any genre — with your rating, dates, progress and private thoughts. Book details and cover art come from the free **Open Library**; everything you write stays on your device unless you choose to export or back it up.
 
-There is no account, no server and no tracking. The only times Pagemark uses the internet are: looking up a book, checking for an app update, and — if you set it up — backing up to your own Google Drive.
+There is no account, no server and no tracking. The only times Pagemark uses the internet are: looking up a book, checking for an app update, and nothing else.
 
 ## 2. The four tabs
 
@@ -284,21 +284,13 @@ Choose the file and Pagemark shows what it found: how many books and reads, how 
 
 What gets mapped: statuses (read, currently reading, to-read, did-not-finish), ratings (rounded to the nearest half star), the date you finished, your review text, print / e-book / audiobook, ISBNs (so covers appear), and your Goodreads shelves become Pagemark shelves. Imports never touch the locked library, and "already have" only compares against your main library.
 
-## 11. Google Drive backup
+## 11. Backups
 
-Settings → Backup and restore → **Back up to Google Drive**. One-time setup (a free Google Cloud project) is described in `docs/DRIVE_SETUP.md`. After that:
+Settings → Backup and restore. The top of the page shows when you last saved a copy.
 
-1. Paste your **Web client ID** and tap **Sign in**.
-2. Turn on **Encrypt backups with a password** (recommended — your locked books are inside every backup). **Remember the password:** without it a backup can't be opened by anyone.
-3. Turn on **Automatic backup**, choose **Daily** or **Weekly**, and **Wi-Fi only** if you like.
-
-Backups go to Pagemark's private app-data area on your Drive (they don't appear among your normal files). The **newest 5** are kept. An unchanged library isn't uploaded again, and each upload is verified before older copies are removed. **Back up now** uploads immediately. The Settings page shows the last backup time, or **FAILED** if something went wrong (details are on the backup page).
-
-<div class="shots one"><figure><img src="../screenshots/backup.jpg" alt="Google Drive backup"><figcaption>Google Drive backup</figcaption></figure></div>
-
-
-
-Android decides exactly when scheduled work runs, so a "daily" backup may be a few hours late, especially with battery saver on.
+- **Save a copy as a file:** one file with your whole library, locked books included. Choose a **password** (recommended) and remember it: without it nobody can open the file, not even Pagemark. Keep the file somewhere other than this phone (email, Google Drive, a computer).
+- **Save my list as a spreadsheet:** a list for Excel or Google Sheets. Locked books are not included.
+- **Remind me to back up:** a notification every week, two weeks or month (your choice), counted from the last time you saved a copy. Android 13 and newer asks once for permission to send notifications.
 
 ## 12. Restoring
 
@@ -338,7 +330,7 @@ Settings → Help and about → **Problem report** shows a small rolling event l
 ## 16. Your privacy, in plain terms
 
 - Your library is stored only in a database file inside the app, and Android's own cloud backup is switched off for it.
-- Pagemark sends **book searches** to Open Library, **update checks** to GitHub, and — only if you set it up — **backups** to your Google Drive.
+- Pagemark sends **book searches** to Open Library and **update checks** to GitHub. Backups are saved only where you choose.
 - Nothing is sent to the developer. There are no accounts, ads or analytics.
 - Cover images are downloaded from Open Library and cached on the phone; locked covers use a separate cache that is cleared whenever the vault closes.
 
@@ -350,7 +342,6 @@ Settings → Help and about → **Problem report** shows a small rolling event l
 | A scanned barcode does nothing | Only ISBN book barcodes (starting 978 or 979) are accepted. Try the torch, or type the ISBN. |
 | Covers are blank offline | Covers are downloaded on demand and cached; they appear once they've loaded online. |
 | Forgot the PIN and lost the recovery code | The locked library can't be opened — that is the point of the lock. Removing the lock also needs the PIN, and the PIN is not part of backups, so a restore won't help. Keep the recovery code safe. |
-| Drive sign-in fails | Check the Web client ID, and that the Android OAuth client matches your app's signing key (see DRIVE_SETUP). After changing the client ID, close and reopen Pagemark. |
 | Backup shows FAILED | Open the backup page for the message; also see Settings → Help and about → Problem report. |
 | Update says no releases found | The project's releases page must be public. Check your connection. |
 | "App not installed" during an update | Usually a different signing key (e.g. a debug build over a release build). Back up, uninstall, and install the release APK. |

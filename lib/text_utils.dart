@@ -10,9 +10,6 @@ String normalizeTags(String raw) {
   return out.join(', ');
 }
 
-/// Whether [client] looks like a Google OAuth client id ("123456-abc.apps.googleusercontent.com").
-bool looksLikeGoogleClientId(String client) => RegExp(r'^\d+-[a-z0-9]+\.apps\.googleusercontent\.com$').hasMatch(client.trim());
-
 /// "412 KB" / "1.3 MB" for a byte count.
 String humanBytes(int n) {
   if (n < 1024) return '$n B';

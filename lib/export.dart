@@ -89,8 +89,12 @@ class Exporter {
     return '﻿$text'; // BOM so Excel reads UTF-8 accents correctly
   }
 
+  /// Set by the app: called after something was saved or shared (restarts the "time to back up" countdown).
+  static Future<void> Function()? onSaved;
+
   static Future<void> _share(File f, String mime) async {
-    await SharePlus.instance.share(ShareParams(files: [XFile(f.path, mimeType: mime)]));
+    final r = await SharePlus.instance.share(ShareParams(files: [XFile(f.path, mimeType: mime)]));
+    if (r.status != ShareResultStatus.dismissed) await onSaved?.call();
   }
 
   static Future<void> shareCsv(AppDb db, {bool includePrivateFields = false}) async {

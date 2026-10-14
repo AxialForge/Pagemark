@@ -24,7 +24,7 @@ A private, fully local book tracker for Android (iOS planned): log what you read
 - **Organise**: shelves, series with numbers, tags, filters, sort, "Currently reading" strip.
 - **Locked library**: PIN (attempt limits + recovery code) or fingerprint; re-locks when you leave (or after 1/5/15 minutes); optional **whole-app lock**; blocks screenshots.
 - **Your data, your files**: CSV/JSON export; whole-database export with optional password encryption.
-- **Backups**: scheduled, verified, optionally encrypted backups to *your own* Google Drive; safe restore.
+- **Backups**: save a password-protected copy of your whole library as a file, or a spreadsheet; a reminder every week, two weeks or month; safe restore with restore points.
 - **Six themes**: Harbor, Midnight Ink, Rosewater, Plum Velvet, Sage and Lamplight, with smooth transitions.
 - **Updates**: in-app updater with release notes and an offline version history.
 
@@ -37,7 +37,6 @@ A private, fully local book tracker for Android (iOS planned): log what you read
 | [Release Notes](docs/release-package/RELEASE_NOTES.md) | What changed in each version ([PDF](docs/release-package/Pagemark-Release-Notes.pdf)) |
 | [Package Overview](docs/release-package/PACKAGE_OVERVIEW.md) | Simple / medium / advanced description ([PDF](docs/release-package/Pagemark-Package-Overview.pdf)) |
 | [Complete documentation (one PDF)](docs/release-package/Pagemark-Documentation.pdf) | The four documents above in one file, with a cover and contents |
-| [Drive backup setup](docs/DRIVE_SETUP.md) | One-time free Google Cloud setup |
 
 ## Install
 
@@ -56,7 +55,7 @@ Flutter 3.47+, Android SDK, JDK 17+. On Windows with JDK 25 see the loopback not
 
 ## Privacy
 
-No accounts, analytics or ads. The network is used for book lookup (Open Library), the update check (GitHub Releases) and — only if you set it up — Drive backup. Details in the User Manual, §16.
+No accounts, analytics or ads. The network is used for book lookup (Open Library) and the update check (GitHub Releases). Details in the User Manual, §16.
 
 ## Development
 

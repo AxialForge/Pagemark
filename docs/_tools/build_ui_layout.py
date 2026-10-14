@@ -70,10 +70,10 @@ sec("2. Navigation map", [
     "**Locked tab**: first time *Set a PIN* (twice) then a recovery code; afterwards the PIN gate, then **Locked library**",
     "   The Locked library is the Library screen plus **Trash** in its three-dot menu; *Forgot PIN?* resets with the recovery code",
     "**Stats tab**: goal ring (*Set goal* / *Change goal* dialog), books per month, ratings, totals, top genres, top authors",
-    "**Settings tab**: Updates, About, Theme, Reminders and widget, Import, Export, Google Drive backup, Database, Privacy",
+    "**Settings tab**: Updates, About, Theme, Reminders and widget, Import, Export, Backup and restore, Your library, Privacy",
     "   **Updates**: Version history",
     "   **Info icon**: About",
-    "   **Import**, **Google Drive backup**, **Restore points**, **Covers**, **Trash**, **Diagnostics**",
+    "   **Import**, **Backup and restore**, **Restore points**, **Covers**, **Trash**, **Diagnostics**",
     "**Outside the app**: home-screen **widget**, long-press **shortcuts** (Add book, Reading now), the system **Share** sheet (Share, then Pagemark), the daily **reminder** notification",
 ])
 
@@ -252,7 +252,7 @@ sec("8. Settings tab", [
 ], [
     ("30_settings_1", "settings-top", "Header, Updates, Theme"),
     ("31c_reminder_on", "settings-reminders", "Reminders and widget"),
-    ("30_settings_2", "settings-data", "Import, export, Drive, database"),
+    ("30_settings_2", "settings-data", "Import, export, backup"),
     ("30_settings_3", "settings-privacy", "Privacy"),
 ], [
     "**App header:** logo, name, version and tagline; **info icon** opens About.",
@@ -261,7 +261,7 @@ sec("8. Settings tab", [
     "**Reminders and widget:** *Daily reading reminder* (switch, then *Reminder time*), *Show book titles on the home-screen widget* (switch).",
     "**Import:** from Goodreads, StoryGraph or a Pagemark export.",
     "**Export (main library only):** Library log as CSV, as JSON.",
-    "**Google Drive backup:** opens the backup page.",
+    "**Backup and restore:** last-backup status, save a copy, restore, reminder.",
     "**Database (includes locked books):** Export database file, Restore from database file, **Restore points**, **Covers**, **Trash**.",
     "**Privacy:** Lock now · Lock after leaving the app (Immediately / 1 / 5 / 15 minutes) · Lock the whole app · Heat level and content notes · Hide the Locked tab · Set or change PIN · Remove lock · Diagnostics.",
 ])
@@ -270,7 +270,7 @@ sec("8.1 Pages opened from Settings", [], [
     ("32_updates", "updates", "Updates"),
     ("38_changelog", "changelog", "Version history"),
     ("33_about", "about", "About"),
-    ("34_drive_backup", "drive-backup", "Google Drive backup"),
+    ("84_backup", "backup", "Backup and restore"),
     ("35_restore_points", "restore-points", "Restore points"),
     ("36_import", "import", "Import"),
     ("39_covers", "covers", "Covers"),
@@ -280,7 +280,7 @@ sec("8.1 Pages opened from Settings", [], [
     "**Updates:** installed version, whether a newer one exists, *Check again*, *Check automatically* switch, *Version history*.",
     "**Version history:** every release's changes, offline (bold and code are rendered).",
     "**About:** version, copyright, the Open Library credit, *View licenses*.",
-    "**Google Drive backup:** Web client ID, **Sign in**, *Encrypt backups with a passphrase*, *Automatic backup*, Frequency (Daily/Weekly), *Wi-Fi only*, a battery-optimisation help card, last successful backup, **Back up now**, **Restore from Drive…**.",
+    "**Backup and restore:** a status card (last backup and how long ago), **Save a copy as a file**, **Save my list as a spreadsheet**, **Restore from a file**, **Go back to an earlier copy**, **Remind me to back up** and **How often**.",
     "**Restore points:** the copies Pagemark kept before each restore or import (newest three of each); tap one to restore it.",
     "**Import:** where to get the file for each source, **Choose a file**, then a preview (new books, duplicates, skipped rows) and a confirmation; **Undo import** afterwards.",
     "**Covers:** how many covers are saved on the phone, **Save covers on this phone**, **Remove unused cover files**.",
@@ -324,7 +324,7 @@ sec("10. Colour themes", [
 sec("11. What these screenshots do not show", [
     "These were taken on an Android emulator with sample data. Not captured (they involve other apps, a signed-in Google account or hardware):",
 ], [], [
-    "The Android share sheet for exports, the Google sign-in and Drive permission screens, and the real backup passphrase dialogs.",
+    "The Android share sheet for exports, the backup password dialogs.",
     "The restore confirmation (\"Replace your library?\"), the import preview and finished screens, and the update-available screen (see the older manual screenshots in `docs/screenshots/`).",
     "Device-lock (fingerprint) mode, the Heat level and content fields when switched on, and the Locked tab when hidden.",
     "The daily reminder notification itself, and anything in landscape, on tablets or on iOS (not built).",

@@ -22,7 +22,6 @@ Android's own cloud backup and device-transfer are switched off for this app, so
 | Book search / ISBN lookup / covers | Open Library (openlibrary.org, Internet Archive) | when you search, scan, or a cover is shown | the text you typed or the ISBN; your IP address is visible to them as for any website |
 | Update check | GitHub (api.github.com) | at most once a day while the app is open, if you leave "Check automatically" on | a request for the public release list; nothing about you or your library |
 | Update download | GitHub | when you tap Download & install | a request for the APK file |
-| Google Drive backup | your own Google Drive, in a private app-data area | only if you set it up, and then on schedule or when you tap Back up now | a copy of your library file — **including locked books** — encrypted with your passphrase if you set one |
 
 Pagemark does **not** send anything to its developer or to any analytics, advertising or crash-reporting service.
 
@@ -34,7 +33,7 @@ Internet (lookup, updates, backup) · Camera (barcode scanner, only when you ope
 
 ## Your control
 - Export everything any time (Settings → Import and export), or back it up yourself.
-- Delete everything by uninstalling the app. Backups you made to Google Drive are managed in your Google account (Drive → Settings → Manage apps → Pagemark → Delete hidden app data).
+- Delete everything by uninstalling the app. Backup files you saved yourself stay wherever you put them; delete them there.
 - Turn off automatic update checks and automatic backups in Settings.
 
 ## Children
@@ -49,8 +48,8 @@ Questions or concerns: open an issue at https://github.com/AxialForge/Pagemark/i
 ---
 
 # Google Play "Data safety" cheat-sheet (if you ever publish there)
-- **Data collected:** none by the developer. (Data is processed on-device; Open Library receives search text, GitHub receives update-check requests, and Google Drive stores backups the user chooses to make — all user-initiated, none developer-collected.)
+- **Data collected:** none by the developer. (Data is processed on-device; Open Library receives search text and GitHub receives update-check requests; backup files are saved only where the user chooses.)
 - **Data shared:** none.
 - **Encryption in transit:** yes (HTTPS). **Encryption at rest:** the library file is not separately encrypted by the app; it lives in Android's private app storage, which Android encrypts with the screen lock. Backups and database exports are encrypted when the user sets a passphrase.
-- **Deletion:** uninstall; Drive backups deletable by the user.
+- **Deletion:** uninstall; saved backup files are deleted by the user.
 - **Permissions justification:** see the Permissions section above.

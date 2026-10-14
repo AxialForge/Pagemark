@@ -3,13 +3,13 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'app_lock.dart';
-import 'backup_page.dart';
+import 'backup_reminder.dart';
+import 'restore_ui.dart';
 import 'book_extras.dart';
 import 'covers.dart';
 import 'branding.dart';
@@ -34,7 +34,6 @@ import 'log.dart';
 import 'lookup.dart';
 import 'reminders.dart';
 import 'widget_sync.dart';
-import 'backup.dart';
 import 'main.dart';
 import 'themes.dart';
 
@@ -70,6 +69,8 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     });
     autoCheckUpdates();
     Reminders.apply(); // tops up the next 3 weeks of reminders (no-op when they are off)
+    BackupReminder.apply(); // tops up the next backup reminders
+    _askNotificationsOnce();
     WidgetSync.start();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Incoming.start(); // a Share or shortcut that started the app
@@ -97,6 +98,16 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   }
 
   DateTime? _leftAt;
+
+  /// After a few books are in, ask once for permission to send reminders (Android 13+ shows its own question).
+  Future<void> _askNotificationsOnce() async {
+    if (prefs.getBool('notif_asked') ?? false) return;
+    final n = (await db.select(db.books).get()).length;
+    if (n < 3 || !mounted) return;
+    await prefs.setBool('notif_asked', true);
+    await Notifier.requestPermission();
+    await BackupReminder.apply();
+  }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -1402,53 +1413,94 @@ class _PrivacyPage extends StatelessWidget {
       ]);
 }
 
-class _BackupPage extends StatelessWidget {
+class _BackupPage extends StatefulWidget {
   const _BackupPage();
   @override
-  Widget build(BuildContext context) => _SettingsSub(SettingsTitles.backup, [
-        const _Hint('A backup is a safe copy of your whole library, including your locked books.'),
-        FutureBuilder<BackupSettings>(
-          future: BackupSettings.load(),
-          builder: (_, snap) {
-            final st = snap.data;
-            final sub = st == null
-                ? 'Automatic backups to your own Google Drive'
-                : st.lastError != null
-                    ? 'The last backup did not work - tap to see why'
-                    : st.lastOk != null
-                        ? 'Last backup ${_date.format(DateTime.parse(st.lastOk!))}${st.enabled ? ' - automatic ${st.frequency}' : ''}'
-                        : st.account == null ? 'Not set up yet' : 'No backup yet';
-            return ListTile(
-              leading: Icon(Icons.cloud_sync, color: st?.lastError != null ? Theme.of(context).colorScheme.error : null),
-              title: const Text('Back up to Google Drive'), subtitle: Text(sub),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BackupPage())),
-            );
-          },
+  State<_BackupPage> createState() => _BackupPageState();
+}
+
+class _BackupPageState extends State<_BackupPage> {
+  Future<void> _saveCopy() async {
+    final pass = await ask(context, 'Password to protect the file (leave empty for none)', '', false, true);
+    if (pass == null || !mounted) return;
+    if (pass.isEmpty) {
+      final go = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
+        title: const Text('Save without a password?'), content: const Text('This file contains your locked books and private notes. Anyone who gets it can read them.'),
+        actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Save anyway'))]));
+      if (go != true) return;
+    } else if (pass.length < 8) {
+      if (mounted) snack(context, 'Use at least 8 characters');
+      return;
+    }
+    await Exporter.shareDb(db, passphrase: pass);
+    if (mounted) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final last = BackupReminder.lastBackup;
+    final days = BackupReminder.daysSince(DateTime.now());
+    final overdue = days == null || days > BackupReminder.everyDays;
+    final cs = Theme.of(context).colorScheme;
+    return _SettingsSub(SettingsTitles.backup, [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+        child: Card(
+          color: overdue ? cs.errorContainer : cs.primaryContainer,
+          child: ListTile(
+            leading: Icon(overdue ? Icons.warning_amber_rounded : Icons.check_circle_outline, color: overdue ? cs.onErrorContainer : cs.onPrimaryContainer),
+            title: Text(last == null ? 'You have not saved a backup yet' : 'Last backup: ${_date.format(last)}', style: TextStyle(color: overdue ? cs.onErrorContainer : cs.onPrimaryContainer, fontWeight: FontWeight.w600)),
+            subtitle: Text(
+              last == null
+                  ? 'Your books are only on this phone. Save a copy somewhere safe, like your email, Google Drive or a computer.'
+                  : days == 0 ? 'Saved today.' : days == 1 ? 'Saved yesterday.' : 'Saved $days days ago.',
+              style: TextStyle(color: overdue ? cs.onErrorContainer : cs.onPrimaryContainer),
+            ),
+          ),
         ),
-        ListTile(leading: const Icon(Icons.save_alt), title: const Text('Save a copy as a file'), subtitle: const Text('Includes your locked books. You can protect the file with a password.'), onTap: () async {
-          final pass = await ask(context, 'Password to protect the file (leave empty for none)', '', false, true);
-          if (pass == null || !context.mounted) return;
-          if (pass.isEmpty) {
-            final go = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
-              title: const Text('Share without a password?'), content: const Text('This file contains your locked books and private notes. Anyone who receives it can read them.'),
-              actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Share anyway'))]));
-            if (go != true) return;
-          } else if (pass.length < 8) {
-            snack(context, 'Use at least 8 characters');
-            return;
-          }
-          await Exporter.shareDb(db, passphrase: pass);
-        }),
-        ListTile(leading: const Icon(Icons.restore), title: const Text('Restore from a file'), subtitle: const Text('Replace your library with a saved copy'), onTap: () async {
-          final r = await FilePicker.pickFile();
-          final path = r?.path;
-          if (path == null || !context.mounted) return;
-          await restoreFlow(context, File(path));
-        }),
-        ListTile(leading: const Icon(Icons.history), title: const Text('Go back to an earlier copy'), subtitle: const Text('Pagemark saves one before every restore and import'), trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RestorePointsPage()))),
-      ]);
+      ),
+      const _Hint('A backup is a safe copy of your whole library, including your locked books. If you lose or break your phone, it brings everything back.'),
+      ListTile(leading: const Icon(Icons.save_alt), title: const Text('Save a copy as a file'), subtitle: const Text('The best backup. Choose where to keep it, and protect it with a password.'), onTap: _saveCopy),
+      ListTile(leading: const Icon(Icons.table_chart_outlined), title: const Text('Save my list as a spreadsheet'), subtitle: const Text('Easy to read in Excel or Google Sheets. Your locked books are not included.'), onTap: () async {
+        await Exporter.shareCsv(db, includePrivateFields: adultFieldsOn());
+        if (mounted) setState(() {});
+      }),
+      const Divider(),
+      ListTile(leading: const Icon(Icons.restore), title: const Text('Restore from a file'), subtitle: const Text('Replace your library with a saved copy'), onTap: () async {
+        final r = await FilePicker.pickFile();
+        final path = r?.path;
+        if (path == null || !context.mounted) return;
+        await restoreFlow(context, File(path));
+      }),
+      ListTile(leading: const Icon(Icons.history), title: const Text('Go back to an earlier copy'), subtitle: const Text('Pagemark saves one before every restore and import'), trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RestorePointsPage()))),
+      const Divider(),
+      SwitchListTile(
+        secondary: const Icon(Icons.notifications_active_outlined),
+        title: const Text('Remind me to back up'),
+        subtitle: const Text('A notification now and then. It restarts each time you save a copy.'),
+        value: BackupReminder.enabled,
+        onChanged: (v) async {
+          final ok = await BackupReminder.setEnabled(v);
+          if (!ok && context.mounted) snack(context, 'Allow notifications for Pagemark in Android settings to get reminders.');
+          if (mounted) setState(() {});
+        },
+      ),
+      if (BackupReminder.enabled)
+        ListTile(
+          leading: const Icon(Icons.event_repeat),
+          title: const Text('How often'),
+          trailing: DropdownButton<int>(
+            value: BackupReminder.everyDays,
+            items: [for (final e in BackupReminder.everyChoices.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
+            onChanged: (v) async {
+              if (v != null) await BackupReminder.setEvery(v);
+              if (mounted) setState(() {});
+            },
+          ),
+        ),
+    ]);
+  }
 }
 
 class _ImportExportPage extends StatelessWidget {
@@ -1545,13 +1597,6 @@ class DiagnosticsPage extends StatelessWidget {
                 child: Row(children: [
                   OutlinedButton.icon(icon: const Icon(Icons.copy), label: const Text('Copy'), onPressed: text.isEmpty ? null : () { Clipboard.setData(ClipboardData(text: text)); snack(context, 'Log copied'); }),
                   const SizedBox(width: 8),
-                  if (kDebugMode) ...[
-                    OutlinedButton.icon(icon: const Icon(Icons.notifications_outlined), label: const Text('Test alert'), onPressed: () async {
-                      await Notifier.requestPermission();
-                      await Notifier.backupProblem('This is a test of the backup-problem notification.');
-                    }),
-                    const SizedBox(width: 8),
-                  ],
                   OutlinedButton.icon(icon: const Icon(Icons.delete_outline), label: const Text('Clear'), onPressed: () async { await Log.clear(); if (context.mounted) Navigator.pop(context); }),
                 ]),
               ),

@@ -8,7 +8,7 @@
 
 - An Android phone or tablet running **Android 7.0 (API 24) or newer**.
 - About **100 MB** free storage (the app is ~30 MB; the library and cached covers are small).
-- Optional, for specific features: a camera (barcode scanning), a screen lock or fingerprint (locked library), a Google account (Drive backup), an internet connection (book lookup, updates, backup).
+- Optional, for specific features: a camera (barcode scanning), a screen lock or fingerprint (locked library), an internet connection (book lookup, updates).
 
 ## 2. Download
 
@@ -43,11 +43,10 @@ Pagemark opens on an empty Library. Tap **Add book** to start. Allow the **camer
 
 | Permission | Why |
 |---|---|
-| Internet | Book lookup (Open Library), update check (GitHub), optional Drive backup |
+| Internet | Book lookup (Open Library), update check (GitHub) |
 | Camera | Scanning ISBN barcodes (asked only when you open the scanner) |
 | Biometric | Fingerprint/device unlock for the locked library |
 | Install packages | Lets Android offer to install a downloaded update |
-| Background work / network state | Running the scheduled Drive backup |
 
 Pagemark does not ask for storage or photo/media permissions. It asks for the camera (barcode scanner) and, on Android 13+, for notifications (backup problems). The version on GitHub also holds the permission to install updates; the Google Play version does not.
 
@@ -68,9 +67,9 @@ Uninstalling Pagemark **deletes your library** from the phone (Android's own bac
 
 The PIN is not stored in backups. After restoring, set a new PIN for the locked library.
 
-## 7. Setting up Google Drive backup (optional, free)
+## 7. Keeping your library safe
 
-Needs a one-time Google Cloud project because Google requires every app that uses Drive to be registered. Follow **`docs/DRIVE_SETUP.md`** in the repository (enable the Drive API, create an Android OAuth client with package `com.axialforge.pagemark` and your signing key's SHA-1, create a Web client, copy its Client ID into Pagemark, and publish the consent screen).
+Settings → Backup and restore → **Save a copy as a file** (protect it with a password) and keep the file somewhere other than this phone. Pagemark can remind you every week, two weeks or month.
 
 For the official release APK, the signing-key SHA-1 is:
 

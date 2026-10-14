@@ -1,4 +1,5 @@
 ﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:pagemark/backup_reminder.dart';
 import 'package:pagemark/db.dart';
 import 'package:pagemark/incoming.dart';
 import 'package:pagemark/reminders.dart';
@@ -94,5 +95,23 @@ void main() {
     expect(plain, '•  Reading reminder uses home_widget here');
     expect(plain.contains('*'), isFalse);
     expect(plain.contains('`'), isFalse);
+  });
+
+  group('backup reminder', () {
+    test('counts from the last backup, at 10:00, never in the past', () {
+      final r = BackupReminder.upcoming(DateTime(2026, 10, 13, 9), DateTime(2026, 10, 1, 15), 30, count: 3);
+      expect(r, [DateTime(2026, 10, 31, 10), DateTime(2026, 11, 30, 10), DateTime(2026, 12, 30, 10)]);
+    });
+    test('a very old backup still gives future dates only', () {
+      final now = DateTime(2026, 10, 13, 12);
+      final r = BackupReminder.upcoming(now, DateTime(2024, 1, 1), 7, count: 4);
+      expect(r.every((d) => d.isAfter(now)), isTrue);
+      expect(r[1].difference(r[0]).inDays, 7);
+      expect(r.first.hour, 10);
+    });
+    test('a backup saved today means the next reminder is a full period away', () {
+      final r = BackupReminder.upcoming(DateTime(2026, 10, 13, 11), DateTime(2026, 10, 13, 11), 14, count: 1);
+      expect(r.single, DateTime(2026, 10, 27, 10));
+    });
   });
 }

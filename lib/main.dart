@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app_lock.dart';
+import 'backup_reminder.dart';
 import 'covers.dart';
+import 'export.dart';
 import 'log.dart';
+import 'notifier.dart';
 import 'privacy.dart';
 import 'db.dart';
 import 'themes.dart';
@@ -27,6 +31,13 @@ Future<void> main() async {
   hideLockedTab.value = prefs.getBool('hide_locked') ?? false;
   hideLockedTab.addListener(() => prefs.setBool('hide_locked', hideLockedTab.value));
   initAppLockSettings();
+  for (final k in prefs.getKeys().where((k) => k.startsWith('bk_')).toList()) {
+    await prefs.remove(k); // leftovers of the Google Drive backup, removed in 0.8.2
+  }
+  if (prefs.getString('first_run') == null) await prefs.setString('first_run', DateTime.now().toIso8601String());
+  Exporter.onSaved = BackupReminder.recordBackup;
+  Notifier.clearLegacy();
+  const FlutterSecureStorage(aOptions: AndroidOptions(resetOnError: false)).delete(key: 'bk_pass').catchError((_) {});
   adultFields.value = prefs.getBool('adult_fields') ?? false;
   adultFields.addListener(() => prefs.setBool('adult_fields', adultFields.value));
   runApp(const PagemarkApp());
