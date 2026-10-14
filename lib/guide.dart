@@ -14,13 +14,14 @@ class GuideTopic {
 /// these, so renaming a page without updating the guide fails the build.
 class SettingsTitles {
   static const appearance = 'Appearance';
-  static const reminders = 'Reminders and widget';
+  static const notifications = 'Notifications';
+  static const widget = 'Widget and shortcuts';
   static const privacy = 'Privacy and lock';
   static const backup = 'Backup and restore';
   static const importExport = 'Import and export';
   static const library = 'Your library';
   static const help = 'Help and about';
-  static const all = [appearance, reminders, privacy, backup, importExport, library, help];
+  static const all = [appearance, notifications, widget, privacy, backup, importExport, library, help];
 }
 
 /// Splits the guide markdown into topics. Lines starting with "[github] " are only for the GitHub build (the Google Play build

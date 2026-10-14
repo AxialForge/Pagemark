@@ -21,6 +21,14 @@ class Notifier {
     return await android?.requestNotificationsPermission() ?? false;
   }
 
+  /// Whether Android currently lets Pagemark show notifications.
+  static Future<bool> areEnabled() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return false;
+    await init();
+    final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    return await android?.areNotificationsEnabled() ?? false;
+  }
+
   /// One notification per moment in [when] (local times), ids [baseId], [baseId]+1... Text never mentions a book. Inexact delivery,
   /// so no special "exact alarm" permission is needed.
   static Future<void> scheduleAt(

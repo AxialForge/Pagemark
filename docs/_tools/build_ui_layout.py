@@ -70,7 +70,7 @@ sec("2. Navigation map", [
     "**Locked tab**: first time *Set a PIN* (twice) then a recovery code; afterwards the PIN gate, then **Locked library**",
     "   The Locked library is the Library screen plus **Trash** in its three-dot menu; *Forgot PIN?* resets with the recovery code",
     "**Stats tab**: goal ring (*Set goal* / *Change goal* dialog), books per month, ratings, totals, top genres, top authors",
-    "**Settings tab**: Updates, About, Theme, Reminders and widget, Import, Export, Backup and restore, Your library, Privacy",
+    "**Settings tab**: Updates, About, Appearance, Notifications, Widget and shortcuts, Import, Export, Backup and restore, Your library, Privacy",
     "   **Updates**: Version history",
     "   **Info icon**: About",
     "   **Import**, **Backup and restore**, **Restore points**, **Covers**, **Trash**, **Diagnostics**",
@@ -251,14 +251,14 @@ sec("8. Settings tab", [
     "One long, scrolling list in sections. Section titles are bold.",
 ], [
     ("30_settings_1", "settings-top", "Header, Updates, Theme"),
-    ("31c_reminder_on", "settings-reminders", "Reminders and widget"),
+    ("31c_reminder_on", "settings-reminders", "Notifications"),
     ("30_settings_2", "settings-data", "Import, export, backup"),
     ("30_settings_3", "settings-privacy", "Privacy"),
 ], [
     "**App header:** logo, name, version and tagline; **info icon** opens About.",
     "**Updates:** check for a newer version (GitHub build only).",
     "**Theme:** six themes, each with a colour dot and *Light/Dark*; a tick marks the current one.",
-    "**Reminders and widget:** *Daily reading reminder* (switch, then *Reminder time*), *Show book titles on the home-screen widget* (switch).",
+    "**Notifications:** *Daily reading reminder* (switch, then *Reminder time*), *Show book titles on the home-screen widget* (switch).",
     "**Import:** from Goodreads, StoryGraph or a Pagemark export.",
     "**Export (main library only):** Library log as CSV, as JSON.",
     "**Backup and restore:** last-backup status, save a copy, restore, reminder.",
@@ -288,7 +288,7 @@ sec("8.1 Pages opened from Settings", [], [
     "**Diagnostics:** a small event log with **Copy**, **Test alert** and **Clear**. It holds no book titles.",
 ])
 
-sec("8.2 Reminders and the widget", [], [
+sec("8.2 Notifications, widget and shortcuts", [], [
     ("31b_reminder_permission", "reminder-permission", "Notification permission"),
     ("31d_time_picker", "reminder-time", "Choosing the time"),
     ("66_widget_tap", "widget-picker", "Widget picker (Add)"),

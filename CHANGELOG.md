@@ -11,6 +11,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Simpler backups.
 
 ### Added
+- **Notifications page** in Settings: all reminders in one place (daily reading reminder, backup reminder), with a clear warning and a **Turn on** button when Android has notifications switched off for Pagemark. The widget and icon shortcuts now have their own page, **Widget and shortcuts**.
 - **Backup reminder** (Settings > Backup and restore > Remind me to back up): a notification every week, two weeks or month, counted from the last time you saved a copy. The Backup page now shows when you last saved a copy, in plain words, with a warning if it is overdue.
 
 ### Removed

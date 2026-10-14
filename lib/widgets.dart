@@ -59,6 +59,11 @@ Future<void> openSecuritySettings() async {
 }
 
 /// Open Android's battery-optimisation list so Pagemark can be allowed to run scheduled backups.
+Future<void> openNotificationSettings() async {
+  if (defaultTargetPlatform != TargetPlatform.android) return;
+  await const AndroidIntent(action: 'android.settings.APP_NOTIFICATION_SETTINGS', arguments: <String, dynamic>{'android.provider.extra.APP_PACKAGE': 'com.axialforge.pagemark'}).launch();
+}
+
 Future<void> openBatterySettings() async {
   if (defaultTargetPlatform != TargetPlatform.android) return;
   await const AndroidIntent(action: 'android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS').launch();

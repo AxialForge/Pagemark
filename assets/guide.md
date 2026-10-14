@@ -55,10 +55,13 @@ If you forget your PIN, tap **Forgot PIN?** on the lock screen and type the reco
 
 To hide the Locked tab completely, go to Settings → Privacy and lock and turn on **Hide the Locked tab**. To open it afterwards, press and hold the word "Library" at the top of the Library screen.
 
-## Reminders and the home-screen widget
-To get a daily nudge to read, go to Settings → Reminders and widget and turn on **Daily reading reminder**. Choose the time. Android may ask if Pagemark can send notifications: say yes. The reminder never names a book.
+## Notifications and reminders
+Go to Settings → Notifications. Android may ask if Pagemark can send notifications: say yes. If you said no before, the page shows a red box with a **Turn on** button.
+- **Daily reading reminder** nudges you to read at the time you choose. It never names a book.
+- **Remind me to back up** reminds you every week, 2 weeks or month to save a copy of your library. Choose **How often**.
 
-To add the widget, press and hold an empty spot on your home screen, tap **Widgets**, find **Pagemark** and tap **Add**. It shows the books you are reading and your yearly goal. It never shows your locked books.
+## Home-screen widget
+Go to Settings → Widget and shortcuts to choose whether the widget shows book titles. To add it, press and hold an empty spot on your home screen, tap **Widgets**, find **Pagemark** and tap **Add**. It shows the books you are reading and your yearly goal. It never shows your locked books.
 
 ## Quick ways in
 Press and hold the Pagemark icon on your home screen for two shortcuts: **Add book** and **Reading now** (only the books you are reading).

@@ -231,7 +231,7 @@ On the lock screen tap **Forgot PIN?**, enter the recovery code and a new PIN. Y
 
 ## 8b. Reminders, widget, sharing and shortcuts
 
-**Reading reminder.** Settings → *Reminders and widget* → **Daily reading reminder**. Android asks once for permission to send notifications. Pick the time; Pagemark schedules the next three weeks and tops them up every time you open it. The text never names a book. Android may deliver it a few minutes late when battery saver is on.
+**Reading reminder.** Settings → *Notifications* → **Daily reading reminder**. Android asks once for permission to send notifications. Pick the time; Pagemark schedules the next three weeks and tops them up every time you open it. The text never names a book. Android may deliver it a few minutes late when battery saver is on.
 
 **Home-screen widget.** Long-press the home screen, choose *Widgets*, then *Pagemark*. It shows up to three books you are reading and your yearly goal, and opens Pagemark when tapped. It is fed from the main library only, so the locked library never appears. Turn off **Show book titles on the home-screen widget** to show counts instead; with the whole-app lock on it always shows counts, because a widget can be seen without unlocking.
 

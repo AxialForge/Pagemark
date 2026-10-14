@@ -1281,7 +1281,8 @@ class SettingsPage extends StatelessWidget {
           _row(context, Icons.menu_book_outlined, 'How to use Pagemark', 'Short, simple steps for everything the app does', () => const GuidePage()),
           const Divider(),
           _row(context, Icons.palette_outlined, SettingsTitles.appearance, 'Choose your colours', () => const _AppearancePage()),
-          _row(context, Icons.notifications_active_outlined, SettingsTitles.reminders, 'A daily nudge to read, and a widget for your home screen', () => const _RemindersPage()),
+          _row(context, Icons.notifications_active_outlined, SettingsTitles.notifications, 'Reading and backup reminders', () => const _NotificationsPage()),
+          _row(context, Icons.widgets_outlined, SettingsTitles.widget, 'Home-screen widget and icon shortcuts', () => const _WidgetPage()),
           _row(context, Icons.lock_outline, SettingsTitles.privacy, 'PIN, fingerprint and your private library', () => _PrivacyPage(onLockNow: onLockNow)),
           _row(context, Icons.cloud_upload_outlined, SettingsTitles.backup, 'Keep your library safe, or bring it back', () => const _BackupPage()),
           _row(context, Icons.swap_horiz, SettingsTitles.importExport, 'Bring books in from another app, or take your list out', () => const _ImportExportPage()),
@@ -1329,12 +1330,107 @@ class _AppearancePage extends StatelessWidget {
       ]);
 }
 
-class _RemindersPage extends StatelessWidget {
-  const _RemindersPage();
+class _NotificationsPage extends StatefulWidget {
+  const _NotificationsPage();
   @override
-  Widget build(BuildContext context) => _SettingsSub(SettingsTitles.reminders, [
-        const _ReminderTiles(),
-        const Divider(),
+  State<_NotificationsPage> createState() => _NotificationsPageState();
+}
+
+class _NotificationsPageState extends State<_NotificationsPage> with WidgetsBindingObserver {
+  bool? allowed;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _check();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _check(); // back from Android's settings
+  }
+
+  Future<void> _check() async {
+    final v = await Notifier.areEnabled();
+    if (mounted) setState(() => allowed = v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return _SettingsSub(SettingsTitles.notifications, [
+      if (allowed == false)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Card(
+            color: cs.errorContainer,
+            child: ListTile(
+              leading: Icon(Icons.notifications_off_outlined, color: cs.onErrorContainer),
+              title: Text('Notifications are off for Pagemark', style: TextStyle(color: cs.onErrorContainer, fontWeight: FontWeight.w600)),
+              subtitle: Text('Your reminders below cannot appear until you allow them.', style: TextStyle(color: cs.onErrorContainer)),
+              trailing: TextButton(onPressed: openNotificationSettings, child: const Text('Turn on')),
+            ),
+          ),
+        )
+      else if (allowed == true)
+        const _Hint('Notifications are on. Pagemark only sends the reminders you choose below, never anything about your books.'),
+      const ListTile(title: Text('Reading', style: TextStyle(fontWeight: FontWeight.bold)), dense: true),
+      const _ReminderTiles(),
+      const Divider(),
+      const ListTile(title: Text('Backup', style: TextStyle(fontWeight: FontWeight.bold)), dense: true),
+      const _BackupReminderTiles(),
+    ]);
+  }
+}
+
+/// The "Remind me to back up" switch and how often, shared by the Notifications page and the Backup page.
+class _BackupReminderTiles extends StatefulWidget {
+  const _BackupReminderTiles();
+  @override
+  State<_BackupReminderTiles> createState() => _BackupReminderTilesState();
+}
+
+class _BackupReminderTilesState extends State<_BackupReminderTiles> {
+  @override
+  Widget build(BuildContext context) => Column(children: [
+        SwitchListTile(
+          secondary: const Icon(Icons.save_outlined),
+          title: const Text('Remind me to back up'),
+          subtitle: const Text('A notification now and then. It restarts each time you save a copy.'),
+          value: BackupReminder.enabled,
+          onChanged: (v) async {
+            final ok = await BackupReminder.setEnabled(v);
+            if (!ok && context.mounted) snack(context, 'Allow notifications for Pagemark in Android settings to get reminders.');
+            if (mounted) setState(() {});
+          },
+        ),
+        if (BackupReminder.enabled)
+          ListTile(
+            leading: const Icon(Icons.event_repeat),
+            title: const Text('How often'),
+            trailing: DropdownButton<int>(
+              value: BackupReminder.everyDays,
+              items: [for (final e in BackupReminder.everyChoices.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
+              onChanged: (v) async {
+                if (v != null) await BackupReminder.setEvery(v);
+                if (mounted) setState(() {});
+              },
+            ),
+          ),
+      ]);
+}
+
+class _WidgetPage extends StatelessWidget {
+  const _WidgetPage();
+  @override
+  Widget build(BuildContext context) => _SettingsSub(SettingsTitles.widget, [
         ValueListenableBuilder<bool>(
           valueListenable: WidgetSync.showTitles,
           builder: (_, on, _) => SwitchListTile(
@@ -1347,6 +1443,8 @@ class _RemindersPage extends StatelessWidget {
         ),
         const _Hint('To add the widget: press and hold an empty spot on your home screen, tap Widgets, then find Pagemark. '
             'It shows what you are reading and your yearly goal, and never shows your locked books. If you ask for your PIN every time Pagemark opens, the widget shows only numbers.'),
+        const Divider(),
+        const ListTile(leading: Icon(Icons.touch_app_outlined), title: Text('Shortcuts'), subtitle: Text('Press and hold the Pagemark icon on your home screen for two shortcuts: Add book, and Reading now (only the books you are reading).')),
       ]);
 }
 
@@ -1475,30 +1573,7 @@ class _BackupPageState extends State<_BackupPage> {
       ListTile(leading: const Icon(Icons.history), title: const Text('Go back to an earlier copy'), subtitle: const Text('Pagemark saves one before every restore and import'), trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RestorePointsPage()))),
       const Divider(),
-      SwitchListTile(
-        secondary: const Icon(Icons.notifications_active_outlined),
-        title: const Text('Remind me to back up'),
-        subtitle: const Text('A notification now and then. It restarts each time you save a copy.'),
-        value: BackupReminder.enabled,
-        onChanged: (v) async {
-          final ok = await BackupReminder.setEnabled(v);
-          if (!ok && context.mounted) snack(context, 'Allow notifications for Pagemark in Android settings to get reminders.');
-          if (mounted) setState(() {});
-        },
-      ),
-      if (BackupReminder.enabled)
-        ListTile(
-          leading: const Icon(Icons.event_repeat),
-          title: const Text('How often'),
-          trailing: DropdownButton<int>(
-            value: BackupReminder.everyDays,
-            items: [for (final e in BackupReminder.everyChoices.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
-            onChanged: (v) async {
-              if (v != null) await BackupReminder.setEvery(v);
-              if (mounted) setState(() {});
-            },
-          ),
-        ),
+      const _BackupReminderTiles(),
     ]);
   }
 }
