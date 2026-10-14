@@ -5,6 +5,7 @@
 The raw PNGs come from an emulator run (see docs/_tools/screenshots/README.md); the default folder is the one used for the 0.8.0 pass.
 Each shot is resized to 480 px wide and saved to docs/screenshots/ui/<name>.jpg.
 """
+import re
 import os
 import pathlib
 import subprocess
@@ -414,6 +415,12 @@ figcaption{font-size:8pt;color:#555;margin-top:2px}
     pdf = DOCS / "Pagemark-UI-Layout.pdf"
     subprocess.run([edge, "--headless", "--disable-gpu", "--no-pdf-header-footer", f"--print-to-pdf={pdf}", page.as_uri()], check=True)
     page.unlink()
+    # house rule: every generated PDF also goes to <project>/Documentation
+    import shutil
+    out = DOCS.parent / "Documentation"
+    out.mkdir(exist_ok=True)
+    ver = re.search(r"^version:\s*([0-9.]+)", (DOCS.parent / "pubspec.yaml").read_text(encoding="utf-8"), re.M).group(1)
+    shutil.copyfile(pdf, out / f"Pagemark-UI-Layout Rev {ver}.pdf")
     print(len(SHOTS), "images;", pdf.stat().st_size // 1024, "KB pdf")
 
 

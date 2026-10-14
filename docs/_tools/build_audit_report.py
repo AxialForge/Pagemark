@@ -6,7 +6,7 @@ this turns them into the two documents the owner reads and forwards.
 
 Usage:
   python build_audit_report.py <project-root> --title "Pagemark 1.0.0 gate audit" --version 0.13.0 --commit b1bbf51 \
-         [--findings-from "1.0.0 gate audit"] [--out-name Pagemark-1.0.0-Gate-Audit-Report] [--out-dir docs/release-audit]
+         [--findings-from "1.0.0 gate audit"] [--out-name Pagemark-1.0.0-Gate-Audit-Report] [--out-dir Documentation] [--rev 1.0]
 
 Needs: python-docx (docx), markdown, and Microsoft Edge or Chrome for the PDF. Never landscape (house rule).
 Reads, in order: RELEASE_READINESS.md, FINDINGS.md (from the heading given by --findings-from, else the whole file),
@@ -174,10 +174,21 @@ def build_pdf(out, title, meta, sections):
                        check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=120)
 
 
+def next_rev(out_dir, name):
+    """First build is Rev 1.0; each rebuild of the same report is the next minor revision (1.1, 1.2...)."""
+    best = None
+    for p in out_dir.glob(f"{name} Rev *.*"):
+        m = re.search(r" Rev (\d+)\.(\d+)\.", p.name)
+        if m:
+            v = (int(m.group(1)), int(m.group(2)))
+            best = v if best is None or v > best else best
+    return "1.0" if best is None else f"{best[0]}.{best[1] + 1}"
+
+
 def main():
     a = argparse.ArgumentParser()
     a.add_argument("root"); a.add_argument("--title", required=True); a.add_argument("--version", default=""); a.add_argument("--commit", default="")
-    a.add_argument("--findings-from", default=""); a.add_argument("--out-name", default=""); a.add_argument("--out-dir", default="docs/release-audit")
+    a.add_argument("--findings-from", default=""); a.add_argument("--out-name", default=""); a.add_argument("--out-dir", default="Documentation"); a.add_argument("--rev", default="")
     a = a.parse_args()
     root = pathlib.Path(a.root).resolve(); src = root / "docs" / "release-audit"
     sections = [("Readiness", read(src / "RELEASE_READINESS.md")),
@@ -190,9 +201,11 @@ def main():
     meta = [x for x in (f"Version {a.version}" if a.version else "", f"Commit {a.commit}" if a.commit else "", datetime.date.today().isoformat()) if x]
     name = a.out_name or re.sub(r"[^A-Za-z0-9]+", "-", a.title).strip("-")
     out_dir = root / a.out_dir; out_dir.mkdir(parents=True, exist_ok=True)
-    build_docx(out_dir / f"{name}.docx", a.title, meta, sections)
-    build_pdf(out_dir / f"{name}.pdf", a.title, meta, sections)
-    print(out_dir / f"{name}.docx"); print(out_dir / f"{name}.pdf")
+    rev = a.rev or next_rev(out_dir, name)
+    stem = f"{name} Rev {rev}"
+    build_docx(out_dir / f"{stem}.docx", a.title, meta + [f"Revision {rev}"], sections)
+    build_pdf(out_dir / f"{stem}.pdf", a.title, meta + [f"Revision {rev}"], sections)
+    print(out_dir / f"{stem}.docx"); print(out_dir / f"{stem}.pdf")
 
 
 main()
