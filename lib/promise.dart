@@ -32,7 +32,7 @@ class PromisePage extends StatelessWidget {
             const SizedBox(height: 8),
             Text('Your reading is your business.', style: t.headlineSmall?.copyWith(color: cs.onPrimaryContainer)),
             const SizedBox(height: 6),
-            Text('Pagemark is a private reading log. This is what we promise, and what the app really does.', style: TextStyle(color: cs.onPrimaryContainer)),
+            Text('Pagemark is a private reading log. This is what we promise, and what the app really does. The small print at the bottom covers the two things worth knowing.', style: TextStyle(color: cs.onPrimaryContainer)),
           ]),
         ),
         const SizedBox(height: 12),
@@ -43,20 +43,32 @@ class PromisePage extends StatelessWidget {
             title: Text(p.$2, style: t.titleMedium),
             subtitle: Text(p.$3),
           ),
-        const Divider(height: 32),
-        Text('The only times Pagemark uses the internet', style: t.titleMedium),
-        const SizedBox(height: 8),
-        const _Bullet('When you search for a book, what you type (a title, an author or a barcode number) is sent to Open Library, a free library catalogue. Cover pictures come from there too.'),
-        const _Bullet('The GitHub version checks for a new version of itself now and then (you can turn this off in Settings, Updates).'),
-        const _Bullet('If you choose a backup folder inside a cloud app such as Google Drive, that app uploads the file under its own rules. Pagemark never signs in to anything.'),
-        const SizedBox(height: 16),
-        Text('A note about the barcode reader', style: t.titleMedium),
-        const SizedBox(height: 8),
-        const Text(
-          'To read a barcode, Pagemark uses a small on-device vision tool from Google (ML Kit). It finds the barcode in the camera picture on your phone; '
-          'the picture is never saved or sent by Pagemark. It is not an AI assistant and learns nothing about you. Because it comes from Google, it may report '
-          'anonymous technical information (such as how fast it ran) to Google, which Pagemark cannot control. If that matters to you, type the number under '
-          'the barcode instead and never open the scanner.',
+        const Divider(height: 24),
+        Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            title: Text('The small print', style: t.titleMedium),
+            subtitle: const Text('Where the app uses the internet, and one thing about the barcode reader'),
+            childrenPadding: const EdgeInsets.only(bottom: 8),
+            expandedCrossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text('The only times Pagemark uses the internet', style: TextStyle(fontWeight: FontWeight.w600)),
+              SizedBox(height: 8),
+              _Bullet('When you search for a book, what you type (a title, an author or a barcode number) is sent to Open Library, a free library catalogue. Cover pictures come from there too.'),
+              _Bullet('The GitHub version checks for a new version of itself now and then (you can turn this off in Settings, Updates).'),
+              _Bullet('If you choose a backup folder inside a cloud app such as Google Drive, that app uploads the file under its own rules. Pagemark never signs in to anything.'),
+              SizedBox(height: 12),
+              Text('About the barcode reader', style: TextStyle(fontWeight: FontWeight.w600)),
+              SizedBox(height: 8),
+              Text(
+                'To read a barcode, Pagemark uses a small on-device vision tool from Google (ML Kit). It finds the barcode in the camera picture on your phone; '
+                'the picture is never saved or sent by Pagemark. It is not an AI assistant and learns nothing about you. Because it comes from Google, it may report '
+                'anonymous technical information (such as how fast it ran) to Google, which Pagemark cannot control. If that matters to you, type the number under '
+                'the barcode instead and never open the scanner.',
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
         Text('Questions? Look at the code, or open a question at github.com/AxialForge/Pagemark.', style: t.bodySmall),
