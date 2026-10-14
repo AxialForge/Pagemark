@@ -10,6 +10,9 @@ class BackupReminder {
   static const _baseId = 200, count = 6;
   static const everyChoices = <int, String>{7: 'Every week', 14: 'Every 2 weeks', 30: 'Every month'};
 
+  /// Bumped whenever a backup is recorded, so open pages can refresh their "last backup" status.
+  static final changes = ValueNotifier<int>(0);
+
   static bool get enabled => prefs.getBool('bkr_on') ?? true;
   static int get everyDays {
     final v = prefs.getInt('bkr_every') ?? 30;
@@ -37,6 +40,7 @@ class BackupReminder {
   /// Called whenever a copy was saved or shared. Restarts the countdown.
   static Future<void> recordBackup() async {
     await prefs.setString('last_backup', DateTime.now().toIso8601String());
+    changes.value++;
     await apply();
   }
 

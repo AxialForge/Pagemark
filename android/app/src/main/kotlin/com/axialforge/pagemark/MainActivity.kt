@@ -10,6 +10,7 @@ import io.flutter.plugin.common.MethodChannel
 // FragmentActivity is required by local_auth (biometric prompt).
 class MainActivity : FlutterFragmentActivity() {
     private var intentChannel: MethodChannel? = null
+    private var folder: FolderChannel? = null
 
     /** What the Share sheet or a launcher shortcut asked for, until Dart picks it up (once). */
     private var pending: Map<String, String>? = null
@@ -18,6 +19,13 @@ class MainActivity : FlutterFragmentActivity() {
         super.onCreate(savedInstanceState)
         // Only a fresh start counts: after process death Android replays the old intent, which must not re-open a share.
         if (savedInstanceState == null) pending = describe(intent)
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (folder?.onActivityResult(requestCode, resultCode, data) == true) return
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -44,6 +52,7 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        folder = FolderChannel(this, flutterEngine.dartExecutor.binaryMessenger)
         intentChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "pagemark/intent").also { ch ->
             ch.setMethodCallHandler { call, result ->
                 if (call.method == "take") {

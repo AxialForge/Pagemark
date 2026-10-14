@@ -294,6 +294,7 @@ Settings → Backup and restore. The top of the page shows when you last saved a
 
 - **Save a copy as a file:** one file with your whole library, locked books included. Choose a **password** (recommended) and remember it: without it nobody can open the file, not even Pagemark. Keep the file somewhere other than this phone (email, Google Drive, a computer).
 - **Save my list as a spreadsheet:** a list for Excel or Google Sheets. Locked books are not included.
+- **Save backups to a folder automatically:** tap **Choose a folder** once and pick a folder with Android's own file picker (on the phone, a USB drive, or inside Google Drive, OneDrive or Dropbox). Pagemark then saves a fresh backup there when you open the app and one is due (every day, week, 2 weeks or month, your choice) and keeps the newest 5. You can protect them with a password. **Back up now** saves one straight away.
 - **Remind me to back up:** a notification every week, two weeks or month (your choice), counted from the last time you saved a copy. Android 13 and newer asks once for permission to send notifications.
 
 ## 12. Restoring

@@ -2,6 +2,9 @@
 <resources>
     <string name="app_name_short">Pagemark</string>
     <string name="widget_description">What you are reading and your yearly goal</string>
+    <string name="widget_preview_goal">8 of 12 books in 2026</string>
+    <string name="widget_preview_reading">The Name of the Wind
+Project Hail Mary</string>
     <string name="widget_empty_goal">Open Pagemark to start</string>
     <string name="widget_empty_reading">Nothing in progress</string>
     <string name="shortcut_add_short">Add book</string>

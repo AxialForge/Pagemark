@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:pagemark/backup_reminder.dart';
 import 'package:pagemark/db.dart';
 import 'package:pagemark/incoming.dart';

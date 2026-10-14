@@ -29,6 +29,7 @@ import 'export.dart';
 import 'lock.dart';
 import 'isbn.dart';
 import 'detailed_ratings.dart';
+import 'folder_backup.dart';
 import 'guide.dart';
 import 'incoming.dart';
 import 'log.dart';
@@ -71,6 +72,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     autoCheckUpdates();
     Reminders.apply(); // tops up the next 3 weeks of reminders (no-op when they are off)
     BackupReminder.apply(); // tops up the next backup reminders
+    FolderBackup.runIfDue(); // the automatic folder backup, if one is due
     _askNotificationsOnce();
     WidgetSync.start();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -120,6 +122,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
       _leftAt = null;
       if (unlocked && shouldRelock(away, lockDelay.value)) _lock(); // the delay has run out while you were away
       if (!unlocked && !appLocked.value) Secure.set(false);
+      FolderBackup.runIfDue(); // back after a while: the automatic folder backup may be due
     }
   }
 
@@ -1530,6 +1533,22 @@ class _BackupPage extends StatefulWidget {
 }
 
 class _BackupPageState extends State<_BackupPage> {
+  @override
+  void initState() {
+    super.initState();
+    BackupReminder.changes.addListener(_refresh);
+  }
+
+  @override
+  void dispose() {
+    BackupReminder.changes.removeListener(_refresh);
+    super.dispose();
+  }
+
+  void _refresh() {
+    if (mounted) setState(() {});
+  }
+
   Future<void> _saveCopy() async {
     final pass = await ask(context, 'Password to protect the file (leave empty for none)', '', false, true);
     if (pass == null || !mounted) return;
@@ -1576,6 +1595,8 @@ class _BackupPageState extends State<_BackupPage> {
         if (mounted) setState(() {});
       }),
       const Divider(),
+      const _FolderBackupTiles(),
+      const Divider(),
       ListTile(leading: const Icon(Icons.restore), title: const Text('Restore from a file'), subtitle: const Text('Replace your library with a saved copy'), onTap: () async {
         final r = await FilePicker.pickFile();
         final path = r?.path;
@@ -1586,6 +1607,127 @@ class _BackupPageState extends State<_BackupPage> {
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RestorePointsPage()))),
       const Divider(),
       const _BackupReminderTiles(),
+    ]);
+  }
+}
+
+/// Automatic backups into a folder you pick once (see folder_backup.dart).
+class _FolderBackupTiles extends StatefulWidget {
+  const _FolderBackupTiles();
+  @override
+  State<_FolderBackupTiles> createState() => _FolderBackupTilesState();
+}
+
+class _FolderBackupTilesState extends State<_FolderBackupTiles> {
+  bool busy = false;
+
+  Future<String?> _newPassword() async {
+    final a = await ask(context, 'Choose a password for your backups', '', false, true);
+    if (a == null || a.isEmpty || !mounted) return null;
+    if (a.length < 8) {
+      snack(context, 'Use at least 8 characters');
+      return null;
+    }
+    final b = await ask(context, 'Type the password again', '', false, true);
+    if (b == null || !mounted) return null;
+    if (a != b) {
+      snack(context, 'The passwords did not match');
+      return null;
+    }
+    return a;
+  }
+
+  Future<void> _choose() async {
+    final picked = await FolderBackup.choose();
+    if (picked == null || !mounted) return;
+    if (!FolderBackup.passwordWanted && mounted) {
+      final yes = await showDialog<bool>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text('Protect your backups with a password?'),
+          content: const Text('Your backups include your locked books. A password keeps them private if someone finds the file. Write it down: without it, nobody can open a backup, not even Pagemark.'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('No password')),
+            FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Set a password')),
+          ],
+        ),
+      );
+      if (yes == true) {
+        final p = await _newPassword();
+        if (p != null) await FolderBackup.setPassword(p);
+      }
+    }
+    await FolderBackup.commit(picked); // only now, so no backup can start before the password question is answered
+    await _backupNow();
+  }
+
+  Future<void> _backupNow() async {
+    setState(() => busy = true);
+    final ok = await FolderBackup.runIfDue(force: true);
+    if (!mounted) return;
+    setState(() => busy = false);
+    snack(context, ok ? 'Backup saved to ${FolderBackup.folderName}' : (FolderBackup.lastError ?? 'The backup did not work.'));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    if (!FolderBackup.isSet) {
+      return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        ListTile(
+          leading: const Icon(Icons.folder_special_outlined),
+          title: const Text('Save backups to a folder automatically'),
+          subtitle: const Text('Pick a folder once. Pagemark then saves a fresh backup there by itself. Tip: choose a folder in Google Drive, OneDrive or Dropbox and Android copies it to the cloud for you.'),
+        ),
+        Padding(padding: const EdgeInsets.fromLTRB(72, 0, 16, 8), child: Align(alignment: Alignment.centerLeft, child: FilledButton.icon(onPressed: _choose, icon: const Icon(Icons.create_new_folder_outlined), label: const Text('Choose a folder')))),
+      ]);
+    }
+    final last = FolderBackup.lastOk;
+    final err = FolderBackup.lastError;
+    return Column(children: [
+      ListTile(
+        leading: Icon(err == null ? Icons.folder_special : Icons.error_outline, color: err == null ? null : cs.error),
+        title: Text('Saving to: ${FolderBackup.folderName}'),
+        subtitle: Text(err ?? (last == null ? 'No automatic backup yet.' : 'Last automatic backup: ${_date.format(last)}')),
+        isThreeLine: err != null,
+      ),
+      if (busy) const LinearProgressIndicator(),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(72, 0, 16, 4),
+        child: Wrap(spacing: 8, children: [
+          FilledButton.tonal(onPressed: busy ? null : _backupNow, child: const Text('Back up now')),
+          OutlinedButton(onPressed: busy ? null : _choose, child: const Text('Change folder')),
+          TextButton(onPressed: busy ? null : () async { await FolderBackup.turnOff(); if (mounted) setState(() {}); }, child: const Text('Turn off')),
+        ]),
+      ),
+      ListTile(
+        leading: const Icon(Icons.event_repeat),
+        title: const Text('How often'),
+        trailing: DropdownButton<int>(
+          value: FolderBackup.everyDays,
+          items: [for (final e in FolderBackup.everyChoices.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
+          onChanged: (v) async {
+            if (v != null) await prefs.setInt('fb_every', v);
+            if (mounted) setState(() {});
+          },
+        ),
+      ),
+      SwitchListTile(
+        secondary: const Icon(Icons.password),
+        title: const Text('Protect backups with a password'),
+        subtitle: const Text('Recommended: your locked books are in every backup.'),
+        value: FolderBackup.passwordWanted,
+        onChanged: (v) async {
+          if (v) {
+            final p = await _newPassword();
+            if (p != null) await FolderBackup.setPassword(p);
+          } else {
+            await FolderBackup.setPassword(null);
+          }
+          if (mounted) setState(() {});
+        },
+      ),
+      const _Hint('Pagemark keeps the newest 5 backups in that folder and checks when you open the app. The folder may need to be on Wi-Fi or a signed-in cloud app to upload.'),
     ]);
   }
 }

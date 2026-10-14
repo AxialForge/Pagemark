@@ -11,6 +11,7 @@ Pagemark is a private reading log. It has no accounts, no servers of its own, no
 - **A backup passphrase (if you set one)** in Android's secure storage, so scheduled backups can encrypt without you.
 - **Reminders and widget:** the reminder is a notification scheduled on your phone and never names a book. The widget is drawn from the main library only (never the locked library) and shows counts only when the whole-app lock is on.
 - **Share target:** text another app shares with Pagemark only fills the search box; it is never saved or sent anywhere until you pick a result, and then only the usual Open Library lookup happens.
+- **Folder backups:** if you choose a folder for automatic backups, Pagemark writes its backup files only into that folder (Android gives it access to that one folder and nothing else). If the folder belongs to a cloud app such as Google Drive, that app uploads the files under its own rules.
 - **A small event log** (Settings → Help and about → Problem report): error messages and backup run results. Database error details are removed before anything is written, so it does not keep book titles or your writing.
 - **Cached cover images.** Covers of locked books use a separate cache that is erased when the locked library closes.
 

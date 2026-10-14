@@ -75,6 +75,7 @@ The **Stats** tab shows how many books you finished each month, your ratings, yo
 Your books live only on this phone. A backup is a safe copy you can bring back if the phone is lost or broken. Go to Settings → Backup and restore:
 - **Save a copy as a file** makes one file with your whole library, including your locked books. Choose a password so nobody else can open it, then pick where to keep it: your email, Google Drive, a computer or a USB stick.
 - **Save my list as a spreadsheet** makes a list you can read in Excel or Google Sheets. It does not include your locked books.
+- **Save backups to a folder automatically** lets you pick a folder once. Pagemark then saves a fresh backup there by itself, about as often as you choose, and keeps the newest 5. If you pick a folder inside Google Drive, OneDrive or Dropbox (when that app is on your phone), Android copies it to the cloud for you. Tap **Choose a folder** to start, and **Back up now** any time.
 - **Restore from a file** replaces your library with a saved copy. Pagemark closes afterwards. Open it again to see the restored library.
 - **Go back to an earlier copy** lists the copies Pagemark made on its own before each restore and import.
 

@@ -24,7 +24,7 @@ A private, fully local book tracker for Android (iOS planned): log what you read
 - **Organise**: shelves, series with numbers, tags, filters, sort, "Currently reading" strip.
 - **Locked library**: PIN (attempt limits + recovery code) or fingerprint; re-locks when you leave (or after 1/5/15 minutes); optional **whole-app lock**; blocks screenshots.
 - **Your data, your files**: CSV/JSON export; whole-database export with optional password encryption.
-- **Backups**: save a password-protected copy of your whole library as a file, or a spreadsheet; a reminder every week, two weeks or month; safe restore with restore points.
+- **Backups**: save a password-protected copy of your whole library as a file, or a spreadsheet; or pick a folder (including one in Google Drive, OneDrive or Dropbox) and Pagemark saves backups there by itself; a reminder every week, two weeks or month; safe restore with restore points.
 - **Six themes**: Harbor, Midnight Ink, Rosewater, Plum Velvet, Sage and Lamplight, with smooth transitions.
 - **Updates**: in-app updater with release notes and an offline version history.
 

@@ -6,6 +6,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-10-14
+
+### Added
+- **Automatic backups to a folder you choose** (Settings > Backup and restore): pick a folder once with Android's own file picker, and Pagemark saves a fresh backup there by itself (every day, week, 2 weeks or month), keeping the newest 5. Choose a folder in Google Drive, OneDrive or Dropbox and Android copies it to the cloud for you, with no sign-in inside Pagemark. Optional password protection; **Back up now** and **Turn off** are on the same page.
+- The widget picker now shows a real preview of the widget.
+
+### Fixed
+- The Backup page's "last backup" card updates the moment a backup is saved.
+- A test now guards every source file against a byte-order mark or garbled dashes, and it already found and removed a leftover mark in one test file.
+
 ## [0.9.0] - 2026-10-13
 
 Rate in more detail, simpler backups, a Notifications page.
