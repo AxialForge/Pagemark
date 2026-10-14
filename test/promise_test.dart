@@ -19,7 +19,7 @@ void main() {
 
   test('the app only contacts the hosts the promise screen describes', () {
     final hosts = <String>{};
-    for (final f in Directory('lib').listSync().whereType<File>().where((f) => f.path.endsWith('.dart'))) {
+    for (final f in Directory('lib').listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart'))) {
       final text = f.readAsStringSync();
       for (final m in RegExp(r"Uri\.https\('([^']+)'").allMatches(text)) {
         hosts.add(m.group(1)!);

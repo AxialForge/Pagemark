@@ -34,7 +34,7 @@ void main() {
 
   test('every **bold** name in the guide appears somewhere in the app', () {
     final source = [
-      for (final f in Directory('lib').listSync().whereType<File>().where((f) => f.path.endsWith('.dart'))) f.readAsStringSync(),
+      for (final f in Directory('lib').listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart'))) f.readAsStringSync(),
       File('android/app/src/main/res/values/strings.xml').readAsStringSync(),
     ].join('\n').toLowerCase();
     // things the guide names that belong to Android's own screens, not to Pagemark

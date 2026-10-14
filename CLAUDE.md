@@ -128,6 +128,8 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 
 `assets/guide.md` is the manual inside the app (Settings > How to use Pagemark, the Library three-dot menu and the empty-library screen). It is written for non-technical readers: short steps, plain words, the exact on-screen names in **bold**. **Whenever you change a screen, a button name, a setting or a behaviour a user can see, update `assets/guide.md` in the same commit** (and add a line to `CHANGELOG.md`). `test/guide_test.dart` fails if the guide names a Settings page or a **bold** label that no screen in the app contains, so a rename without a guide update breaks the build. Lines starting with `[github] ` appear only in the GitHub build (the Play build has no updater). The `SettingsTitles` constants in `lib/guide.dart` are the single source for the Settings page names.
 
+- **`lib/ui.dart` is one Dart library split into `part` files** in `lib/ui/` (home, library, add_book, book_page, read_editor, settings, misc). Imports live only in `ui.dart`; the parts share private names (`_date`, `_Hint`, `_SettingsSub`...). Add a new screen to the part it belongs to, or add a new `part 'ui/x.dart';` line.
+
 ## Docs & screenshots
 
 - Documentation lives in `docs/release-package/*.md`; `python docs/_tools/build_docs.py` builds the four PDFs plus the combined `Pagemark-Documentation.pdf` (needs Python `markdown` and Edge). Figures are inline HTML (`<div class="shots">`) pointing at `../screenshots/*.jpg`.
