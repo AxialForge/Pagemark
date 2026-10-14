@@ -121,7 +121,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   /// After a few books are in, ask once for permission to send reminders (Android 13+ shows its own question).
   Future<void> _askNotificationsOnce() async {
     if (prefs.getBool('notif_asked') ?? false) return;
-    final n = (await db.select(db.books).get()).length;
+    final n = (await db.select(db.books).get()).where((b) => !Samples.ids().contains(b.id)).length; // sample books do not count
     if (n < 3 || !mounted) return;
     await prefs.setBool('notif_asked', true);
     await Notifier.requestPermission();

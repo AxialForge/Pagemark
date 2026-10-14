@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart' show BooleanExpressionOperators, Value;
+import 'package:flutter/foundation.dart' show ValueNotifier;
 import 'package:intl/intl.dart';
 import 'db.dart';
 import 'main.dart';
@@ -6,6 +7,9 @@ import 'main.dart';
 /// Five well-known public-domain books a new reader can try the app with, and take away again in one tap.
 class Samples {
   static const _key = 'sample_ids';
+
+  /// Bumped when the sample books were added or removed, so the Library can look again.
+  static final changed = ValueNotifier<int>(0);
 
   static List<int> ids() => [for (final s in (prefs.getString(_key) ?? '').split(',')) if (int.tryParse(s) != null) int.parse(s)];
 
@@ -29,12 +33,13 @@ class Samples {
             title: title, author: Value(author), year: Value(year), pages: Value(pages), genre: Value(genre),
             description: Value('A sample book to try Pagemark with. Remove all the samples any time from the Library.'),
           ));
+      made.add(id);
+      await prefs.setString(_key, made.join(',')); // remembered at once, so the Library can tell sample books from yours while they are still being added
       await db.into(db.reads).insert(ReadsCompanion.insert(
             bookId: id, status: Value(status), started: Value(status == 'want' ? null : ago(startedAgo)),
             finished: Value(finishedAgo == null ? null : ago(finishedAgo)), rating: Value(rating), thoughts: Value(thoughts), currentPage: Value(page),
           ));
       await db.setOnShelf(id, shelf, true);
-      made.add(id);
     }
 
     await book('Pride and Prejudice', 'Jane Austen', 1813, 432, 'Classic', 'finished', rating: 4.5, thoughts: 'A sparkling comedy of manners.', startedAgo: 40, finishedAgo: 26);
@@ -42,7 +47,7 @@ class Samples {
     await book('The Time Machine', 'H. G. Wells', 1895, 118, 'Science fiction', 'finished', rating: 4.0, thoughts: 'Short, strange and still thrilling.', startedAgo: 14, finishedAgo: 9);
     await book('Dracula', 'Bram Stoker', 1897, 418, 'Gothic', 'want');
     await book('Moby-Dick', 'Herman Melville', 1851, 635, 'Classic', 'dnf', startedAgo: 60, finishedAgo: 50);
-    await prefs.setString(_key, made.join(','));
+    changed.value++;
   }
 
   /// Removes the sample books for good (and their shelf). Returns how many were removed.
@@ -57,6 +62,7 @@ class Samples {
       await db.deleteShelf(s.id);
     }
     await prefs.remove(_key);
+    changed.value++;
     return n;
   }
 }

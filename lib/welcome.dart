@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -123,17 +124,22 @@ class LibraryBanners extends StatefulWidget {
 
 class _LibraryBannersState extends State<LibraryBanners> {
   bool samples = false, nudge = false;
+  StreamSubscription<void>? _sub;
 
   @override
   void initState() {
     super.initState();
     _check();
     BackupReminder.changes.addListener(_check);
+    Samples.changed.addListener(_check);
+    _sub = db.watchLibrary(locked: false).listen((_) => _check()); // books added or removed: look again
   }
 
   @override
   void dispose() {
+    _sub?.cancel();
     BackupReminder.changes.removeListener(_check);
+    Samples.changed.removeListener(_check);
     super.dispose();
   }
 
