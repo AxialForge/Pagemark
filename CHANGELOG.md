@@ -6,6 +6,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-10-14
+
+### Added
+- Google Books as a second source, merged with Open Library: more books found, and missing covers, pages, publishers and descriptions filled in. One source being down is fine. Turn it off in Settings, Your library, Also search Google Books.
+- Refresh details from the internet (book menu): see what a lookup found and tick what to take. Details you typed yourself are only changed if you tick them; an ISBN you have and a cover you saved on the phone are never replaced.
+- Choose another edition: pick the cover, publisher, year, pages and ISBN of a different printing (Open Library editions).
+- Scan many books: keep the camera open and scan a whole shelf. One click per book, each added on its own; duplicates are skipped and books not found are listed.
+- What next? In Read next order, a few suggestions from your own want-to-read list: next in a series you started, more from an author you rated 4 or more, a genre you rate highly. Worked out on the phone; the locked library is never used.
+
+### Changed
+- The Our promise page, About and the privacy notes now name Google Books as a place a search goes (unless turned off).
+
 ## [0.12.0] - 2026-10-14
 
 ### Added

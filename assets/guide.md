@@ -16,6 +16,14 @@ Tap **Add book** on the Library screen (the round button at the bottom).
 
 Tip: if you share a book from a web page or another app (Share, then Pagemark), Pagemark opens with the search already filled in.
 
+## Add a whole shelf at once
+On the **Add a book** screen, tap the icon with a tick (Scan many books). Point the camera at one barcode after another. Each book gives one click and is added on its own. Books you already have are skipped, and any that cannot be found are listed so you can add them by hand.
+
+## Fix a book's details
+Open the book, tap the three dots and choose **Refresh details from the internet**. Pagemark looks the book up again and shows what it found. Missing details are ticked for you. Details you typed yourself are only changed if you tick them. Tap **Choose another edition** to pick the cover, publisher and page count of a different printing.
+
+More books are found because Pagemark asks Google Books as well as Open Library. To use Open Library only, go to Settings → Your library and turn off **Also search Google Books**.
+
 ## Say what you are reading
 Open a book and tap **Log a read**.
 - Choose **Print**, **E-book** or **Audiobook**.
@@ -80,7 +88,7 @@ Press and hold the Pagemark icon on your home screen for two shortcuts: **Add bo
 On a book you are reading, tap **Start** under its progress and **Stop** when you put it down. Pagemark asks which page you are on, then adds the time to your reading log and to your calendar. If you close the app while the timer runs, it keeps counting.
 
 ## Put your next books in order
-In the Library, tap the three dots, then **Read next order**. Press and hold a book, then drag it. Books you want to read are listed in the order you choose.
+In the Library, tap the three dots, then **Read next order**. Press and hold a book, then drag it. Books you want to read are listed in the order you choose. Above the list, Pagemark suggests a few books from your own list, such as the next book in a series you started. Tap **Read first** to put one at the top. These suggestions are worked out on your phone from your own books only.
 
 ## Lend a book
 Open the book and tap **Lend this book**. Type who has it and choose whether to be reminded to ask for it back. The reminder never names the book or the person. When it comes home, tap **Got it back**.

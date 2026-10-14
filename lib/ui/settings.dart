@@ -489,6 +489,7 @@ class _LibraryExtrasPage extends StatelessWidget {
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CoversPage()))),
         const _DefaultsTiles(),
         const Divider(),
+        _GoogleSwitch(),
         ValueListenableBuilder<bool>(
           valueListenable: detailedRatings,
           builder: (context, on, _) => SwitchListTile(
@@ -510,6 +511,26 @@ class _LibraryExtrasPage extends StatelessWidget {
           ),
         ),
       ]);
+}
+
+/// Settings > Your library: whether book searches also ask Google Books.
+class _GoogleSwitch extends StatefulWidget {
+  @override
+  State<_GoogleSwitch> createState() => _GoogleSwitchState();
+}
+
+class _GoogleSwitchState extends State<_GoogleSwitch> {
+  @override
+  Widget build(BuildContext context) => SwitchListTile(
+        secondary: const Icon(Icons.travel_explore),
+        title: const Text('Also search Google Books'),
+        subtitle: const Text('Finds more books and fills in missing details. What you type is sent to Google Books as well as Open Library. Turn off to use Open Library only.'),
+        value: googleOn(),
+        onChanged: (v) async {
+          await prefs.setBool('src_google', v);
+          if (mounted) setState(() {});
+        },
+      );
 }
 
 /// Date style, the format a new read starts with, and removing the sample books.

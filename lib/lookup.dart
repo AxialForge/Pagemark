@@ -170,6 +170,141 @@ class Lookup {
     return viaSearch.first..isbn = isbn;
   }
 
+  // ── Google Books (second source, no key) ──
+  static String _https(String u) => u.startsWith('http://') ? 'https://${u.substring(7)}' : u;
+
+  /// One Google Books "volume" as a [BookMeta]; null when it has no title.
+  static BookMeta? parseVolume(Object? v) {
+    try {
+      final info = v is Map ? v['volumeInfo'] : null;
+      if (info is! Map) return null;
+      final title = _str(info['title']);
+      if (title.isEmpty) return null;
+      String isbn = '';
+      for (final id in _list(info['industryIdentifiers'])) {
+        if (id is Map) {
+          final x = Isbn.to13(_str(id['identifier']));
+          if (x != null && (isbn.isEmpty || id['type'] == 'ISBN_13')) isbn = x;
+        }
+      }
+      final links = info['imageLinks'];
+      final thumb = links is Map ? (_str(links['thumbnail']).isNotEmpty ? _str(links['thumbnail']) : _str(links['smallThumbnail'])) : '';
+      final cats = _list(info['categories']).whereType<String>().expand((c) => c.split('/')).map((c) => c.trim()).where((c) => c.isNotEmpty && !_noisy.hasMatch(c));
+      return BookMeta(
+        title: title,
+        author: _list(info['authors']).whereType<String>().join(', '),
+        isbn: isbn,
+        coverUrl: thumb.isEmpty ? '' : _https(thumb).replaceAll('&edge=curl', ''),
+        genre: cats.toSet().take(3).join(', '),
+        publisher: _str(info['publisher']),
+        description: _str(info['description']).trim(),
+        year: _int(RegExp(r'(1[5-9]\d{2}|20\d{2})').firstMatch(_str(info['publishedDate']))?.group(1)),
+        pages: _int(info['pageCount']) == 0 ? null : _int(info['pageCount']),
+      );
+    } catch (e) {
+      Log.w('lookup', 'skipped malformed Google record: $e');
+      return null;
+    }
+  }
+
+  static Future<List<BookMeta>> googleSearch(String q, {int max = 20}) async {
+    final r = await _get(Uri.https('www.googleapis.com', '/books/v1/volumes', {'q': q.trim(), 'maxResults': '$max', 'printType': 'books'}));
+    final body = _decode(r);
+    return [for (final v in _list(body is Map ? body['items'] : null)) ?parseVolume(v)];
+  }
+
+  static String _key(BookMeta m) => '${m.title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '')}|${m.author.split(',').first.toLowerCase().replaceAll(RegExp(r'[^a-z]'), '')}';
+
+  /// Adds [extra] to [base]: the same book (same ISBN, or same title and first author) fills the gaps in the entry already there,
+  /// and a book only [extra] knows is appended. Never overwrites something [base] already has.
+  static List<BookMeta> merge(List<BookMeta> base, List<BookMeta> extra) {
+    final out = [...base];
+    for (final e in extra) {
+      final i = out.indexWhere((m) => (m.isbn.isNotEmpty && m.isbn == e.isbn) || _key(m) == _key(e));
+      if (i < 0) {
+        out.add(e);
+        continue;
+      }
+      fillGaps(out[i], e);
+    }
+    return out;
+  }
+
+  /// Copies into [m] only the details it lacks.
+  static void fillGaps(BookMeta m, BookMeta e) {
+    if (m.isbn.isEmpty) m.isbn = e.isbn;
+    if (m.coverUrl.isEmpty) m.coverUrl = e.coverUrl;
+    if (m.genre.isEmpty) m.genre = e.genre;
+    if (m.publisher.isEmpty) m.publisher = e.publisher;
+    if (m.description.isEmpty) m.description = e.description;
+    m.year ??= e.year;
+    m.pages ??= e.pages;
+  }
+
+  /// Open Library and (when [google]) Google Books together. One source failing is fine; both failing reports the first error.
+  static Future<List<BookMeta>> searchAll(String q, {bool google = true}) async {
+    if (!google) return search(q);
+    Object? err;
+    Future<List<BookMeta>> safe(Future<List<BookMeta>> f) => f.catchError((Object e) {
+          err ??= e;
+          return <BookMeta>[];
+        });
+    final both = await Future.wait([safe(search(q)), safe(googleSearch(q))]);
+    if (both[0].isEmpty && both[1].isEmpty && err != null) throw err!;
+    return rank(merge(both[0], both[1]), q);
+  }
+
+  /// ISBN lookup across both sources: Open Library first, then Google fills any gap (or answers alone).
+  static Future<BookMeta?> byIsbnAll(String raw, {bool google = true}) async {
+    BookMeta? m;
+    Object? err;
+    try {
+      m = await byIsbn(raw);
+    } on LookupException catch (e) {
+      if (!google || e.message.contains('not a valid')) rethrow;
+      err = e;
+    }
+    if (!google) return m;
+    if (m != null && m.coverUrl.isNotEmpty && m.pages != null && m.description.isNotEmpty && m.publisher.isNotEmpty) return m;
+    try {
+      final isbn = Isbn.to13(raw)!;
+      final g = await googleSearch('isbn:$isbn', max: 3);
+      if (g.isNotEmpty) {
+        if (m == null) return g.first..isbn = isbn;
+        fillGaps(m, g.first);
+      }
+    } on LookupException catch (e) {
+      if (m == null) throw err ?? e;
+    }
+    return m;
+  }
+
+  /// Every edition Open Library lists for a work (publisher, year, pages, ISBN, cover), for the edition picker.
+  static Future<List<BookMeta>> editions(String workKey) async {
+    if (!workKey.startsWith('/works/')) return [];
+    final r = await _get(Uri.https('openlibrary.org', '$workKey/editions.json', {'limit': '50'}));
+    final body = _decode(r);
+    final out = <BookMeta>[];
+    for (final e in _list(body is Map ? body['entries'] : null)) {
+      try {
+        if (e is! Map) continue;
+        final isbns = [..._list(e['isbn_13']), ..._list(e['isbn_10'])].whereType<String>().map(Isbn.to13).whereType<String>().toList();
+        final covers = _list(e['covers']).whereType<int>().where((c) => c > 0).toList();
+        final pubs = _list(e['publishers']).whereType<String>();
+        out.add(BookMeta(
+          title: _str(e['title']),
+          isbn: isbns.isNotEmpty ? isbns.first : '',
+          coverUrl: covers.isNotEmpty ? 'https://covers.openlibrary.org/b/id/${covers.first}-L.jpg' : '',
+          publisher: pubs.isNotEmpty ? pubs.first : '',
+          year: _int(RegExp(r'(1[5-9]\d{2}|20\d{2})').firstMatch(_str(e['publish_date']))?.group(1)),
+          pages: _int(e['number_of_pages']),
+          workKey: workKey,
+        ));
+      } catch (_) {}
+    }
+    return out;
+  }
+
   /// Best-effort description from the work record; empty if unavailable.
   static Future<String> description(String workKey) async {
     if (!workKey.startsWith('/works/')) return '';

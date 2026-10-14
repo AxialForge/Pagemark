@@ -32,7 +32,7 @@ The `play` flavor has no `REQUEST_INSTALL_PACKAGES` permission and no Updates sc
 ## Data safety form (answers)
 
 - Does the app collect or share user data? **Pagemark itself collects nothing and has no server.** The only thing sent anywhere is a public book lookup:
-  - **Book lookup:** the title, author or ISBN you type or scan is sent to Open Library. Declare as "search query / app activity", not linked to identity, optional.
+  - **Book lookup:** the title, author or ISBN you type or scan is sent to Open Library and, unless the user turns it off, Google Books. Declare as "search query / app activity", not linked to identity, optional.
 - Camera: used only to read barcodes on the device; images are not stored or sent.
 - No ads, no analytics, no crash-reporting SDK. Data is encrypted in transit (HTTPS). Users can delete data by clearing app storage or deleting the backup files they saved.
 

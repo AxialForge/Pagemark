@@ -30,6 +30,7 @@ class BookPage extends StatelessWidget {
             IconButton(icon: const Icon(Icons.edit), tooltip: 'Edit book', onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EditBook(book: b)))),
             PopupMenuButton<String>(
               onSelected: (v) async {
+                if (v == 'refresh') await refreshDetails(context, b);
                 if (v == 'lock') await (db.update(db.books)..where((x) => x.id.equals(b.id))).write(BooksCompanion(locked: Value(!b.locked)));
                 if (v.startsWith('cover_')) {
                   final msg = await coverAction(b, v.substring(6));
@@ -47,6 +48,7 @@ class BookPage extends StatelessWidget {
                 }
               },
               itemBuilder: (_) => [
+                const PopupMenuItem(value: 'refresh', child: Text('Refresh details from the internet')),
                 PopupMenuItem(value: 'lock', child: Text(b.locked ? 'Move to main library' : 'Move to locked library')),
                 if (b.coverUrl.isNotEmpty && !CoverStore.isLocal(b.coverUrl)) const PopupMenuItem(value: 'cover_save', child: Text('Save cover on this phone')),
                 const PopupMenuItem(value: 'cover_pick', child: Text('Choose cover from gallery')),

@@ -57,6 +57,8 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 
 ## Gotchas / constraints
 
+- **Two lookup sources (`lib/lookup.dart`, `lib/finding.dart`).** `Lookup.search` / `byIsbn` stay Open Library only (the older tests rely on that); the UI calls `searchAll` / `byIsbnAll` with `google: googleOn()`. `merge`/`fillGaps` only fill empty fields, never overwrite. Any new host needs a line on the promise screen and an entry in `promiseHosts` (a test enforces it). Refresh must never replace an ISBN or a `local:` cover, and a lookup for a locked book goes through `confirmVaultLookup` first. Suggestions (`suggestNext`) are fed `watchLibrary(locked: false)` only.
+
 - **Reading life (`lib/reading_life.dart`, `reading_life_ui.dart`, `report_pdf.dart`).** Everything that feeds a shared output (year card, calendar, PDF) takes `watchLibrary(locked: false)` / `watchSessions(locked: false)`; never pass the vault's rows. The timer's running state lives in prefs `timer_book` / `timer_start` (do not rename to `bk_*`, those are wiped). Loan reminder ids are `300000 + loanId`; their text must stay generic (lock screen). The built-in PDF fonts are Latin-1 only, so `ReportPdf.clean` swaps other letters for `?`.
 
 - **Wide screens go through `lib/adaptive.dart`.** Open a book with `openBookIn` and leave it with `closeBook` (never `Navigator.push/pop` directly for `BookPage`), or the two-pane layout (>=840 dp) breaks. Only the main Library gets the `DetailPane`; the locked library must never use it, so private books cannot linger in the pane.

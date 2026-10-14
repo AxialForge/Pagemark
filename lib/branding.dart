@@ -82,7 +82,7 @@ class AppHeader extends StatelessWidget {
               applicationLegalese: '© 2026 AxialForge. All your data stays on this device.',
               children: const [
                 SizedBox(height: 12),
-                Text('Book details and covers come from Open Library (openlibrary.org), a free, open project of the Internet Archive.'),
+                Text('Book details and covers come from Open Library (openlibrary.org), a free, open project of the Internet Archive, and from Google Books.'),
               ],
             ),
           );

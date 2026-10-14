@@ -9,6 +9,8 @@ import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'adaptive.dart';
 import 'app_lock.dart';
+import 'bulk_scan.dart';
+import 'finding.dart';
 import 'reading_life_ui.dart';
 import 'backup_reminder.dart';
 import 'restore_ui.dart';

@@ -106,10 +106,10 @@ class _AddBookState extends State<AddBook> {
 
   Future<void> _search(String q) => run(() async {
         if (Isbn.looksLikeBookCode(q)) {
-          final m = await Lookup.byIsbn(q);
+          final m = await Lookup.byIsbnAll(q, google: googleOn());
           return [?m];
         }
-        return Lookup.search(q);
+        return Lookup.searchAll(q, google: googleOn());
       });
 
   Future<void> scan() async {
@@ -117,6 +117,13 @@ class _AddBookState extends State<AddBook> {
     if (code == null) return;
     qc.text = code;
     await go(code);
+  }
+
+  /// Scan a whole shelf: each barcode is looked up and added on its own. The locked library gets the same one-time internet warning.
+  Future<void> scanMany() async {
+    if (widget.locked && !await confirmVaultLookup(context)) return;
+    if (!mounted) return;
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => BulkScanPage(locked: widget.locked)));
   }
 
   bool saving = false;
@@ -152,24 +159,16 @@ class _AddBookState extends State<AddBook> {
   }
 
   Future<void> _insert(BookMeta m) async {
-    final id = await db.into(db.books).insert(BooksCompanion.insert(
-          title: m.title,
-          author: Value(m.author), isbn: Value(m.isbn), coverUrl: Value(m.coverUrl), genre: Value(m.genre),
-          publisher: Value(m.publisher), year: Value(m.year), pages: Value(m.pages),
-          series: Value(m.series), description: Value(m.description), locked: Value(widget.locked),
-        ));
-    if (m.description.isEmpty && m.workKey.isNotEmpty) {
-      Lookup.description(m.workKey).then((d) {
-        if (d.isNotEmpty) (db.update(db.books)..where((b) => b.id.equals(id))).write(BooksCompanion(description: Value(d)));
-      });
-    }
+    final id = await insertMeta(m, locked: widget.locked);
     if (!mounted) return;
     Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: id))); // Back returns to your search results
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Add a book'), actions: [IconButton(icon: const Icon(Icons.qr_code_scanner), tooltip: 'Scan a barcode', onPressed: scan)]),
+        appBar: AppBar(title: const Text('Add a book'), actions: [IconButton(icon: const Icon(Icons.qr_code_scanner), tooltip: 'Scan a barcode', onPressed: scan),
+          IconButton(icon: const Icon(Icons.library_add_check_outlined), tooltip: 'Scan many books', onPressed: scanMany),
+        ]),
         body: Column(children: [
           Padding(
             padding: const EdgeInsets.all(12),
@@ -241,6 +240,22 @@ Future<String?> ask(BuildContext c, String label, [String initial = '', bool mul
       ],
     ),
   );
+}
+
+/// Saves a looked-up book (and fetches its description in the background when the lookup had none).
+Future<int> insertMeta(BookMeta m, {required bool locked}) async {
+  final id = await db.into(db.books).insert(BooksCompanion.insert(
+        title: m.title,
+        author: Value(m.author), isbn: Value(m.isbn), coverUrl: Value(m.coverUrl), genre: Value(m.genre),
+        publisher: Value(m.publisher), year: Value(m.year), pages: Value(m.pages),
+        series: Value(m.series), description: Value(m.description), locked: Value(locked),
+      ));
+  if (m.description.isEmpty && m.workKey.isNotEmpty) {
+    Lookup.description(m.workKey).then((d) {
+      if (d.isNotEmpty) (db.update(db.books)..where((b) => b.id.equals(id))).write(BooksCompanion(description: Value(d)));
+    });
+  }
+  return id;
 }
 
 class ScanPage extends StatefulWidget {

@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import 'adaptive.dart';
 import 'branding.dart';
 import 'db.dart';
+import 'finding.dart' show suggestNext;
 import 'firstrun.dart' show appDate;
 import 'main.dart';
 import 'notifier.dart';
@@ -346,9 +347,30 @@ class QueuePage extends StatelessWidget {
             builder: (context, snap) {
               if (!snap.hasData) return const Center(child: CircularProgressIndicator());
               final rows = ReadingLifeDb.orderQueue(snap.data!);
+              final tips = suggestNext(snap.data!, limit: 3);
               if (rows.isEmpty) return const EmptyState(message: 'Books you want to read appear here, so you can put them in the order you will read them.');
               return Column(children: [
                 const Padding(padding: EdgeInsets.fromLTRB(16, 12, 16, 4), child: Text('Press and hold a book, then drag it to where you want it.')),
+                if (tips.isNotEmpty)
+                  Card(
+                    margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('You might like next', style: Theme.of(context).textTheme.titleSmall),
+                        for (final s in tips)
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(s.row.book.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                            subtitle: Text(s.reason),
+                            trailing: TextButton(
+                              onPressed: () => db.saveQueue([s.row.book.id, for (final r in rows) if (r.book.id != s.row.book.id) r.book.id]),
+                              child: const Text('Read first'),
+                            ),
+                          ),
+                      ]),
+                    ),
+                  ),
                 Expanded(
                   child: ReorderableListView.builder(
                     itemCount: rows.length,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Pagemark's promises, in plain words. Every claim here is checked by `test/promise_test.dart` (no tracking or AI packages in the app,
 /// and the internet hosts the code talks to are exactly the ones listed below), so a promise cannot quietly go out of date.
-const promiseHosts = ['openlibrary.org', 'covers.openlibrary.org', 'api.github.com', 'github.com'];
+const promiseHosts = ['openlibrary.org', 'covers.openlibrary.org', 'www.googleapis.com', 'api.github.com', 'github.com'];
 
 class PromisePage extends StatelessWidget {
   const PromisePage({super.key});
@@ -55,7 +55,7 @@ class PromisePage extends StatelessWidget {
             children: const [
               Text('The only times Pagemark uses the internet', style: TextStyle(fontWeight: FontWeight.w600)),
               SizedBox(height: 8),
-              _Bullet('When you search for a book, what you type (a title, an author or a barcode number) is sent to Open Library, a free library catalogue. Cover pictures come from there too.'),
+              _Bullet('When you search for a book, what you type (a title, an author or a barcode number) is sent to Open Library, a free library catalogue, and (unless you turn it off in Settings) to Google Books. Cover pictures come from them too.'),
               _Bullet('The GitHub version checks for a new version of itself now and then (you can turn this off in Settings, Updates).'),
               _Bullet('If you choose a backup folder inside a cloud app such as Google Drive, that app uploads the file under its own rules. Pagemark never signs in to anything.'),
               SizedBox(height: 12),

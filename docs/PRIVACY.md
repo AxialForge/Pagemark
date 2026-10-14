@@ -11,7 +11,7 @@ Pagemark is a private reading log. It has no accounts, no servers of its own, no
 - **No AI inside the app.** No assistant, no AI features, and nothing you write is sent to or used to train an AI service.
 - **Your books stay on your phone** unless you save a backup, and then only where you put it.
 - **Free and open to inspect:** the code is public.
-- **The only internet use:** book searches (to Open Library), the GitHub build's update check, and whatever a cloud app does with a backup folder you choose.
+- **The only internet use:** book searches (to Open Library and, unless turned off in Settings, Google Books), the GitHub build's update check, and whatever a cloud app does with a backup folder you choose.
 - **About the barcode reader:** it uses Google's on-device ML Kit vision tool. Pagemark never saves or sends the camera picture, but the Google library may report anonymous technical information to Google.
 
 A test in the project fails if a tracking, advertising or AI package is added or the app contacts a new internet address.
@@ -32,7 +32,7 @@ Android's own cloud backup and device-transfer are switched off for this app, so
 ## When data leaves your phone
 | What | Where it goes | When | What is sent |
 |---|---|---|---|
-| Book search / ISBN lookup / covers | Open Library (openlibrary.org, Internet Archive) | when you search, scan, or a cover is shown | the text you typed or the ISBN; your IP address is visible to them as for any website |
+| Book search / ISBN lookup / covers | Open Library (openlibrary.org, Internet Archive) and Google Books (googleapis.com; can be turned off in Settings) | when you search, scan, or a cover is shown | the text you typed or the ISBN; your IP address is visible to them as for any website |
 | Update check | GitHub (api.github.com) | at most once a day while the app is open, if you leave "Check automatically" on | a request for the public release list; nothing about you or your library |
 | Update download | GitHub | when you tap Download & install | a request for the APK file |
 
