@@ -1,50 +1,52 @@
-# Release readiness - Pagemark 0.7.0
+# Release readiness - Pagemark 1.0.0 gate (audited 0.13.0, commit b1bbf51)
 
-Audited commit `045e8147c28780fd03dd0f714cce9d0225071f13` (tag v0.7.0), 2026-10-12. Mobile-leaning full audit.
+**Verdict: READY WITH CONDITIONS.** No blocker, critical or high finding. The code is in good shape for 1.0.0; the conditions are a few small fixes, the documentation set, and a real-phone pass nobody has done yet.
 
-## Verdict: READY WITH CONDITIONS
+(The 0.7.0 verdict and its 84 findings are in `FINDINGS.md` above the 1.0.0 section; all were fixed in 0.7.1 to 0.8.1. Their READY FOR VERIFICATION status was not re-run one by one in this gate; the suite, migrations and release checks cover the same ground.)
 
-0 BLOCKER, 0 CRITICAL, 6 HIGH, 17 MEDIUM, 41 LOW, 20 INFO (84 findings, see FINDINGS.md). Nothing loses data on a normal path, the 193-test suite passes from a fresh clone twice, and the signed release builds and runs. The six HIGH findings are on failure paths, but two of them (PGM-100, PGM-200) affect the promises the app makes about restore and lock, so fix or knowingly accept them before calling 0.7.x done.
+## Counts (new this round)
 
-## Status after the fix pass (2026-10-12, version 0.7.1, local commits 6052bc8..8ca6bbe)
-
-All 6 HIGH findings and 15 of the 17 MEDIUM findings are fixed in code with new tests (suite now 206 tests, analyzer clean). They are marked READY FOR VERIFICATION in FINDINGS.md: the auditor has not yet re-run the original scripts against the fixes, and several need a real phone (FLAG_SECURE in recents, Keystore reset, Drive, updater). Not fixed, by decision or scope: PGM-110 (shelf names are global, a design change), PGM-108 (undo import leaves extra reads), 22 LOW and 12 INFO items listed in FINDINGS.md.
-
-Verified on the emulator after the fixes: the 0.7.1 sideload release installs over 0.7.0 with the 5,000-book library intact, the font-2.0 filter chip is no longer clipped, no runtime errors in logcat. Release files built by `tool/build.ps1` are signed with the release key (SHA-1 39:04:59:AD...:27:F7), and the Play bundle has no installer permission.
-
-Verdict now: **READY WITH CONDITIONS** for a 0.7.1 release once the real-device checks in MANUAL_TEST_PLAN.md pass.
-
-### Second fix pass (version 0.7.2, not yet released)
-
-Also fixed: PGM-108 (Undo import), PGM-110 (shelf names per library), 114, 115, 118, 122, 123, 126, 127, 129, 206, 211, 213, 244. Accepted with a reason: 116 and 117 (matching by ISBN and the Date Added fallback are intended), 205 (PBKDF2 iterations: the PIN's own length dominates), 215, 225, 128. Deferred: 125 (Unicode-normalised passphrases), 223 (CI release job needs secrets you add), 245 (screenshots to regenerate), 247 (manual numbering), 250 (localisation, planned for 0.9.0). 211 needs one action from you: set the `PAGEMARK_NAS` environment variable before running `tool/backup-to-nas.ps1`.
-
-## HIGH findings as found (fix unless accepted)
-
-| ID | One line | Verify with |
+| Severity | Count | IDs |
 |---|---|---|
-| PGM-100 | The "safety copy kept in the app" after a restore/import has no way to be restored in the UI | add a restore-from-safety-copy action; manually restore twice and recover the first state |
-| PGM-101 | PIN lockout overflows (negative at 300 fails, 0 s from 320), so attempt limiting stops | `scripts/pgm_engine_audit_test.dart` case K-lockout-overflow |
-| PGM-102 | Changing the backup passphrase does not trigger a new upload | change passphrase, run backup, expect a new file |
-| PGM-103 | restoreDb and safetyCopy have no tests | the new tests exist and run in `flutter test` |
-| PGM-200 | A secure-storage reset leaves no lock config; gate offers "Set a PIN" and opens | `scripts/pgm200_securestorage_loss_test.dart` |
-| PGM-202 | After that reset, scheduled Drive backups upload unencrypted with no warning | backup refuses or notifies when the passphrase key is gone |
+| BLOCKER / CRITICAL / HIGH | 0 | |
+| MEDIUM | 4 | PGM-300, PGM-302, PGM-320, PGM-324 |
+| LOW | 4 | PGM-301, PGM-303, PGM-321, PGM-322 |
+| INFO | 4 | PGM-323 (accepted), PGM-325 to PGM-327 (verified positives) |
 
-Suggested direction: PGM-101 `steps >= 7 ? 3600 : 30 * (1 << steps)` (lock.dart:98); PGM-200/202 set `resetOnError: false` and treat a missing key as "storage lost", fail closed and notify; PGM-102 clear `bk_hash` in `setPassphrase` (backup.dart:145).
+## Conditions for tagging 1.0.0
 
-## Coverage
+1. **Fix PGM-320** (stuck timer), **PGM-300** (Stats width on tablets), **PGM-302** (genre noise). These are the three a user would notice. PGM-301, 303, 321, 322 are small and should go in the same release.
+2. **Documentation set (house rule for a major release):** regenerate User Manual, Install Manual, Release Notes and README, write the Package Overview (simple, medium, advanced) and refresh the GitHub details (PGM-324).
+3. **Real-phone pass** from `MANUAL_TEST_PLAN.md`, in particular the timer, folder backup to a real cloud folder, fingerprint, notifications, TalkBack and the updater.
+4. **Google Play steps** (account, 14-day closed test, Data safety form, listing) are outside the code. The Play bundle builds; see `docs/PLAY_STORE.md`.
 
-| Area | Result |
+Localisation is not a gate item; it needs a second language chosen first.
+
+## What was and was not tested
+
+| Phase | Result |
 |---|---|
-| Automated suite (fresh clone, x2) | 193 pass, 1 skip by design, analyzer clean, generated code current |
-| Smoke / launch (release x86_64, emulator) | first launch OK; cold 1.3 s at 5k books |
-| Scale (5,000 books, restore via picker) | OK, ~120 MB PSS, Stats correct |
-| Data safety / engine / hostile input | script-driven, 33 findings, rest passed (see findings_part_data.md) |
-| Security / packaging / docs / compat | static + APK inspection, 44 findings; signing and assets verified |
-| Mobile emulator passes | font scale 2.0 (PGM-001), landscape inconclusive (PGM-004) |
-| Real device | NOT RUN (see MANUAL_TEST_PLAN.md) |
+| Baseline, suite, generated code | pass, twice |
+| Migrations schema 1 to 5 to 6 | pass, all rows kept, integrity and foreign keys clean |
+| Release assets | signature, hash, secrets, permissions, 16 KB alignment checked; CI green |
+| Hostile input (new parsers) | fuzzed, only PGM-303 |
+| GUI | tablet rail, two panes, Stats, font 2.0 seen; full activation sweep NOT RUN |
+| Data safety (backup, restore, folder) | unchanged since the 0.7.0 audit; real providers NOT RUN |
+| Performance | NOT RUN this round |
+| Real hardware, TalkBack, notifications, camera | NOT RUN |
 
 ## Top risks
 
-1. Lock/backup trust after a Keystore reset (PGM-200, 202, 204).
-2. Restore is the one destructive path and it is the least tested (PGM-100, 103, 104-106).
-3. Docs promise things the code does not do (PGM-203, 240-243, 248).
+- Anything that touches Android itself (folder picker, notifications, camera, share sheets, TalkBack) has only emulator or no coverage. The folder backup is the one with real data consequences.
+- Lookup data quality: free sources return noisy genres and occasional wrong editions (PGM-302). Refresh details lets users fix it, but they must notice.
+- The timer is the only new feature that holds state outside the database (PGM-320).
+
+## Build-session handoff
+
+**PGM-320 stuck timer.** Repro: copy `scripts/pgm320_stuck_timer_test.dart` into `test/` and run it; it fails on the missing Stop. Cause: `lib/reading_life_ui.dart` `_other` blocks other books and the Stop button only shows for the timed book (`_mine`). Fix direction: when a timer belongs to another book, offer Stop (save or discard that session), and clear the saved timer when its book is finished, trashed or purged. Verify: the same test passes, plus a new test that finishing the book clears `timer_start`.
+
+**PGM-300 Stats width.** Repro: emulator `wm size 2400x1440; wm density 280`, open Stats (`evidence_1.0/f12_stats.png`). Fix direction: wrap the Stats list in `NarrowColumn` and give the calendar grid a fixed cell height (`mainAxisExtent: 40`). Verify: same screenshot shows a one-screen month; add a widget test pumping Stats at 1200 dp asserting the grid is under 400 tall.
+
+**PGM-302 genre noise.** Repro: search "dune frank herbert", add the first result, read the Genre line (`evidence_1.0/f11_pane_book.png`). Fix direction: in `Lookup.genres()` and Google categories, split subjects on commas, drop duplicates case-insensitively, drop "(imaginary place)" entries and the book's own title, keep three. Verify: a lookup_test with the Dune subject list returns clean genres.
+
+**PGM-301, 303, 321, 322:** cap the guide and Add a book with `NarrowColumn`; reject `pages <= 0` or above 20,000 in `parseVolume` and `_parseDoc`; call `closeBook` after Move to locked library; give the empty-state button a book or help icon. Verify with the v0130 and pgm310 tests plus one widget test each.
