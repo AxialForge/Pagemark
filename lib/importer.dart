@@ -14,7 +14,8 @@ class ImportRead {
   String thoughts, narrator;
   int? minutes, heat;
   String contentNotes;
-  ImportRead({this.heat, this.contentNotes = '', this.format = 'print', this.status = 'want', this.started, this.finished, this.rating, this.thoughts = '', this.narrator = '', this.minutes});
+  double? story, characters, writing, pace, feeling, narratorRating;
+  ImportRead({this.story, this.characters, this.writing, this.pace, this.feeling, this.narratorRating, this.heat, this.contentNotes = '', this.format = 'print', this.status = 'want', this.started, this.finished, this.rating, this.thoughts = '', this.narrator = '', this.minutes});
 }
 
 /// One book (with its reads and shelves) found in a file.
@@ -22,7 +23,8 @@ class ImportQuote {
   String text, note;
   int? page;
   DateTime? created;
-  ImportQuote(this.text, {this.page, this.note = '', this.created});
+  double? rating;
+  ImportQuote(this.text, {this.page, this.note = '', this.created, this.rating});
 }
 
 class ImportBook {
@@ -174,7 +176,7 @@ class Importer {
           if (text.isEmpty) continue;
           final key = ImportBook(title: _s(q['title']), author: _s(q['author']), isbn: cleanIsbn(_s(q['isbn']))).key;
           final book = parsed.books.where((b) => b.key == key).firstOrNull;
-          if (book != null) book.quotes.add(ImportQuote(text, page: _int(q['page']), note: _s(q['note']), created: DateTime.tryParse(_s(q['created']))));
+          if (book != null) book.quotes.add(ImportQuote(text, page: _int(q['page']), note: _s(q['note']), rating: halfStars(q['rating']), created: DateTime.tryParse(_s(q['created']))));
         }
         return parsed;
       case ImportSource.pagemarkCsv:
@@ -216,6 +218,8 @@ class Importer {
           started: parseDate(_s(r['started'])), finished: parseDate(_s(r['finished'])), rating: halfStars(r['rating']),
           thoughts: _unsafe(_s(r['thoughts'])), narrator: _unsafe(_s(r['narrator'])), minutes: _int(r['minutes']),
           heat: _int(r['heat']), contentNotes: _unsafe(_s(r['content_notes'])),
+          story: halfStars(r['rating_story']), characters: halfStars(r['rating_characters']), writing: halfStars(r['rating_writing']),
+          pace: halfStars(r['rating_pace']), feeling: halfStars(r['rating_feeling']), narratorRating: halfStars(r['rating_narrator']),
         ));
       }
     }
@@ -374,14 +378,15 @@ class ImportRunner {
         for (final r in b.reads) {
           final rid = await db.into(db.reads).insert(ReadsCompanion.insert(
                 bookId: bookId, format: Value(r.format), status: Value(r.status), started: Value(r.started), finished: Value(r.finished),
-                rating: Value(r.rating), thoughts: Value(r.thoughts), narrator: Value(r.narrator), minutes: Value(r.minutes),
+                rating: Value(r.rating), ratingStory: Value(r.story), ratingCharacters: Value(r.characters), ratingWriting: Value(r.writing),
+                ratingPace: Value(r.pace), ratingFeeling: Value(r.feeling), ratingNarrator: Value(r.narratorRating), thoughts: Value(r.thoughts), narrator: Value(r.narrator), minutes: Value(r.minutes),
                 heat: Value(r.heat), contentNotes: Value(r.contentNotes),
               ));
           reads++;
           if (onExisting) existingReads.add(rid);
         }
         for (final q in b.quotes) {
-          final qid = await db.into(db.quotes).insert(QuotesCompanion.insert(bookId: bookId, body: q.text, page: Value(q.page), note: Value(q.note), created: Value(q.created ?? DateTime.now())));
+          final qid = await db.into(db.quotes).insert(QuotesCompanion.insert(bookId: bookId, body: q.text, page: Value(q.page), note: Value(q.note), rating: Value(q.rating), created: Value(q.created ?? DateTime.now())));
           if (onExisting) existingQuotes.add(qid);
         }
         for (final s in b.shelves) {

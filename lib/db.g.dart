@@ -1109,6 +1109,72 @@ class $ReadsTable extends Reads with TableInfo<$ReadsTable, Read> {
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _ratingStoryMeta = const VerificationMeta(
+    'ratingStory',
+  );
+  @override
+  late final GeneratedColumn<double> ratingStory = GeneratedColumn<double>(
+    'rating_story',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _ratingCharactersMeta = const VerificationMeta(
+    'ratingCharacters',
+  );
+  @override
+  late final GeneratedColumn<double> ratingCharacters = GeneratedColumn<double>(
+    'rating_characters',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _ratingWritingMeta = const VerificationMeta(
+    'ratingWriting',
+  );
+  @override
+  late final GeneratedColumn<double> ratingWriting = GeneratedColumn<double>(
+    'rating_writing',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _ratingPaceMeta = const VerificationMeta(
+    'ratingPace',
+  );
+  @override
+  late final GeneratedColumn<double> ratingPace = GeneratedColumn<double>(
+    'rating_pace',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _ratingFeelingMeta = const VerificationMeta(
+    'ratingFeeling',
+  );
+  @override
+  late final GeneratedColumn<double> ratingFeeling = GeneratedColumn<double>(
+    'rating_feeling',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _ratingNarratorMeta = const VerificationMeta(
+    'ratingNarrator',
+  );
+  @override
+  late final GeneratedColumn<double> ratingNarrator = GeneratedColumn<double>(
+    'rating_narrator',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1124,6 +1190,12 @@ class $ReadsTable extends Reads with TableInfo<$ReadsTable, Read> {
     currentPage,
     heat,
     contentNotes,
+    ratingStory,
+    ratingCharacters,
+    ratingWriting,
+    ratingPace,
+    ratingFeeling,
+    ratingNarrator,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1220,6 +1292,57 @@ class $ReadsTable extends Reads with TableInfo<$ReadsTable, Read> {
         ),
       );
     }
+    if (data.containsKey('rating_story')) {
+      context.handle(
+        _ratingStoryMeta,
+        ratingStory.isAcceptableOrUnknown(
+          data['rating_story']!,
+          _ratingStoryMeta,
+        ),
+      );
+    }
+    if (data.containsKey('rating_characters')) {
+      context.handle(
+        _ratingCharactersMeta,
+        ratingCharacters.isAcceptableOrUnknown(
+          data['rating_characters']!,
+          _ratingCharactersMeta,
+        ),
+      );
+    }
+    if (data.containsKey('rating_writing')) {
+      context.handle(
+        _ratingWritingMeta,
+        ratingWriting.isAcceptableOrUnknown(
+          data['rating_writing']!,
+          _ratingWritingMeta,
+        ),
+      );
+    }
+    if (data.containsKey('rating_pace')) {
+      context.handle(
+        _ratingPaceMeta,
+        ratingPace.isAcceptableOrUnknown(data['rating_pace']!, _ratingPaceMeta),
+      );
+    }
+    if (data.containsKey('rating_feeling')) {
+      context.handle(
+        _ratingFeelingMeta,
+        ratingFeeling.isAcceptableOrUnknown(
+          data['rating_feeling']!,
+          _ratingFeelingMeta,
+        ),
+      );
+    }
+    if (data.containsKey('rating_narrator')) {
+      context.handle(
+        _ratingNarratorMeta,
+        ratingNarrator.isAcceptableOrUnknown(
+          data['rating_narrator']!,
+          _ratingNarratorMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1281,6 +1404,30 @@ class $ReadsTable extends Reads with TableInfo<$ReadsTable, Read> {
         DriftSqlType.string,
         data['${effectivePrefix}content_notes'],
       )!,
+      ratingStory: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}rating_story'],
+      ),
+      ratingCharacters: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}rating_characters'],
+      ),
+      ratingWriting: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}rating_writing'],
+      ),
+      ratingPace: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}rating_pace'],
+      ),
+      ratingFeeling: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}rating_feeling'],
+      ),
+      ratingNarrator: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}rating_narrator'],
+      ),
     );
   }
 
@@ -1304,6 +1451,12 @@ class Read extends DataClass implements Insertable<Read> {
   final int? currentPage;
   final int? heat;
   final String contentNotes;
+  final double? ratingStory;
+  final double? ratingCharacters;
+  final double? ratingWriting;
+  final double? ratingPace;
+  final double? ratingFeeling;
+  final double? ratingNarrator;
   const Read({
     required this.id,
     required this.bookId,
@@ -1318,6 +1471,12 @@ class Read extends DataClass implements Insertable<Read> {
     this.currentPage,
     this.heat,
     required this.contentNotes,
+    this.ratingStory,
+    this.ratingCharacters,
+    this.ratingWriting,
+    this.ratingPace,
+    this.ratingFeeling,
+    this.ratingNarrator,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1347,6 +1506,24 @@ class Read extends DataClass implements Insertable<Read> {
       map['heat'] = Variable<int>(heat);
     }
     map['content_notes'] = Variable<String>(contentNotes);
+    if (!nullToAbsent || ratingStory != null) {
+      map['rating_story'] = Variable<double>(ratingStory);
+    }
+    if (!nullToAbsent || ratingCharacters != null) {
+      map['rating_characters'] = Variable<double>(ratingCharacters);
+    }
+    if (!nullToAbsent || ratingWriting != null) {
+      map['rating_writing'] = Variable<double>(ratingWriting);
+    }
+    if (!nullToAbsent || ratingPace != null) {
+      map['rating_pace'] = Variable<double>(ratingPace);
+    }
+    if (!nullToAbsent || ratingFeeling != null) {
+      map['rating_feeling'] = Variable<double>(ratingFeeling);
+    }
+    if (!nullToAbsent || ratingNarrator != null) {
+      map['rating_narrator'] = Variable<double>(ratingNarrator);
+    }
     return map;
   }
 
@@ -1375,6 +1552,24 @@ class Read extends DataClass implements Insertable<Read> {
           : Value(currentPage),
       heat: heat == null && nullToAbsent ? const Value.absent() : Value(heat),
       contentNotes: Value(contentNotes),
+      ratingStory: ratingStory == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ratingStory),
+      ratingCharacters: ratingCharacters == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ratingCharacters),
+      ratingWriting: ratingWriting == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ratingWriting),
+      ratingPace: ratingPace == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ratingPace),
+      ratingFeeling: ratingFeeling == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ratingFeeling),
+      ratingNarrator: ratingNarrator == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ratingNarrator),
     );
   }
 
@@ -1397,6 +1592,12 @@ class Read extends DataClass implements Insertable<Read> {
       currentPage: serializer.fromJson<int?>(json['currentPage']),
       heat: serializer.fromJson<int?>(json['heat']),
       contentNotes: serializer.fromJson<String>(json['contentNotes']),
+      ratingStory: serializer.fromJson<double?>(json['ratingStory']),
+      ratingCharacters: serializer.fromJson<double?>(json['ratingCharacters']),
+      ratingWriting: serializer.fromJson<double?>(json['ratingWriting']),
+      ratingPace: serializer.fromJson<double?>(json['ratingPace']),
+      ratingFeeling: serializer.fromJson<double?>(json['ratingFeeling']),
+      ratingNarrator: serializer.fromJson<double?>(json['ratingNarrator']),
     );
   }
   @override
@@ -1416,6 +1617,12 @@ class Read extends DataClass implements Insertable<Read> {
       'currentPage': serializer.toJson<int?>(currentPage),
       'heat': serializer.toJson<int?>(heat),
       'contentNotes': serializer.toJson<String>(contentNotes),
+      'ratingStory': serializer.toJson<double?>(ratingStory),
+      'ratingCharacters': serializer.toJson<double?>(ratingCharacters),
+      'ratingWriting': serializer.toJson<double?>(ratingWriting),
+      'ratingPace': serializer.toJson<double?>(ratingPace),
+      'ratingFeeling': serializer.toJson<double?>(ratingFeeling),
+      'ratingNarrator': serializer.toJson<double?>(ratingNarrator),
     };
   }
 
@@ -1433,6 +1640,12 @@ class Read extends DataClass implements Insertable<Read> {
     Value<int?> currentPage = const Value.absent(),
     Value<int?> heat = const Value.absent(),
     String? contentNotes,
+    Value<double?> ratingStory = const Value.absent(),
+    Value<double?> ratingCharacters = const Value.absent(),
+    Value<double?> ratingWriting = const Value.absent(),
+    Value<double?> ratingPace = const Value.absent(),
+    Value<double?> ratingFeeling = const Value.absent(),
+    Value<double?> ratingNarrator = const Value.absent(),
   }) => Read(
     id: id ?? this.id,
     bookId: bookId ?? this.bookId,
@@ -1447,6 +1660,20 @@ class Read extends DataClass implements Insertable<Read> {
     currentPage: currentPage.present ? currentPage.value : this.currentPage,
     heat: heat.present ? heat.value : this.heat,
     contentNotes: contentNotes ?? this.contentNotes,
+    ratingStory: ratingStory.present ? ratingStory.value : this.ratingStory,
+    ratingCharacters: ratingCharacters.present
+        ? ratingCharacters.value
+        : this.ratingCharacters,
+    ratingWriting: ratingWriting.present
+        ? ratingWriting.value
+        : this.ratingWriting,
+    ratingPace: ratingPace.present ? ratingPace.value : this.ratingPace,
+    ratingFeeling: ratingFeeling.present
+        ? ratingFeeling.value
+        : this.ratingFeeling,
+    ratingNarrator: ratingNarrator.present
+        ? ratingNarrator.value
+        : this.ratingNarrator,
   );
   Read copyWithCompanion(ReadsCompanion data) {
     return Read(
@@ -1467,6 +1694,24 @@ class Read extends DataClass implements Insertable<Read> {
       contentNotes: data.contentNotes.present
           ? data.contentNotes.value
           : this.contentNotes,
+      ratingStory: data.ratingStory.present
+          ? data.ratingStory.value
+          : this.ratingStory,
+      ratingCharacters: data.ratingCharacters.present
+          ? data.ratingCharacters.value
+          : this.ratingCharacters,
+      ratingWriting: data.ratingWriting.present
+          ? data.ratingWriting.value
+          : this.ratingWriting,
+      ratingPace: data.ratingPace.present
+          ? data.ratingPace.value
+          : this.ratingPace,
+      ratingFeeling: data.ratingFeeling.present
+          ? data.ratingFeeling.value
+          : this.ratingFeeling,
+      ratingNarrator: data.ratingNarrator.present
+          ? data.ratingNarrator.value
+          : this.ratingNarrator,
     );
   }
 
@@ -1485,7 +1730,13 @@ class Read extends DataClass implements Insertable<Read> {
           ..write('minutes: $minutes, ')
           ..write('currentPage: $currentPage, ')
           ..write('heat: $heat, ')
-          ..write('contentNotes: $contentNotes')
+          ..write('contentNotes: $contentNotes, ')
+          ..write('ratingStory: $ratingStory, ')
+          ..write('ratingCharacters: $ratingCharacters, ')
+          ..write('ratingWriting: $ratingWriting, ')
+          ..write('ratingPace: $ratingPace, ')
+          ..write('ratingFeeling: $ratingFeeling, ')
+          ..write('ratingNarrator: $ratingNarrator')
           ..write(')'))
         .toString();
   }
@@ -1505,6 +1756,12 @@ class Read extends DataClass implements Insertable<Read> {
     currentPage,
     heat,
     contentNotes,
+    ratingStory,
+    ratingCharacters,
+    ratingWriting,
+    ratingPace,
+    ratingFeeling,
+    ratingNarrator,
   );
   @override
   bool operator ==(Object other) =>
@@ -1522,7 +1779,13 @@ class Read extends DataClass implements Insertable<Read> {
           other.minutes == this.minutes &&
           other.currentPage == this.currentPage &&
           other.heat == this.heat &&
-          other.contentNotes == this.contentNotes);
+          other.contentNotes == this.contentNotes &&
+          other.ratingStory == this.ratingStory &&
+          other.ratingCharacters == this.ratingCharacters &&
+          other.ratingWriting == this.ratingWriting &&
+          other.ratingPace == this.ratingPace &&
+          other.ratingFeeling == this.ratingFeeling &&
+          other.ratingNarrator == this.ratingNarrator);
 }
 
 class ReadsCompanion extends UpdateCompanion<Read> {
@@ -1539,6 +1802,12 @@ class ReadsCompanion extends UpdateCompanion<Read> {
   final Value<int?> currentPage;
   final Value<int?> heat;
   final Value<String> contentNotes;
+  final Value<double?> ratingStory;
+  final Value<double?> ratingCharacters;
+  final Value<double?> ratingWriting;
+  final Value<double?> ratingPace;
+  final Value<double?> ratingFeeling;
+  final Value<double?> ratingNarrator;
   const ReadsCompanion({
     this.id = const Value.absent(),
     this.bookId = const Value.absent(),
@@ -1553,6 +1822,12 @@ class ReadsCompanion extends UpdateCompanion<Read> {
     this.currentPage = const Value.absent(),
     this.heat = const Value.absent(),
     this.contentNotes = const Value.absent(),
+    this.ratingStory = const Value.absent(),
+    this.ratingCharacters = const Value.absent(),
+    this.ratingWriting = const Value.absent(),
+    this.ratingPace = const Value.absent(),
+    this.ratingFeeling = const Value.absent(),
+    this.ratingNarrator = const Value.absent(),
   });
   ReadsCompanion.insert({
     this.id = const Value.absent(),
@@ -1568,6 +1843,12 @@ class ReadsCompanion extends UpdateCompanion<Read> {
     this.currentPage = const Value.absent(),
     this.heat = const Value.absent(),
     this.contentNotes = const Value.absent(),
+    this.ratingStory = const Value.absent(),
+    this.ratingCharacters = const Value.absent(),
+    this.ratingWriting = const Value.absent(),
+    this.ratingPace = const Value.absent(),
+    this.ratingFeeling = const Value.absent(),
+    this.ratingNarrator = const Value.absent(),
   }) : bookId = Value(bookId);
   static Insertable<Read> custom({
     Expression<int>? id,
@@ -1583,6 +1864,12 @@ class ReadsCompanion extends UpdateCompanion<Read> {
     Expression<int>? currentPage,
     Expression<int>? heat,
     Expression<String>? contentNotes,
+    Expression<double>? ratingStory,
+    Expression<double>? ratingCharacters,
+    Expression<double>? ratingWriting,
+    Expression<double>? ratingPace,
+    Expression<double>? ratingFeeling,
+    Expression<double>? ratingNarrator,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1598,6 +1885,12 @@ class ReadsCompanion extends UpdateCompanion<Read> {
       if (currentPage != null) 'current_page': currentPage,
       if (heat != null) 'heat': heat,
       if (contentNotes != null) 'content_notes': contentNotes,
+      if (ratingStory != null) 'rating_story': ratingStory,
+      if (ratingCharacters != null) 'rating_characters': ratingCharacters,
+      if (ratingWriting != null) 'rating_writing': ratingWriting,
+      if (ratingPace != null) 'rating_pace': ratingPace,
+      if (ratingFeeling != null) 'rating_feeling': ratingFeeling,
+      if (ratingNarrator != null) 'rating_narrator': ratingNarrator,
     });
   }
 
@@ -1615,6 +1908,12 @@ class ReadsCompanion extends UpdateCompanion<Read> {
     Value<int?>? currentPage,
     Value<int?>? heat,
     Value<String>? contentNotes,
+    Value<double?>? ratingStory,
+    Value<double?>? ratingCharacters,
+    Value<double?>? ratingWriting,
+    Value<double?>? ratingPace,
+    Value<double?>? ratingFeeling,
+    Value<double?>? ratingNarrator,
   }) {
     return ReadsCompanion(
       id: id ?? this.id,
@@ -1630,6 +1929,12 @@ class ReadsCompanion extends UpdateCompanion<Read> {
       currentPage: currentPage ?? this.currentPage,
       heat: heat ?? this.heat,
       contentNotes: contentNotes ?? this.contentNotes,
+      ratingStory: ratingStory ?? this.ratingStory,
+      ratingCharacters: ratingCharacters ?? this.ratingCharacters,
+      ratingWriting: ratingWriting ?? this.ratingWriting,
+      ratingPace: ratingPace ?? this.ratingPace,
+      ratingFeeling: ratingFeeling ?? this.ratingFeeling,
+      ratingNarrator: ratingNarrator ?? this.ratingNarrator,
     );
   }
 
@@ -1675,6 +1980,24 @@ class ReadsCompanion extends UpdateCompanion<Read> {
     if (contentNotes.present) {
       map['content_notes'] = Variable<String>(contentNotes.value);
     }
+    if (ratingStory.present) {
+      map['rating_story'] = Variable<double>(ratingStory.value);
+    }
+    if (ratingCharacters.present) {
+      map['rating_characters'] = Variable<double>(ratingCharacters.value);
+    }
+    if (ratingWriting.present) {
+      map['rating_writing'] = Variable<double>(ratingWriting.value);
+    }
+    if (ratingPace.present) {
+      map['rating_pace'] = Variable<double>(ratingPace.value);
+    }
+    if (ratingFeeling.present) {
+      map['rating_feeling'] = Variable<double>(ratingFeeling.value);
+    }
+    if (ratingNarrator.present) {
+      map['rating_narrator'] = Variable<double>(ratingNarrator.value);
+    }
     return map;
   }
 
@@ -1693,7 +2016,13 @@ class ReadsCompanion extends UpdateCompanion<Read> {
           ..write('minutes: $minutes, ')
           ..write('currentPage: $currentPage, ')
           ..write('heat: $heat, ')
-          ..write('contentNotes: $contentNotes')
+          ..write('contentNotes: $contentNotes, ')
+          ..write('ratingStory: $ratingStory, ')
+          ..write('ratingCharacters: $ratingCharacters, ')
+          ..write('ratingWriting: $ratingWriting, ')
+          ..write('ratingPace: $ratingPace, ')
+          ..write('ratingFeeling: $ratingFeeling, ')
+          ..write('ratingNarrator: $ratingNarrator')
           ..write(')'))
         .toString();
   }
@@ -2162,6 +2491,15 @@ class $QuotesTable extends Quotes with TableInfo<$QuotesTable, Quote> {
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _ratingMeta = const VerificationMeta('rating');
+  @override
+  late final GeneratedColumn<double> rating = GeneratedColumn<double>(
+    'rating',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdMeta = const VerificationMeta(
     'created',
   );
@@ -2175,7 +2513,15 @@ class $QuotesTable extends Quotes with TableInfo<$QuotesTable, Quote> {
     defaultValue: currentDateAndTime,
   );
   @override
-  List<GeneratedColumn> get $columns => [id, bookId, body, page, note, created];
+  List<GeneratedColumn> get $columns => [
+    id,
+    bookId,
+    body,
+    page,
+    note,
+    rating,
+    created,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -2219,6 +2565,12 @@ class $QuotesTable extends Quotes with TableInfo<$QuotesTable, Quote> {
         note.isAcceptableOrUnknown(data['note']!, _noteMeta),
       );
     }
+    if (data.containsKey('rating')) {
+      context.handle(
+        _ratingMeta,
+        rating.isAcceptableOrUnknown(data['rating']!, _ratingMeta),
+      );
+    }
     if (data.containsKey('created')) {
       context.handle(
         _createdMeta,
@@ -2254,6 +2606,10 @@ class $QuotesTable extends Quotes with TableInfo<$QuotesTable, Quote> {
         DriftSqlType.string,
         data['${effectivePrefix}note'],
       )!,
+      rating: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}rating'],
+      ),
       created: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created'],
@@ -2273,6 +2629,7 @@ class Quote extends DataClass implements Insertable<Quote> {
   final String body;
   final int? page;
   final String note;
+  final double? rating;
   final DateTime created;
   const Quote({
     required this.id,
@@ -2280,6 +2637,7 @@ class Quote extends DataClass implements Insertable<Quote> {
     required this.body,
     this.page,
     required this.note,
+    this.rating,
     required this.created,
   });
   @override
@@ -2292,6 +2650,9 @@ class Quote extends DataClass implements Insertable<Quote> {
       map['page'] = Variable<int>(page);
     }
     map['note'] = Variable<String>(note);
+    if (!nullToAbsent || rating != null) {
+      map['rating'] = Variable<double>(rating);
+    }
     map['created'] = Variable<DateTime>(created);
     return map;
   }
@@ -2303,6 +2664,9 @@ class Quote extends DataClass implements Insertable<Quote> {
       body: Value(body),
       page: page == null && nullToAbsent ? const Value.absent() : Value(page),
       note: Value(note),
+      rating: rating == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rating),
       created: Value(created),
     );
   }
@@ -2318,6 +2682,7 @@ class Quote extends DataClass implements Insertable<Quote> {
       body: serializer.fromJson<String>(json['body']),
       page: serializer.fromJson<int?>(json['page']),
       note: serializer.fromJson<String>(json['note']),
+      rating: serializer.fromJson<double?>(json['rating']),
       created: serializer.fromJson<DateTime>(json['created']),
     );
   }
@@ -2330,6 +2695,7 @@ class Quote extends DataClass implements Insertable<Quote> {
       'body': serializer.toJson<String>(body),
       'page': serializer.toJson<int?>(page),
       'note': serializer.toJson<String>(note),
+      'rating': serializer.toJson<double?>(rating),
       'created': serializer.toJson<DateTime>(created),
     };
   }
@@ -2340,6 +2706,7 @@ class Quote extends DataClass implements Insertable<Quote> {
     String? body,
     Value<int?> page = const Value.absent(),
     String? note,
+    Value<double?> rating = const Value.absent(),
     DateTime? created,
   }) => Quote(
     id: id ?? this.id,
@@ -2347,6 +2714,7 @@ class Quote extends DataClass implements Insertable<Quote> {
     body: body ?? this.body,
     page: page.present ? page.value : this.page,
     note: note ?? this.note,
+    rating: rating.present ? rating.value : this.rating,
     created: created ?? this.created,
   );
   Quote copyWithCompanion(QuotesCompanion data) {
@@ -2356,6 +2724,7 @@ class Quote extends DataClass implements Insertable<Quote> {
       body: data.body.present ? data.body.value : this.body,
       page: data.page.present ? data.page.value : this.page,
       note: data.note.present ? data.note.value : this.note,
+      rating: data.rating.present ? data.rating.value : this.rating,
       created: data.created.present ? data.created.value : this.created,
     );
   }
@@ -2368,13 +2737,15 @@ class Quote extends DataClass implements Insertable<Quote> {
           ..write('body: $body, ')
           ..write('page: $page, ')
           ..write('note: $note, ')
+          ..write('rating: $rating, ')
           ..write('created: $created')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, bookId, body, page, note, created);
+  int get hashCode =>
+      Object.hash(id, bookId, body, page, note, rating, created);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2384,6 +2755,7 @@ class Quote extends DataClass implements Insertable<Quote> {
           other.body == this.body &&
           other.page == this.page &&
           other.note == this.note &&
+          other.rating == this.rating &&
           other.created == this.created);
 }
 
@@ -2393,6 +2765,7 @@ class QuotesCompanion extends UpdateCompanion<Quote> {
   final Value<String> body;
   final Value<int?> page;
   final Value<String> note;
+  final Value<double?> rating;
   final Value<DateTime> created;
   const QuotesCompanion({
     this.id = const Value.absent(),
@@ -2400,6 +2773,7 @@ class QuotesCompanion extends UpdateCompanion<Quote> {
     this.body = const Value.absent(),
     this.page = const Value.absent(),
     this.note = const Value.absent(),
+    this.rating = const Value.absent(),
     this.created = const Value.absent(),
   });
   QuotesCompanion.insert({
@@ -2408,6 +2782,7 @@ class QuotesCompanion extends UpdateCompanion<Quote> {
     required String body,
     this.page = const Value.absent(),
     this.note = const Value.absent(),
+    this.rating = const Value.absent(),
     this.created = const Value.absent(),
   }) : bookId = Value(bookId),
        body = Value(body);
@@ -2417,6 +2792,7 @@ class QuotesCompanion extends UpdateCompanion<Quote> {
     Expression<String>? body,
     Expression<int>? page,
     Expression<String>? note,
+    Expression<double>? rating,
     Expression<DateTime>? created,
   }) {
     return RawValuesInsertable({
@@ -2425,6 +2801,7 @@ class QuotesCompanion extends UpdateCompanion<Quote> {
       if (body != null) 'body': body,
       if (page != null) 'page': page,
       if (note != null) 'note': note,
+      if (rating != null) 'rating': rating,
       if (created != null) 'created': created,
     });
   }
@@ -2435,6 +2812,7 @@ class QuotesCompanion extends UpdateCompanion<Quote> {
     Value<String>? body,
     Value<int?>? page,
     Value<String>? note,
+    Value<double?>? rating,
     Value<DateTime>? created,
   }) {
     return QuotesCompanion(
@@ -2443,6 +2821,7 @@ class QuotesCompanion extends UpdateCompanion<Quote> {
       body: body ?? this.body,
       page: page ?? this.page,
       note: note ?? this.note,
+      rating: rating ?? this.rating,
       created: created ?? this.created,
     );
   }
@@ -2465,6 +2844,9 @@ class QuotesCompanion extends UpdateCompanion<Quote> {
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
+    if (rating.present) {
+      map['rating'] = Variable<double>(rating.value);
+    }
     if (created.present) {
       map['created'] = Variable<DateTime>(created.value);
     }
@@ -2479,6 +2861,7 @@ class QuotesCompanion extends UpdateCompanion<Quote> {
           ..write('body: $body, ')
           ..write('page: $page, ')
           ..write('note: $note, ')
+          ..write('rating: $rating, ')
           ..write('created: $created')
           ..write(')'))
         .toString();
@@ -3288,6 +3671,12 @@ typedef $$ReadsTableCreateCompanionBuilder = ReadsCompanion Function({
   Value<int?> currentPage,
   Value<int?> heat,
   Value<String> contentNotes,
+  Value<double?> ratingStory,
+  Value<double?> ratingCharacters,
+  Value<double?> ratingWriting,
+  Value<double?> ratingPace,
+  Value<double?> ratingFeeling,
+  Value<double?> ratingNarrator,
 });
 typedef $$ReadsTableUpdateCompanionBuilder = ReadsCompanion Function({
   Value<int> id,
@@ -3303,6 +3692,12 @@ typedef $$ReadsTableUpdateCompanionBuilder = ReadsCompanion Function({
   Value<int?> currentPage,
   Value<int?> heat,
   Value<String> contentNotes,
+  Value<double?> ratingStory,
+  Value<double?> ratingCharacters,
+  Value<double?> ratingWriting,
+  Value<double?> ratingPace,
+  Value<double?> ratingFeeling,
+  Value<double?> ratingNarrator,
 });
 
 final class $$ReadsTableReferences
@@ -3392,6 +3787,36 @@ class $$ReadsTableFilterComposer extends Composer<_$AppDb, $ReadsTable> {
 
   ColumnFilters<String> get contentNotes => $composableBuilder(
     column: $table.contentNotes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get ratingStory => $composableBuilder(
+    column: $table.ratingStory,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get ratingCharacters => $composableBuilder(
+    column: $table.ratingCharacters,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get ratingWriting => $composableBuilder(
+    column: $table.ratingWriting,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get ratingPace => $composableBuilder(
+    column: $table.ratingPace,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get ratingFeeling => $composableBuilder(
+    column: $table.ratingFeeling,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get ratingNarrator => $composableBuilder(
+    column: $table.ratingNarrator,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3487,6 +3912,36 @@ class $$ReadsTableOrderingComposer extends Composer<_$AppDb, $ReadsTable> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get ratingStory => $composableBuilder(
+    column: $table.ratingStory,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get ratingCharacters => $composableBuilder(
+    column: $table.ratingCharacters,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get ratingWriting => $composableBuilder(
+    column: $table.ratingWriting,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get ratingPace => $composableBuilder(
+    column: $table.ratingPace,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get ratingFeeling => $composableBuilder(
+    column: $table.ratingFeeling,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get ratingNarrator => $composableBuilder(
+    column: $table.ratingNarrator,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$BooksTableOrderingComposer get bookId {
     final $$BooksTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -3559,6 +4014,36 @@ class $$ReadsTableAnnotationComposer extends Composer<_$AppDb, $ReadsTable> {
     builder: (column) => column,
   );
 
+  GeneratedColumn<double> get ratingStory => $composableBuilder(
+    column: $table.ratingStory,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get ratingCharacters => $composableBuilder(
+    column: $table.ratingCharacters,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get ratingWriting => $composableBuilder(
+    column: $table.ratingWriting,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get ratingPace => $composableBuilder(
+    column: $table.ratingPace,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get ratingFeeling => $composableBuilder(
+    column: $table.ratingFeeling,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get ratingNarrator => $composableBuilder(
+    column: $table.ratingNarrator,
+    builder: (column) => column,
+  );
+
   $$BooksTableAnnotationComposer get bookId {
     final $$BooksTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -3624,6 +4109,12 @@ class $$ReadsTableTableManager
                 Value<int?> currentPage = const Value.absent(),
                 Value<int?> heat = const Value.absent(),
                 Value<String> contentNotes = const Value.absent(),
+                Value<double?> ratingStory = const Value.absent(),
+                Value<double?> ratingCharacters = const Value.absent(),
+                Value<double?> ratingWriting = const Value.absent(),
+                Value<double?> ratingPace = const Value.absent(),
+                Value<double?> ratingFeeling = const Value.absent(),
+                Value<double?> ratingNarrator = const Value.absent(),
               }) => ReadsCompanion(
                 id: id,
                 bookId: bookId,
@@ -3638,6 +4129,12 @@ class $$ReadsTableTableManager
                 currentPage: currentPage,
                 heat: heat,
                 contentNotes: contentNotes,
+                ratingStory: ratingStory,
+                ratingCharacters: ratingCharacters,
+                ratingWriting: ratingWriting,
+                ratingPace: ratingPace,
+                ratingFeeling: ratingFeeling,
+                ratingNarrator: ratingNarrator,
               ),
           createCompanionCallback:
               ({
@@ -3654,6 +4151,12 @@ class $$ReadsTableTableManager
                 Value<int?> currentPage = const Value.absent(),
                 Value<int?> heat = const Value.absent(),
                 Value<String> contentNotes = const Value.absent(),
+                Value<double?> ratingStory = const Value.absent(),
+                Value<double?> ratingCharacters = const Value.absent(),
+                Value<double?> ratingWriting = const Value.absent(),
+                Value<double?> ratingPace = const Value.absent(),
+                Value<double?> ratingFeeling = const Value.absent(),
+                Value<double?> ratingNarrator = const Value.absent(),
               }) => ReadsCompanion.insert(
                 id: id,
                 bookId: bookId,
@@ -3668,6 +4171,12 @@ class $$ReadsTableTableManager
                 currentPage: currentPage,
                 heat: heat,
                 contentNotes: contentNotes,
+                ratingStory: ratingStory,
+                ratingCharacters: ratingCharacters,
+                ratingWriting: ratingWriting,
+                ratingPace: ratingPace,
+                ratingFeeling: ratingFeeling,
+                ratingNarrator: ratingNarrator,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -4304,6 +4813,7 @@ typedef $$QuotesTableCreateCompanionBuilder = QuotesCompanion Function({
   required String body,
   Value<int?> page,
   Value<String> note,
+  Value<double?> rating,
   Value<DateTime> created,
 });
 typedef $$QuotesTableUpdateCompanionBuilder = QuotesCompanion Function({
@@ -4312,6 +4822,7 @@ typedef $$QuotesTableUpdateCompanionBuilder = QuotesCompanion Function({
   Value<String> body,
   Value<int?> page,
   Value<String> note,
+  Value<double?> rating,
   Value<DateTime> created,
 });
 
@@ -4362,6 +4873,11 @@ class $$QuotesTableFilterComposer extends Composer<_$AppDb, $QuotesTable> {
 
   ColumnFilters<String> get note => $composableBuilder(
     column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get rating => $composableBuilder(
+    column: $table.rating,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4422,6 +4938,11 @@ class $$QuotesTableOrderingComposer extends Composer<_$AppDb, $QuotesTable> {
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get rating => $composableBuilder(
+    column: $table.rating,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get created => $composableBuilder(
     column: $table.created,
     builder: (column) => ColumnOrderings(column),
@@ -4470,6 +4991,9 @@ class $$QuotesTableAnnotationComposer extends Composer<_$AppDb, $QuotesTable> {
 
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<double> get rating =>
+      $composableBuilder(column: $table.rating, builder: (column) => column);
 
   GeneratedColumn<DateTime> get created =>
       $composableBuilder(column: $table.created, builder: (column) => column);
@@ -4531,6 +5055,7 @@ class $$QuotesTableTableManager
                 Value<String> body = const Value.absent(),
                 Value<int?> page = const Value.absent(),
                 Value<String> note = const Value.absent(),
+                Value<double?> rating = const Value.absent(),
                 Value<DateTime> created = const Value.absent(),
               }) => QuotesCompanion(
                 id: id,
@@ -4538,6 +5063,7 @@ class $$QuotesTableTableManager
                 body: body,
                 page: page,
                 note: note,
+                rating: rating,
                 created: created,
               ),
           createCompanionCallback:
@@ -4547,6 +5073,7 @@ class $$QuotesTableTableManager
                 required String body,
                 Value<int?> page = const Value.absent(),
                 Value<String> note = const Value.absent(),
+                Value<double?> rating = const Value.absent(),
                 Value<DateTime> created = const Value.absent(),
               }) => QuotesCompanion.insert(
                 id: id,
@@ -4554,6 +5081,7 @@ class $$QuotesTableTableManager
                 body: body,
                 page: page,
                 note: note,
+                rating: rating,
                 created: created,
               ),
           withReferenceMapper: (p0) => p0

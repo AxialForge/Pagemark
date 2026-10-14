@@ -45,6 +45,13 @@ class Reads extends Table {
   IntColumn get currentPage => integer().nullable()(); // reading progress (page or %)
   IntColumn get heat => integer().nullable()(); // 0-5 private "heat" level (opt-in field)
   TextColumn get contentNotes => text().withDefault(const Constant(''))(); // private content notes (opt-in field)
+  // optional detailed ratings, 0.5 - 5 (opt-in in Settings); narrator only for audiobook reads
+  RealColumn get ratingStory => real().nullable()();
+  RealColumn get ratingCharacters => real().nullable()();
+  RealColumn get ratingWriting => real().nullable()();
+  RealColumn get ratingPace => real().nullable()();
+  RealColumn get ratingFeeling => real().nullable()();
+  RealColumn get ratingNarrator => real().nullable()();
 }
 
 /// A passage you want to keep from a book.
@@ -54,6 +61,7 @@ class Quotes extends Table {
   TextColumn get body => text()();
   IntColumn get page => integer().nullable()();
   TextColumn get note => text().withDefault(const Constant(''))();
+  RealColumn get rating => real().nullable()(); // 0.5 - 5: how much you loved this line
   DateTimeColumn get created => dateTime().withDefault(currentDateAndTime)();
 }
 
@@ -77,7 +85,7 @@ class AppDb extends _$AppDb {
   AppDb() : super(_open());
   AppDb.forFile(File f) : super(NativeDatabase(f, setup: _pragmas));
   AppDb.memory() : super(NativeDatabase.memory());
-  static const currentSchema = 4;
+  static const currentSchema = 5;
   @override
   int get schemaVersion => currentSchema;
 
@@ -102,6 +110,16 @@ class AppDb extends _$AppDb {
             await m.addColumn(reads, reads.heat);
             await m.addColumn(reads, reads.contentNotes);
             await m.createTable(quotes);
+          }
+          if (from < 5) {
+            await m.addColumn(reads, reads.ratingStory);
+            await m.addColumn(reads, reads.ratingCharacters);
+            await m.addColumn(reads, reads.ratingWriting);
+            await m.addColumn(reads, reads.ratingPace);
+            await m.addColumn(reads, reads.ratingFeeling);
+            await m.addColumn(reads, reads.ratingNarrator);
+            // a database older than 4 just had the quotes table created (with this column) in the step above
+            if (from >= 4) await m.addColumn(quotes, quotes.rating);
           }
         },
         beforeOpen: (details) async {
@@ -163,10 +181,10 @@ class AppDb extends _$AppDb {
         return {for (final e in m.entries) e.key: e.value.toString()};
       });
 
-  Future<int> addQuote(int bookId, String text, {int? page, String note = ''}) =>
-      into(quotes).insert(QuotesCompanion.insert(bookId: bookId, body: text.trim(), page: Value(page), note: Value(note.trim())));
-  Future<void> updateQuote(int id, String text, {int? page, String note = ''}) => (update(quotes)..where((q) => q.id.equals(id)))
-      .write(QuotesCompanion(body: Value(text.trim()), page: Value(page), note: Value(note.trim())));
+  Future<int> addQuote(int bookId, String text, {int? page, String note = '', double? rating}) =>
+      into(quotes).insert(QuotesCompanion.insert(bookId: bookId, body: text.trim(), page: Value(page), note: Value(note.trim()), rating: Value(rating)));
+  Future<void> updateQuote(int id, String text, {int? page, String note = '', double? rating}) => (update(quotes)..where((q) => q.id.equals(id)))
+      .write(QuotesCompanion(body: Value(text.trim()), page: Value(page), note: Value(note.trim()), rating: Value(rating)));
   Future<void> deleteQuote(int id) => (delete(quotes)..where((q) => q.id.equals(id))).go();
   Future<void> restoreQuote(Quote q) => into(quotes).insert(q, mode: InsertMode.insertOrReplace);
 

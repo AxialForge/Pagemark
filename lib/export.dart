@@ -57,7 +57,7 @@ class Exporter {
     for (final q in await db.select(db.quotes).get()) {
       final b = books[q.bookId];
       if (b == null || (b.locked && !includeLocked)) continue;
-      out.add({'title': b.title, 'author': b.author, 'isbn': b.isbn, 'quote': q.body, 'page': q.page, 'note': q.note, 'created': q.created.toIso8601String()});
+      out.add({'title': b.title, 'author': b.author, 'isbn': b.isbn, 'quote': q.body, 'page': q.page, 'note': q.note, 'rating': q.rating, 'created': q.created.toIso8601String()});
     }
     return out;
   }
@@ -76,6 +76,8 @@ class Exporter {
           'started': r?.started?.toIso8601String(), 'finished': r?.finished?.toIso8601String(),
           'rating': r?.rating, 'thoughts': r?.thoughts, 'narrator': r?.narrator, 'minutes': r?.minutes,
           'series_total': b.seriesTotal, 'series_number': b.seriesNumber, 'description': b.description,
+          'rating_story': r?.ratingStory, 'rating_characters': r?.ratingCharacters, 'rating_writing': r?.ratingWriting,
+          'rating_pace': r?.ratingPace, 'rating_feeling': r?.ratingFeeling, 'rating_narrator': r?.ratingNarrator,
           if (includePrivateFields) ...{'heat': r?.heat, 'content_notes': r?.contentNotes},
         });
       }

@@ -6,17 +6,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.8.2] - 2026-10-13
+## [0.9.0] - 2026-10-13
 
-Simpler backups.
+Rate in more detail, simpler backups, a Notifications page.
 
 ### Added
+- **Rate books in more detail** (Settings > Your library): optional stars for Story, Characters, Writing, Pace and How it made me feel, plus Narrator on audiobook reads. They show on the book page and in your saved lists, and Stats shows your average for each.
+- **Star ratings on quotes** ("How much you love it") and an **average rating on the Series page** (counting the books you rated).
 - **Notifications page** in Settings: all reminders in one place (daily reading reminder, backup reminder), with a clear warning and a **Turn on** button when Android has notifications switched off for Pagemark. The widget and icon shortcuts now have their own page, **Widget and shortcuts**.
 - **Backup reminder** (Settings > Backup and restore > Remind me to back up): a notification every week, two weeks or month, counted from the last time you saved a copy. The Backup page now shows when you last saved a copy, in plain words, with a warning if it is overdue.
 
 ### Removed
 - **Google Drive backup.** It needed a Google Cloud project and a "client ID", which was too hard for most people. Saving a password-protected copy as a file (and a spreadsheet) stays, and you can keep that file anywhere, including your own Google Drive. If you had Drive backup turned on, its old files stay in your Drive; Pagemark just stops using them.
 - The background-work, Google sign-in and Drive libraries are gone from the app, so it is smaller and asks for fewer permissions.
+
+### Changed
+- The library file format moves to schema 5 (new columns for the detailed ratings and quote stars). Restores of older backups still work; a backup made by 0.9.0 cannot be restored by an older Pagemark.
 
 ## [0.8.1] - 2026-10-13
 

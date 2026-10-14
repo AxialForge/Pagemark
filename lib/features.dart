@@ -3,6 +3,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'book_extras.dart' show heatStatsCard, adultFieldsOn;
+import 'detailed_ratings.dart';
 import 'branding.dart';
 import 'db.dart';
 import 'main.dart';
@@ -381,10 +382,11 @@ class SeriesPage extends StatelessWidget {
     final total = rows.map((r) => r.book.seriesTotal ?? 0).fold<int>(0, (a, b) => a > b ? a : b);
     final outside = total > rows.length ? total - rows.length : 0; // volumes you do not have yet
     final next = rows.where((r) => !r.reads.any((e) => e.status == 'finished')).firstOrNull;
+    final avg = seriesAverage(rows);
     return ExpansionTile(
       initiallyExpanded: rows.length <= 4,
       title: Text(rows.first.book.series.trim()),
-      subtitle: Text('$read of ${total > 0 ? total : rows.length} read${outside > 0 ? ' · $outside not in your library' : ''}${next == null ? (outside > 0 ? '' : ' — all done') : ' · next: ${next.book.title}'}'),
+      subtitle: Text('$read of ${total > 0 ? total : rows.length} read${outside > 0 ? ' · $outside not in your library' : ''}${next == null ? (outside > 0 ? '' : ' — all done') : ' · next: ${next.book.title}'}${avg.average == null ? '' : ' · average ${avg.average!.toStringAsFixed(1)} stars (${avg.rated} rated)'}'),
       children: [
         for (final r in rows)
           ListTile(
@@ -502,6 +504,7 @@ class _StatsState extends State<Stats> {
               if (avgDays != null) _kv(context, 'Average days to finish', avgDays.toStringAsFixed(1)),
               for (final e in byFmt.entries) _kv(context, 'Finished · ${formats[e.key]}', '${e.value}'),
             ])),
+            detailedRatingsCard(context, rows.expand((r) => r.reads)),
             if (adultFieldsOn()) heatStatsCard(context, done),
             section('Top genres', RankBars(top(genres))),
             section('Top authors', RankBars(top(authors))),

@@ -28,6 +28,7 @@ import 'db.dart';
 import 'export.dart';
 import 'lock.dart';
 import 'isbn.dart';
+import 'detailed_ratings.dart';
 import 'guide.dart';
 import 'incoming.dart';
 import 'log.dart';
@@ -988,6 +989,7 @@ class BookPage extends StatelessWidget {
                       leading: Icon(r.format == 'audio' ? Icons.headphones : r.format == 'ebook' ? Icons.tablet_android : Icons.menu_book),
                       title: Text('${formats[r.format]} · ${statuses[r.status]}'),
                       subtitle: Text([
+                        if (detailText(r).isNotEmpty) detailText(r),
                         if (r.started != null) 'Started ${_date.format(r.started!)}',
                         if (r.finished != null) 'Finished ${_date.format(r.finished!)}',
                         if (r.narrator.isNotEmpty) 'Narrator: ${r.narrator}',
@@ -1116,8 +1118,9 @@ class _ReadEditorState extends State<ReadEditor> {
   late final page = TextEditingController(text: '${widget.read?.currentPage ?? ''}');
   late final contentNotes = TextEditingController(text: widget.read?.contentNotes);
   late int heat = widget.read?.heat ?? 0;
+  late final Map<String, double> detail = {for (final a in ratingAspects) if (widget.read != null && aspectOf(widget.read!, a.key) != null) a.key: aspectOf(widget.read!, a.key)!};
 
-  String _state() => [format, status, started?.toIso8601String(), finished?.toIso8601String(), rating, thoughts.text, narrator.text, minutes.text, page.text, heat, contentNotes.text].join('|');
+  String _state() => [format, status, started?.toIso8601String(), finished?.toIso8601String(), rating, thoughts.text, narrator.text, minutes.text, page.text, heat, contentNotes.text, ...[for (final a in ratingAspects) detail[a.key]]].join('|');
   late final String _snap = _state();
   bool _saved = false;
   bool get _dirty => !_saved && _state() != _snap;
@@ -1193,6 +1196,10 @@ class _ReadEditorState extends State<ReadEditor> {
               bookId: Value(widget.bookId), format: Value(format), status: Value(status), started: Value(started), finished: Value(fin),
               rating: Value(rating == 0 ? null : rating), thoughts: Value(thoughts.text), narrator: Value(narrator.text), minutes: Value(int.tryParse(minutes.text)), currentPage: Value(int.tryParse(page.text)),
               heat: Value(adultFieldsOn() ? (heat == 0 ? null : heat) : widget.read?.heat), contentNotes: Value(adultFieldsOn() ? contentNotes.text : (widget.read?.contentNotes ?? '')),
+              // with detailed ratings off, whatever was saved before is kept as it was
+              ratingStory: Value(detailedRatingsOn() ? detail['story'] : widget.read?.ratingStory), ratingCharacters: Value(detailedRatingsOn() ? detail['characters'] : widget.read?.ratingCharacters),
+              ratingWriting: Value(detailedRatingsOn() ? detail['writing'] : widget.read?.ratingWriting), ratingPace: Value(detailedRatingsOn() ? detail['pace'] : widget.read?.ratingPace),
+              ratingFeeling: Value(detailedRatingsOn() ? detail['feeling'] : widget.read?.ratingFeeling), ratingNarrator: Value(detailedRatingsOn() ? (format == 'audio' ? detail['narrator'] : null) : widget.read?.ratingNarrator),
             );
             _saved = true;
             if (widget.read == null) {
@@ -1234,6 +1241,11 @@ class _ReadEditorState extends State<ReadEditor> {
             const SizedBox(width: 8),
             Text(rating == 0 ? 'tap a star' : '$rating'),
           ]),
+          if (detailedRatingsOn()) ...[
+            const SizedBox(height: 8),
+            DetailedRatingsEditor(values: detail, audio: format == 'audio', onChanged: (k, v) => setState(() => v == 0 ? detail.remove(k) : detail[k] = v)),
+            const SizedBox(height: 8),
+          ],
           if (format == 'audio') ...[
             TextField(controller: narrator, decoration: const InputDecoration(labelText: 'Narrator', border: OutlineInputBorder())),
             const SizedBox(height: 12),
@@ -1599,6 +1611,16 @@ class _LibraryExtrasPage extends StatelessWidget {
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TrashPage()))),
         ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Cover pictures'), subtitle: const Text('Keep covers on this phone so they work without internet and are included in backups'), trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CoversPage()))),
+        ValueListenableBuilder<bool>(
+          valueListenable: detailedRatings,
+          builder: (context, on, _) => SwitchListTile(
+            secondary: const Icon(Icons.star_half_rounded),
+            title: const Text('Rate books in more detail'),
+            subtitle: const Text('Adds optional stars for story, characters, writing, pace and how it made you feel (and the narrator for audiobooks) to each read, and a chart in Stats.'),
+            value: on,
+            onChanged: (v) => detailedRatings.value = v,
+          ),
+        ),
         ValueListenableBuilder<bool>(
           valueListenable: adultFields,
           builder: (context, on, _) => SwitchListTile(

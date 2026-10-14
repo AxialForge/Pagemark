@@ -17,6 +17,8 @@ Open a book and tap **Log a read**.
 
 A book can have more than one read, for example if you read it again next year.
 
+Want to say more than one overall rating? Go to Settings → Your library and turn on **Rate books in more detail**. Each read then has optional stars for **Story**, **Characters**, **Writing**, **Pace** and **How it made me feel** (and **Narrator** for audiobooks). The **Stats** tab shows your average for each.
+
 ## Keep track of your page
 While a book is **Reading**, its page shows a progress card. Tap **Update progress** and move the slider to the page you are on. Pagemark shows how far you are and about how many days are left at your pace.
 
@@ -35,10 +37,10 @@ A shelf is a group you make yourself, like "Book club" or "Comfort reads".
 
 To rename or delete shelves, tap the three dots at the top of the Library and choose **Manage shelves**. Deleting a shelf never deletes the books on it.
 
-To see your series (like a trilogy) and which book is next, tap the three dots and choose **Series**. To put a book in a series, tap its pencil icon and fill in **Series** and **Number in series**.
+To see your series (like a trilogy), which book is next and the average rating of the books you rated, tap the three dots and choose **Series**. To put a book in a series, tap its pencil icon and fill in **Series** and **Number in series**.
 
 ## Save quotes
-Open a book and tap **Add quote**. Type the passage, add the page if you know it, and tap **Save**. Quotes show up on the book's page and in the Library search.
+Open a book and tap **Add quote**. Type the passage, add the page if you know it, give it stars for how much you love it (optional) and tap **Save**. Quotes show up on the book's page and in the Library search.
 
 ## Move many books at once
 Press and hold a book until a tick appears, then tap other books to add them. The top bar lets you mark them finished, put them on a shelf, move them to your Locked library or delete them. Every change has an **Undo** button for a few seconds.

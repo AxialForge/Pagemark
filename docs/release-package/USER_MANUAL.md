@@ -91,6 +91,10 @@ While a book has an active read, its page shows a **progress card**. Tap **Updat
 
 
 
+### Rating in more detail
+
+Settings → Your library → **Rate books in more detail** adds optional stars to every read for **Story**, **Characters**, **Writing**, **Pace** and **How it made me feel**, plus **Narrator** on audiobook reads. They show on the book's page, in the Stats tab (your average for each) and in your saved lists. Quotes can also have stars ("How much you love it"), and the Series page shows the average rating of a series' books.
+
 ## 6. The Library
 
 - **Search** — title, author, tags, genre and series.

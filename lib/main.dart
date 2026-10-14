@@ -17,6 +17,8 @@ late SharedPreferences prefs;
 final themeId = ValueNotifier<String>('light_him');
 /// Stealth: hide the Locked tab (the vault is then opened by long-pressing the Library title).
 final hideLockedTab = ValueNotifier<bool>(false);
+/// Opt-in: stars for story, characters, writing, pace and feeling on each read (Settings > Your library).
+final detailedRatings = ValueNotifier<bool>(false);
 /// Opt-in private fields on each read: a heat level and content notes (Settings, Privacy).
 final adultFields = ValueNotifier<bool>(false);
 
@@ -38,6 +40,8 @@ Future<void> main() async {
   Exporter.onSaved = BackupReminder.recordBackup;
   Notifier.clearLegacy();
   const FlutterSecureStorage(aOptions: AndroidOptions(resetOnError: false)).delete(key: 'bk_pass').catchError((_) {});
+  detailedRatings.value = prefs.getBool('detailed_ratings') ?? false;
+  detailedRatings.addListener(() => prefs.setBool('detailed_ratings', detailedRatings.value));
   adultFields.value = prefs.getBool('adult_fields') ?? false;
   adultFields.addListener(() => prefs.setBool('adult_fields', adultFields.value));
   runApp(const PagemarkApp());

@@ -23,7 +23,7 @@ class QuotesSection extends StatelessWidget {
   const QuotesSection({super.key, required this.book});
 
   Future<void> _edit(BuildContext context, [Quote? q]) async {
-    final r = await showModalBottomSheet<(String, int?, String)>(
+    final r = await showModalBottomSheet<(String, int?, String, double?)>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
@@ -31,9 +31,9 @@ class QuotesSection extends StatelessWidget {
     );
     if (r == null) return;
     if (q == null) {
-      await db.addQuote(book.id, r.$1, page: r.$2, note: r.$3);
+      await db.addQuote(book.id, r.$1, page: r.$2, note: r.$3, rating: r.$4);
     } else {
-      await db.updateQuote(q.id, r.$1, page: r.$2, note: r.$3);
+      await db.updateQuote(q.id, r.$1, page: r.$2, note: r.$3, rating: r.$4);
     }
   }
 
@@ -64,6 +64,7 @@ class QuotesSection extends StatelessWidget {
                       Expanded(
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           Text(q.body, style: const TextStyle(fontFamily: 'serif', fontStyle: FontStyle.italic, fontSize: 15.5, height: 1.4)),
+                          if (q.rating != null) Padding(padding: const EdgeInsets.only(top: 4), child: StarRating(value: q.rating!, size: 16, onChanged: (_) {})),
                           if (q.page != null || q.note.isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 6),
@@ -118,6 +119,7 @@ class _QuoteEditorState extends State<_QuoteEditor> {
   late final text = TextEditingController(text: widget.quote?.body);
   late final page = TextEditingController(text: '${widget.quote?.page ?? ''}');
   late final note = TextEditingController(text: widget.quote?.note);
+  late double rating = widget.quote?.rating ?? 0;
 
   @override
   void dispose() {
@@ -147,6 +149,8 @@ class _QuoteEditorState extends State<_QuoteEditor> {
               Expanded(child: TextField(controller: note, textCapitalization: TextCapitalization.sentences, decoration: const InputDecoration(labelText: 'Why it stuck (optional)', border: OutlineInputBorder()))),
             ]),
             const SizedBox(height: 12),
+            Row(children: [const Text('How much you love it'), const SizedBox(width: 12), StarRating(value: rating, size: 30, onChanged: (v) => setState(() => rating = v))]),
+            const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerRight,
               child: FilledButton(
@@ -155,7 +159,7 @@ class _QuoteEditorState extends State<_QuoteEditor> {
                     snack(context, 'Type the passage first');
                     return;
                   }
-                  Navigator.pop(context, (text.text.trim(), int.tryParse(page.text), note.text.trim()));
+                  Navigator.pop(context, (text.text.trim(), int.tryParse(page.text), note.text.trim(), rating == 0 ? null : rating));
                 },
                 child: const Text('Save'),
               ),
