@@ -283,7 +283,11 @@ class _LibraryState extends State<Library> {
                   height: 148,
                   child: ListView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 12), children: [
                     for (final r in reading)
-                      GestureDetector(
+                      Semantics(
+                        button: true,
+                        label: 'Open ${r.book.title}, currently reading',
+                        excludeSemantics: true,
+                        child: GestureDetector(
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: r.book.id))),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -293,6 +297,7 @@ class _LibraryState extends State<Library> {
                             r.progress != null ? SlimProgress(r.progress!) : Text(r.book.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.labelSmall),
                           ])),
                         ),
+                      ),
                       ),
                   ]),
                 ),
@@ -344,7 +349,8 @@ class Cover extends StatelessWidget {
             child: CachedNetworkImage(imageUrl: small, cacheManager: locked ? lockedCache : null, memCacheWidth: (w * 3).round(), width: w, height: w * 1.5, fit: BoxFit.cover,
                 fadeInDuration: const Duration(milliseconds: 250), placeholder: (_, _) => ph, errorWidget: (_, _, _) => ph),
           );
-    return tag == null ? img : Hero(tag: tag!, child: img);
+    final shown = tag == null ? img : Hero(tag: tag!, child: img);
+    return title.trim().isEmpty ? shown : Semantics(image: true, label: 'Cover of ${title.trim()}', child: ExcludeSemantics(child: shown));
   }
 }
 

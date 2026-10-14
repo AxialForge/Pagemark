@@ -19,37 +19,54 @@ String starsText(double v) {
 // ───────────────────────── Small widgets ─────────────────────────
 
 /// Tap the left half of a star for .5, the right half for a whole star; tap the same value again to clear.
+/// Screen readers get one control: "Rating, 3.5 of 5 stars" that can be swiped up or down in half-star steps. Each star is at least
+/// 40 wide and 48 tall to touch, even when drawn small.
 class StarRating extends StatelessWidget {
   final double value;
   final ValueChanged<double> onChanged;
   final double size;
-  const StarRating({super.key, required this.value, required this.onChanged, this.size = 40});
+  final String label;
+  const StarRating({super.key, required this.value, required this.onChanged, this.size = 40, this.label = 'Rating'});
 
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.tertiary;
+    final box = size < 40 ? 40.0 : size;
+    String fmt(double v) => v == 0 ? 'no stars' : '${v % 1 == 0 ? v.toInt() : v} of 5 stars';
     return Semantics(
-      label: 'Rating ${value == 0 ? 'none' : value}',
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        for (var i = 0; i < 5; i++)
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapDown: (d) {
-              final v = i + (d.localPosition.dx < size / 2 ? 0.5 : 1.0);
-              HapticFeedback.selectionClick();
-              onChanged(v == value ? 0 : v);
-            },
-            child: AnimatedScale(
-              scale: value > i ? 1.12 : 1,
-              duration: const Duration(milliseconds: 160),
-              curve: Curves.easeOutBack,
-              child: Icon(
-                value >= i + 1 ? Icons.star_rounded : value >= i + 0.5 ? Icons.star_half_rounded : Icons.star_outline_rounded,
-                size: size, color: color,
+      label: label,
+      value: fmt(value),
+      increasedValue: fmt((value + 0.5).clamp(0, 5).toDouble()),
+      decreasedValue: fmt((value - 0.5).clamp(0, 5).toDouble()),
+      onIncrease: value < 5 ? () => onChanged(value + 0.5) : null,
+      onDecrease: value > 0 ? () => onChanged(value - 0.5) : null,
+      child: ExcludeSemantics(
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          for (var i = 0; i < 5; i++)
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapDown: (d) {
+                final v = i + (d.localPosition.dx < box / 2 ? 0.5 : 1.0);
+                HapticFeedback.selectionClick();
+                onChanged(v == value ? 0 : v);
+              },
+              child: SizedBox(
+                width: box, height: box < 48 ? 48 : box,
+                child: Center(
+                  child: AnimatedScale(
+                    scale: value > i ? 1.12 : 1,
+                    duration: const Duration(milliseconds: 160),
+                    curve: Curves.easeOutBack,
+                    child: Icon(
+                      value >= i + 1 ? Icons.star_rounded : value >= i + 0.5 ? Icons.star_half_rounded : Icons.star_outline_rounded,
+                      size: size, color: color,
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
-      ]),
+        ]),
+      ),
     );
   }
 }

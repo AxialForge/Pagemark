@@ -54,24 +54,30 @@ class _WelcomePageState extends State<WelcomePage> {
             child: TextButton(onPressed: () => _finish(null), child: const Text('Skip')),
           ),
           Expanded(
+            flex: 3,
             child: PageView(
               controller: _ctl,
               onPageChanged: (i) => setState(() => _page = i),
               children: [
                 for (final p in _pages)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      Container(
-                        width: 120, height: 120,
-                        decoration: BoxDecoration(color: cs.primaryContainer, shape: BoxShape.circle),
-                        child: Icon(p.$1, size: 60, color: cs.onPrimaryContainer),
+                  LayoutBuilder(
+                    builder: (context, box) => SingleChildScrollView( // big text must scroll, never overflow
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: box.maxHeight),
+                        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                          Container(
+                            width: 120, height: 120,
+                            decoration: BoxDecoration(color: cs.primaryContainer, shape: BoxShape.circle),
+                            child: Icon(p.$1, size: 60, color: cs.onPrimaryContainer),
+                          ),
+                          const SizedBox(height: 32),
+                          Text(p.$2, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+                          const SizedBox(height: 16),
+                          Text(p.$3, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+                        ]),
                       ),
-                      const SizedBox(height: 32),
-                      Text(p.$2, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
-                      const SizedBox(height: 16),
-                      Text(p.$3, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
-                    ]),
+                    ),
                   ),
               ],
             ),
@@ -80,8 +86,10 @@ class _WelcomePageState extends State<WelcomePage> {
             for (var i = 0; i < _pages.length; i++)
               Container(margin: const EdgeInsets.all(4), width: 8, height: 8, decoration: BoxDecoration(shape: BoxShape.circle, color: i == _page ? cs.primary : cs.outlineVariant)),
           ]),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+          Flexible(
+            flex: 2,
+            child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
             child: last
                 ? Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                     FilledButton.icon(onPressed: () => _finish(const AddBook(locked: false)), icon: const Icon(Icons.add), label: const Text('Add my first book')),
@@ -110,6 +118,7 @@ class _WelcomePageState extends State<WelcomePage> {
                     alignment: Alignment.centerRight,
                     child: FilledButton(onPressed: () => _ctl.nextPage(duration: const Duration(milliseconds: 250), curve: Curves.easeOut), child: const Text('Next')),
                   ),
+            ),
           ),
         ]),
       ),

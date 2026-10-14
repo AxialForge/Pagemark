@@ -178,7 +178,7 @@ class _AddBookState extends State<AddBook> {
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
                 hintText: 'Search for a book (title, author or ISBN)', border: const OutlineInputBorder(),
-                suffixIcon: IconButton(icon: const Icon(Icons.search), onPressed: () => go(qc.text)),
+                suffixIcon: IconButton(icon: const Icon(Icons.search), tooltip: 'Search', onPressed: () => go(qc.text)),
               ),
               onSubmitted: go,
             ),

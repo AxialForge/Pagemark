@@ -27,7 +27,7 @@ class BookPage extends StatelessWidget {
         }
         return Scaffold(
           appBar: AppBar(title: Text(b.title, overflow: TextOverflow.ellipsis), actions: [
-            IconButton(icon: const Icon(Icons.edit), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EditBook(book: b)))),
+            IconButton(icon: const Icon(Icons.edit), tooltip: 'Edit book', onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => EditBook(book: b)))),
             PopupMenuButton<String>(
               onSelected: (v) async {
                 if (v == 'lock') await (db.update(db.books)..where((x) => x.id.equals(b.id))).write(BooksCompanion(locked: Value(!b.locked)));
