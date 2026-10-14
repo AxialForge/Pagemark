@@ -17,7 +17,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 DOCS = ROOT / "docs"
 OUT_IMG = DOCS / "screenshots" / "ui"
 RAW = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else pathlib.Path(r"C:\Users\JOSEPH~1\AppData\Local\Temp\claude\C--Users-Joseph-Costarella\0c11867f-7a9a-4d2c-a7c8-6c9a62be2e31\scratchpad\ui\shots")
-VERSION = "0.8.0"
+VERSION = "0.9.1"
 
 # (raw file, output name) - every image the document uses
 SHOTS = {}
@@ -248,58 +248,86 @@ sec("7. Locked tab", [
 
 # 8 -----------------------------------------------------------------------------------------------------------------------
 sec("8. Settings tab", [
-    "One long, scrolling list in sections. Section titles are bold.",
+    "A short list of eight plain-language pages. At the top: **Updates** (GitHub build only) and **How to use Pagemark**. Each row has an icon, a title and one plain sentence.",
 ], [
-    ("30_settings_1", "settings-top", "Header, Updates, Theme"),
-    ("31c_reminder_on", "settings-reminders", "Notifications"),
-    ("30_settings_2", "settings-data", "Import, export, backup"),
-    ("30_settings_3", "settings-privacy", "Privacy"),
+    ("95_settings_home2", "settings-home", "Settings"),
+    ("96_notifications", "settings-notifications", "Notifications"),
+    ("C1_widget", "settings-widget", "Widget and shortcuts"),
+    ("C2_privacy", "settings-privacy", "Privacy and lock"),
+    ("A1_backup_page", "settings-backup", "Backup and restore"),
+    ("C3_importexport", "settings-importexport", "Import and export"),
+    ("C4_library", "settings-library", "Your library"),
+    ("C5_help", "settings-help", "Help and about"),
 ], [
-    "**App header:** logo, name, version and tagline; **info icon** opens About.",
-    "**Updates:** check for a newer version (GitHub build only).",
-    "**Theme:** six themes, each with a colour dot and *Light/Dark*; a tick marks the current one.",
-    "**Notifications:** *Daily reading reminder* (switch, then *Reminder time*), *Show book titles on the home-screen widget* (switch).",
-    "**Import:** from Goodreads, StoryGraph or a Pagemark export.",
-    "**Export (main library only):** Library log as CSV, as JSON.",
-    "**Backup and restore:** last-backup status, save a copy, restore, reminder.",
-    "**Database (includes locked books):** Export database file, Restore from database file, **Restore points**, **Covers**, **Trash**.",
-    "**Privacy:** Lock now · Lock after leaving the app (Immediately / 1 / 5 / 15 minutes) · Lock the whole app · Heat level and content notes · Hide the Locked tab · Set or change PIN · Remove lock · Diagnostics.",
+    "**Appearance:** six colour themes, each with a colour dot and Light/Dark; a tick marks the current one.",
+    "**Notifications:** a red box with a **Turn on** button when Android has notifications off for Pagemark; the **Daily reading reminder** (switch and time) and **Remind me to back up** with **How often**.",
+    "**Widget and shortcuts:** whether the widget shows book titles, how to add it, and the two icon shortcuts.",
+    "**Privacy and lock:** Lock now, Lock when I leave Pagemark (delay), Ask for my PIN to open Pagemark, Hide the Locked tab, Change my PIN, Turn off the lock.",
+    "**Backup and restore:** a status card (when you last saved a backup, red if overdue), Save a copy as a file, Save my list as a spreadsheet, **Save backups to a folder automatically**, Restore from a file, Go back to an earlier copy, and the backup reminder.",
+    "**Import and export:** bring in books from another app; save your list as a spreadsheet or a JSON file (locked books are never included).",
+    "**Your library:** Deleted books, Cover pictures, **Rate books in more detail**, Heat level and content notes.",
+    "**Help and about:** How to use Pagemark, What's new, Problem report.",
 ])
 
-sec("8.1 Pages opened from Settings", [], [
+sec("8.1 Backups to a folder", [
+    "Pick a folder once with Android's own file picker. It can be on the phone, a USB drive, or inside Google Drive, OneDrive or Dropbox (Android then copies it to the cloud). Pagemark saves a fresh backup there when the app opens and one is due, and keeps the newest 5.",
+], [
+    ("A2_picker", "folder-picker", "Android's folder picker"),
+    ("B4_password_question", "folder-password", "Protect with a password?"),
+    ("B7", "folder-backup-on", "Saving to a folder"),
+], [
+    "**Back up now**, **Change folder** and **Turn off** are under the folder name; **How often** is Every day, week, 2 weeks or month.",
+    "With a password the files are encrypted (`.pgbak`); without one they are plain copies.",
+])
+
+sec("8.2 Other pages", [], [
     ("32_updates", "updates", "Updates"),
-    ("38_changelog", "changelog", "Version history"),
+    ("38_changelog", "changelog", "What's new"),
     ("33_about", "about", "About"),
-    ("84_backup", "backup", "Backup and restore"),
-    ("35_restore_points", "restore-points", "Restore points"),
-    ("36_import", "import", "Import"),
-    ("39_covers", "covers", "Covers"),
-    ("40_trash", "trash", "Trash"),
-    ("37_diagnostics", "diagnostics", "Diagnostics"),
+    ("35_restore_points", "restore-points", "Go back to an earlier copy"),
+    ("36_import", "import", "Bring in books"),
+    ("39_covers", "covers", "Cover pictures"),
+    ("40_trash", "trash", "Deleted books"),
+    ("37_diagnostics", "diagnostics", "Problem report"),
 ], [
-    "**Updates:** installed version, whether a newer one exists, *Check again*, *Check automatically* switch, *Version history*.",
-    "**Version history:** every release's changes, offline (bold and code are rendered).",
-    "**About:** version, copyright, the Open Library credit, *View licenses*.",
-    "**Backup and restore:** a status card (last backup and how long ago), **Save a copy as a file**, **Save my list as a spreadsheet**, **Restore from a file**, **Go back to an earlier copy**, **Remind me to back up** and **How often**.",
-    "**Restore points:** the copies Pagemark kept before each restore or import (newest three of each); tap one to restore it.",
-    "**Import:** where to get the file for each source, **Choose a file**, then a preview (new books, duplicates, skipped rows) and a confirmation; **Undo import** afterwards.",
-    "**Covers:** how many covers are saved on the phone, **Save covers on this phone**, **Remove unused cover files**.",
-    "**Trash:** deleted books with *Restore* and *Delete forever*; items are removed automatically after 30 days.",
-    "**Diagnostics:** a small event log with **Copy**, **Test alert** and **Clear**. It holds no book titles.",
+    "**Updates:** installed version, whether a newer one exists, *Check again*, *Check automatically*, **What's new**.",
+    "**What's new:** every change in every version, offline.",
+    "**Go back to an earlier copy:** the copies Pagemark kept before each restore and import; tap one to restore it.",
+    "**Bring in books:** where to get the file for each source, **Choose a file**, a preview, then **Undo import** afterwards.",
+    "**Cover pictures:** how many covers are saved on the phone, **Save covers on this phone**, **Remove unused cover files**.",
+    "**Deleted books:** restore or delete forever; removed automatically after 30 days.",
+    "**Problem report:** a small log with **Copy**, **Clear**; it holds no book titles.",
 ])
 
-sec("8.2 Notifications, widget and shortcuts", [], [
+sec("8.3 Notifications, widget and shortcuts", [], [
     ("31b_reminder_permission", "reminder-permission", "Notification permission"),
-    ("31d_time_picker", "reminder-time", "Choosing the time"),
+    ("31d_time_picker", "reminder-time", "Choosing the reminder time"),
     ("66_widget_tap", "widget-picker", "Widget picker (Add)"),
     ("66_widget_with_titles", "widget-titles", "Widget with titles"),
     ("66_widget_on_home", "widget-counts", "Widget, counts only (whole-app lock on)"),
     ("68_app_shortcuts", "shortcuts", "Long-press shortcuts"),
 ], [
-    "**Reminder:** off by default. Turning it on asks Android for notification permission; then pick a time. The text is generic (\"A few pages tonight?\") and never names a book.",
-    "**Widget (3×2):** *Pagemark*, \"8 of 12 books in 2026\" (or \"n books finished in 2026\" with no goal), and up to three books you are reading. Tapping opens the app. It never includes locked books; with the whole-app lock on, or titles switched off, it shows only counts (\"2 books in progress\").",
+    "**Reminders:** off for reading by default; the text never names a book. The backup reminder counts from the last saved backup.",
+    "**Widget (3x2):** up to three books you are reading and your yearly goal; never includes locked books; counts only with the whole-app lock on.",
     "**Shortcuts:** long-press the app icon for *Add book* and *Reading now*.",
 ])
+
+sec("8.4 The built-in guide", [
+    "**How to use Pagemark** has short topics in plain words with a search box (\"What do you need help with?\"). It works without internet and is kept in step with the app by a test.",
+], [
+    ("91_guide", "guide", "Guide topics"),
+    ("92_guide_open", "guide-open", "A topic opened"),
+], [])
+
+sec("8.5 Rating in more detail", [
+    "Settings, Your library, **Rate books in more detail** adds optional stars to every read, quotes can have stars, and the Series page shows an average.",
+], [
+    ("99c_rated", "detail-editor", "Edit read with detailed stars"),
+    ("99d_book_after", "detail-card", "Shown on the book page"),
+    ("99e_stats", "detail-stats", "Your detailed ratings in Stats"),
+    ("99f_quote_editor", "quote-stars", "Quote with stars"),
+    ("99g_series", "series-average", "Series average"),
+], [])
 
 # 9 -----------------------------------------------------------------------------------------------------------------------
 sec("9. Whole-app lock", [

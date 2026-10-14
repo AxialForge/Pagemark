@@ -1,6 +1,6 @@
 # Pagemark - UI layout and screen guide
 
-**Version 0.8.0** - every screen, what is on it and how you get there.
+**Version 0.9.1** - every screen, what is on it and how you get there.
 
 
 ## 1. The whole app at a glance
@@ -36,10 +36,10 @@ Every screen and how you reach it. Indented lines open from the line above.
 - **Locked tab**: first time *Set a PIN* (twice) then a recovery code; afterwards the PIN gate, then **Locked library**
     - The Locked library is the Library screen plus **Trash** in its three-dot menu; *Forgot PIN?* resets with the recovery code
 - **Stats tab**: goal ring (*Set goal* / *Change goal* dialog), books per month, ratings, totals, top genres, top authors
-- **Settings tab**: Updates, About, Theme, Reminders and widget, Import, Export, Google Drive backup, Database, Privacy
+- **Settings tab**: Updates, About, Appearance, Notifications, Widget and shortcuts, Import, Export, Backup and restore, Your library, Privacy
     - **Updates**: Version history
     - **Info icon**: About
-    - **Import**, **Google Drive backup**, **Restore points**, **Covers**, **Trash**, **Diagnostics**
+    - **Import**, **Backup and restore**, **Restore points**, **Covers**, **Trash**, **Diagnostics**
 - **Outside the app**: home-screen **widget**, long-press **shortcuts** (Add book, Reading now), the system **Share** sheet (Share, then Pagemark), the daily **reminder** notification
 
 
@@ -224,61 +224,92 @@ A private library behind a PIN or your fingerprint. Its books are hidden from th
 
 ## 8. Settings tab
 
-One long, scrolling list in sections. Section titles are bold.
+A short list of eight plain-language pages. At the top: **Updates** (GitHub build only) and **How to use Pagemark**. Each row has an icon, a title and one plain sentence.
 
 
-<div class="shots"><figure><img src="screenshots/ui/settings-top.jpg" alt="Header, Updates, Theme"><figcaption>Header, Updates, Theme</figcaption></figure><figure><img src="screenshots/ui/settings-reminders.jpg" alt="Reminders and widget"><figcaption>Reminders and widget</figcaption></figure><figure><img src="screenshots/ui/settings-data.jpg" alt="Import, export, Drive, database"><figcaption>Import, export, Drive, database</figcaption></figure></div>
+<div class="shots"><figure><img src="screenshots/ui/settings-home.jpg" alt="Settings"><figcaption>Settings</figcaption></figure><figure><img src="screenshots/ui/settings-notifications.jpg" alt="Notifications"><figcaption>Notifications</figcaption></figure><figure><img src="screenshots/ui/settings-widget.jpg" alt="Widget and shortcuts"><figcaption>Widget and shortcuts</figcaption></figure></div>
 
 
-<div class="shots"><figure><img src="screenshots/ui/settings-privacy.jpg" alt="Privacy"><figcaption>Privacy</figcaption></figure></div>
+<div class="shots"><figure><img src="screenshots/ui/settings-privacy.jpg" alt="Privacy and lock"><figcaption>Privacy and lock</figcaption></figure><figure><img src="screenshots/ui/settings-backup.jpg" alt="Backup and restore"><figcaption>Backup and restore</figcaption></figure><figure><img src="screenshots/ui/settings-importexport.jpg" alt="Import and export"><figcaption>Import and export</figcaption></figure></div>
 
 
-- **App header:** logo, name, version and tagline; **info icon** opens About.
-- **Updates:** check for a newer version (GitHub build only).
-- **Theme:** six themes, each with a colour dot and *Light/Dark*; a tick marks the current one.
-- **Reminders and widget:** *Daily reading reminder* (switch, then *Reminder time*), *Show book titles on the home-screen widget* (switch).
-- **Import:** from Goodreads, StoryGraph or a Pagemark export.
-- **Export (main library only):** Library log as CSV, as JSON.
-- **Google Drive backup:** opens the backup page.
-- **Database (includes locked books):** Export database file, Restore from database file, **Restore points**, **Covers**, **Trash**.
-- **Privacy:** Lock now · Lock after leaving the app (Immediately / 1 / 5 / 15 minutes) · Lock the whole app · Heat level and content notes · Hide the Locked tab · Set or change PIN · Remove lock · Diagnostics.
+<div class="shots"><figure><img src="screenshots/ui/settings-library.jpg" alt="Your library"><figcaption>Your library</figcaption></figure><figure><img src="screenshots/ui/settings-help.jpg" alt="Help and about"><figcaption>Help and about</figcaption></figure></div>
 
 
-## 8.1 Pages opened from Settings
+- **Appearance:** six colour themes, each with a colour dot and Light/Dark; a tick marks the current one.
+- **Notifications:** a red box with a **Turn on** button when Android has notifications off for Pagemark; the **Daily reading reminder** (switch and time) and **Remind me to back up** with **How often**.
+- **Widget and shortcuts:** whether the widget shows book titles, how to add it, and the two icon shortcuts.
+- **Privacy and lock:** Lock now, Lock when I leave Pagemark (delay), Ask for my PIN to open Pagemark, Hide the Locked tab, Change my PIN, Turn off the lock.
+- **Backup and restore:** a status card (when you last saved a backup, red if overdue), Save a copy as a file, Save my list as a spreadsheet, **Save backups to a folder automatically**, Restore from a file, Go back to an earlier copy, and the backup reminder.
+- **Import and export:** bring in books from another app; save your list as a spreadsheet or a JSON file (locked books are never included).
+- **Your library:** Deleted books, Cover pictures, **Rate books in more detail**, Heat level and content notes.
+- **Help and about:** How to use Pagemark, What's new, Problem report.
 
 
-<div class="shots"><figure><img src="screenshots/ui/updates.jpg" alt="Updates"><figcaption>Updates</figcaption></figure><figure><img src="screenshots/ui/changelog.jpg" alt="Version history"><figcaption>Version history</figcaption></figure><figure><img src="screenshots/ui/about.jpg" alt="About"><figcaption>About</figcaption></figure></div>
+## 8.1 Backups to a folder
+
+Pick a folder once with Android's own file picker. It can be on the phone, a USB drive, or inside Google Drive, OneDrive or Dropbox (Android then copies it to the cloud). Pagemark saves a fresh backup there when the app opens and one is due, and keeps the newest 5.
 
 
-<div class="shots"><figure><img src="screenshots/ui/drive-backup.jpg" alt="Google Drive backup"><figcaption>Google Drive backup</figcaption></figure><figure><img src="screenshots/ui/restore-points.jpg" alt="Restore points"><figcaption>Restore points</figcaption></figure><figure><img src="screenshots/ui/import.jpg" alt="Import"><figcaption>Import</figcaption></figure></div>
+<div class="shots"><figure><img src="screenshots/ui/folder-picker.jpg" alt="Android's folder picker"><figcaption>Android's folder picker</figcaption></figure><figure><img src="screenshots/ui/folder-password.jpg" alt="Protect with a password?"><figcaption>Protect with a password?</figcaption></figure><figure><img src="screenshots/ui/folder-backup-on.jpg" alt="Saving to a folder"><figcaption>Saving to a folder</figcaption></figure></div>
 
 
-<div class="shots"><figure><img src="screenshots/ui/covers.jpg" alt="Covers"><figcaption>Covers</figcaption></figure><figure><img src="screenshots/ui/trash.jpg" alt="Trash"><figcaption>Trash</figcaption></figure><figure><img src="screenshots/ui/diagnostics.jpg" alt="Diagnostics"><figcaption>Diagnostics</figcaption></figure></div>
+- **Back up now**, **Change folder** and **Turn off** are under the folder name; **How often** is Every day, week, 2 weeks or month.
+- With a password the files are encrypted (`.pgbak`); without one they are plain copies.
 
 
-- **Updates:** installed version, whether a newer one exists, *Check again*, *Check automatically* switch, *Version history*.
-- **Version history:** every release's changes, offline (bold and code are rendered).
-- **About:** version, copyright, the Open Library credit, *View licenses*.
-- **Google Drive backup:** Web client ID, **Sign in**, *Encrypt backups with a passphrase*, *Automatic backup*, Frequency (Daily/Weekly), *Wi-Fi only*, a battery-optimisation help card, last successful backup, **Back up now**, **Restore from Drive…**.
-- **Restore points:** the copies Pagemark kept before each restore or import (newest three of each); tap one to restore it.
-- **Import:** where to get the file for each source, **Choose a file**, then a preview (new books, duplicates, skipped rows) and a confirmation; **Undo import** afterwards.
-- **Covers:** how many covers are saved on the phone, **Save covers on this phone**, **Remove unused cover files**.
-- **Trash:** deleted books with *Restore* and *Delete forever*; items are removed automatically after 30 days.
-- **Diagnostics:** a small event log with **Copy**, **Test alert** and **Clear**. It holds no book titles.
+## 8.2 Other pages
 
 
-## 8.2 Reminders and the widget
+<div class="shots"><figure><img src="screenshots/ui/updates.jpg" alt="Updates"><figcaption>Updates</figcaption></figure><figure><img src="screenshots/ui/changelog.jpg" alt="What's new"><figcaption>What's new</figcaption></figure><figure><img src="screenshots/ui/about.jpg" alt="About"><figcaption>About</figcaption></figure></div>
 
 
-<div class="shots"><figure><img src="screenshots/ui/reminder-permission.jpg" alt="Notification permission"><figcaption>Notification permission</figcaption></figure><figure><img src="screenshots/ui/reminder-time.jpg" alt="Choosing the time"><figcaption>Choosing the time</figcaption></figure><figure><img src="screenshots/ui/widget-picker.jpg" alt="Widget picker (Add)"><figcaption>Widget picker (Add)</figcaption></figure></div>
+<div class="shots"><figure><img src="screenshots/ui/restore-points.jpg" alt="Go back to an earlier copy"><figcaption>Go back to an earlier copy</figcaption></figure><figure><img src="screenshots/ui/import.jpg" alt="Bring in books"><figcaption>Bring in books</figcaption></figure><figure><img src="screenshots/ui/covers.jpg" alt="Cover pictures"><figcaption>Cover pictures</figcaption></figure></div>
+
+
+<div class="shots"><figure><img src="screenshots/ui/trash.jpg" alt="Deleted books"><figcaption>Deleted books</figcaption></figure><figure><img src="screenshots/ui/diagnostics.jpg" alt="Problem report"><figcaption>Problem report</figcaption></figure></div>
+
+
+- **Updates:** installed version, whether a newer one exists, *Check again*, *Check automatically*, **What's new**.
+- **What's new:** every change in every version, offline.
+- **Go back to an earlier copy:** the copies Pagemark kept before each restore and import; tap one to restore it.
+- **Bring in books:** where to get the file for each source, **Choose a file**, a preview, then **Undo import** afterwards.
+- **Cover pictures:** how many covers are saved on the phone, **Save covers on this phone**, **Remove unused cover files**.
+- **Deleted books:** restore or delete forever; removed automatically after 30 days.
+- **Problem report:** a small log with **Copy**, **Clear**; it holds no book titles.
+
+
+## 8.3 Notifications, widget and shortcuts
+
+
+<div class="shots"><figure><img src="screenshots/ui/reminder-permission.jpg" alt="Notification permission"><figcaption>Notification permission</figcaption></figure><figure><img src="screenshots/ui/reminder-time.jpg" alt="Choosing the reminder time"><figcaption>Choosing the reminder time</figcaption></figure><figure><img src="screenshots/ui/widget-picker.jpg" alt="Widget picker (Add)"><figcaption>Widget picker (Add)</figcaption></figure></div>
 
 
 <div class="shots"><figure><img src="screenshots/ui/widget-titles.jpg" alt="Widget with titles"><figcaption>Widget with titles</figcaption></figure><figure><img src="screenshots/ui/widget-counts.jpg" alt="Widget, counts only (whole-app lock on)"><figcaption>Widget, counts only (whole-app lock on)</figcaption></figure><figure><img src="screenshots/ui/shortcuts.jpg" alt="Long-press shortcuts"><figcaption>Long-press shortcuts</figcaption></figure></div>
 
 
-- **Reminder:** off by default. Turning it on asks Android for notification permission; then pick a time. The text is generic ("A few pages tonight?") and never names a book.
-- **Widget (3×2):** *Pagemark*, "8 of 12 books in 2026" (or "n books finished in 2026" with no goal), and up to three books you are reading. Tapping opens the app. It never includes locked books; with the whole-app lock on, or titles switched off, it shows only counts ("2 books in progress").
+- **Reminders:** off for reading by default; the text never names a book. The backup reminder counts from the last saved backup.
+- **Widget (3x2):** up to three books you are reading and your yearly goal; never includes locked books; counts only with the whole-app lock on.
 - **Shortcuts:** long-press the app icon for *Add book* and *Reading now*.
+
+
+## 8.4 The built-in guide
+
+**How to use Pagemark** has short topics in plain words with a search box ("What do you need help with?"). It works without internet and is kept in step with the app by a test.
+
+
+<div class="shots"><figure><img src="screenshots/ui/guide.jpg" alt="Guide topics"><figcaption>Guide topics</figcaption></figure><figure><img src="screenshots/ui/guide-open.jpg" alt="A topic opened"><figcaption>A topic opened</figcaption></figure></div>
+
+
+## 8.5 Rating in more detail
+
+Settings, Your library, **Rate books in more detail** adds optional stars to every read, quotes can have stars, and the Series page shows an average.
+
+
+<div class="shots"><figure><img src="screenshots/ui/detail-editor.jpg" alt="Edit read with detailed stars"><figcaption>Edit read with detailed stars</figcaption></figure><figure><img src="screenshots/ui/detail-card.jpg" alt="Shown on the book page"><figcaption>Shown on the book page</figcaption></figure><figure><img src="screenshots/ui/detail-stats.jpg" alt="Your detailed ratings in Stats"><figcaption>Your detailed ratings in Stats</figcaption></figure></div>
+
+
+<div class="shots"><figure><img src="screenshots/ui/quote-stars.jpg" alt="Quote with stars"><figcaption>Quote with stars</figcaption></figure><figure><img src="screenshots/ui/series-average.jpg" alt="Series average"><figcaption>Series average</figcaption></figure></div>
 
 
 ## 9. Whole-app lock
@@ -308,7 +339,7 @@ Pick one in Settings. Harbor is the default.
 These were taken on an Android emulator with sample data. Not captured (they involve other apps, a signed-in Google account or hardware):
 
 
-- The Android share sheet for exports, the Google sign-in and Drive permission screens, and the real backup passphrase dialogs.
+- The Android share sheet for exports, the backup password dialogs.
 - The restore confirmation ("Replace your library?"), the import preview and finished screens, and the update-available screen (see the older manual screenshots in `docs/screenshots/`).
 - Device-lock (fingerprint) mode, the Heat level and content fields when switched on, and the Locked tab when hidden.
 - The daily reminder notification itself, and anything in landscape, on tablets or on iOS (not built).
