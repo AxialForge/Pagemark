@@ -13,6 +13,7 @@ class GuideTopic {
 /// The names of the Settings pages. The guide refers to them, and a test checks that every "Settings → X" in the guide uses one of
 /// these, so renaming a page without updating the guide fails the build.
 class SettingsTitles {
+  static const promise = 'Our promise to you';
   static const appearance = 'Appearance';
   static const notifications = 'Notifications';
   static const widget = 'Widget and shortcuts';
@@ -21,7 +22,7 @@ class SettingsTitles {
   static const importExport = 'Import and export';
   static const library = 'Your library';
   static const help = 'Help and about';
-  static const all = [appearance, notifications, widget, privacy, backup, importExport, library, help];
+  static const all = [promise, appearance, notifications, widget, privacy, backup, importExport, library, help];
 }
 
 /// Splits the guide markdown into topics. Lines starting with "[github] " are only for the GitHub build (the Google Play build

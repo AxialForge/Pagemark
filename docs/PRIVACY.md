@@ -4,6 +4,18 @@
 
 Pagemark is a private reading log. It has no accounts, no servers of its own, no advertising and no analytics. This page says exactly what the app stores and when anything leaves your phone.
 
+## Our promise
+
+- **We never collect your data.** No account, no analytics, no tracking, no advertising ID, no crash-reporting service. There is no Pagemark server to send anything to.
+- **No ads, no selling, no sharing.**
+- **No AI inside the app.** No assistant, no AI features, and nothing you write is sent to or used to train an AI service.
+- **Your books stay on your phone** unless you save a backup, and then only where you put it.
+- **Free and open to inspect:** the code is public.
+- **The only internet use:** book searches (to Open Library), the GitHub build's update check, and whatever a cloud app does with a backup folder you choose.
+- **About the barcode reader:** it uses Google's on-device ML Kit vision tool. Pagemark never saves or sends the camera picture, but the Google library may report anonymous technical information to Google.
+
+A test in the project fails if a tracking, advertising or AI package is added or the app contacts a new internet address.
+
 ## What Pagemark stores on your phone
 - **Your library:** books, reads (dates, ratings, your thoughts), shelves, series, notes, tags and the Trash — in one database file inside the app's private storage.
 - **Settings:** theme, library style, filters, backup options.

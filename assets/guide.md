@@ -1,5 +1,8 @@
 # How to use Pagemark
 
+## Our promise
+Go to Settings → Our promise to you. In short: Pagemark never collects your data, has no ads and no accounts, uses no AI, and keeps your books on your phone. The page also lists the only times the app uses the internet (searching for a book, and checking for a new version) and explains the barcode reader.
+
 ## Your first time
 The first time you open Pagemark you see three short screens. Tap **Skip** at any time. At the end you can add your first book, **Try it with 5 sample books**, restore a library you saved before, or **Just look around**.
 

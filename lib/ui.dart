@@ -32,6 +32,7 @@ import 'detailed_ratings.dart';
 import 'firstrun.dart';
 import 'folder_backup.dart';
 import 'guide.dart';
+import 'promise.dart';
 import 'incoming.dart';
 import 'log.dart';
 import 'lookup.dart';
@@ -1336,6 +1337,7 @@ class SettingsPage extends StatelessWidget {
           const UpdateTile(),
           const Divider(),
           _row(context, Icons.menu_book_outlined, 'How to use Pagemark', 'Short, simple steps for everything the app does', () => const GuidePage()),
+          _row(context, Icons.verified_user_outlined, 'Our promise to you', 'No tracking, no ads, no AI. Your books stay yours.', () => const PromisePage()),
           const Divider(),
           _row(context, Icons.palette_outlined, SettingsTitles.appearance, 'Choose your colours', () => const _AppearancePage()),
           _row(context, Icons.notifications_active_outlined, SettingsTitles.notifications, 'Reading and backup reminders', () => const _NotificationsPage()),
@@ -1882,6 +1884,8 @@ class _HelpPage extends StatelessWidget {
   const _HelpPage();
   @override
   Widget build(BuildContext context) => _SettingsSub(SettingsTitles.help, [
+        ListTile(leading: const Icon(Icons.verified_user_outlined), title: const Text('Our promise to you'), subtitle: const Text('No tracking, no ads, no AI. Your books stay yours.'), trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PromisePage()))),
         ListTile(leading: const Icon(Icons.menu_book_outlined), title: const Text('How to use Pagemark'), subtitle: const Text('Short, simple steps for everything the app does'), trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GuidePage()))),
         ListTile(leading: const Icon(Icons.new_releases_outlined), title: const Text("What's new"), subtitle: const Text('Every change in every version'), trailing: const Icon(Icons.chevron_right),

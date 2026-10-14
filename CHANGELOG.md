@@ -6,6 +6,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Our promise to you** (Settings, and on the welcome screens): a plain-words page saying Pagemark never collects your data, has no ads, accounts or AI, and keeps your books on your phone. It lists the only places the app uses the internet and explains the barcode reader. A test now fails if a tracking, advertising or AI package is added, or if the app starts contacting a new internet address.
+
 ## [0.10.0] - 2026-10-14
 
 First start, safer backups, fewer dead ends.

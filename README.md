@@ -1,5 +1,7 @@
 # Pagemark
 
+> **Our promise:** Pagemark never collects your data. No accounts, no ads, no tracking, no AI. Your books stay on your phone. [Read it in full](docs/PRIVACY.md#our-promise).
+
 A private, fully local book tracker for Android (iOS planned): log what you read and listen to, rate it, and keep your thoughts — with nothing leaving your phone unless you choose.
 
 <img src="assets/branding/logo.png" width="96" alt="Pagemark logo" />

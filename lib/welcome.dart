@@ -7,6 +7,7 @@ import 'package:drift/drift.dart' show BooleanExpressionOperators;
 import 'firstrun.dart';
 import 'folder_backup.dart';
 import 'main.dart';
+import 'promise.dart';
 import 'restore_ui.dart';
 import 'ui.dart';
 
@@ -22,7 +23,7 @@ class _WelcomePageState extends State<WelcomePage> {
   int _page = 0;
 
   static const _pages = [
-    (Icons.menu_book_rounded, 'Your private reading log', 'Keep track of every book you read or listen to: what you thought, how far you are, and what you want to read next. Everything stays on this phone.'),
+    (Icons.menu_book_rounded, 'Your private reading log', 'Keep track of every book you read or listen to: what you thought, how far you are, and what you want to read next. Everything stays on this phone. No account, no ads, no tracking, no AI.'),
     (Icons.qr_code_scanner, 'Adding a book is easy', 'Scan the barcode on the back of a book, or type its title. Pagemark finds the cover and the details for you.'),
     (Icons.lock_outline, 'Private and safe', 'Keep some books behind a PIN in the Locked tab. Save a backup copy now and then, so you never lose your library. Pagemark will remind you.'),
   ];
@@ -103,6 +104,7 @@ class _WelcomePageState extends State<WelcomePage> {
                       child: const Text('I already use Pagemark: restore my library'),
                     ),
                     TextButton(onPressed: () => _finish(null), child: const Text('Just look around')),
+                    TextButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PromisePage())), child: const Text('Read our promise to you')),
                   ])
                 : Align(
                     alignment: Alignment.centerRight,
