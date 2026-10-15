@@ -8,7 +8,7 @@ void main() {
 
   test('the alarm receiver and the reboot receiver for scheduled notifications are declared, and not exported', () {
     for (final name in ['ScheduledNotificationReceiver', 'ScheduledNotificationBootReceiver']) {
-      final m = RegExp('<receiver[^>]*com\.dexterous\.flutterlocalnotifications\.$name[^>]*>').firstMatch(manifest);
+      final m = RegExp('<receiver[^>]*com[.]dexterous[.]flutterlocalnotifications[.]$name[^>]*>').firstMatch(manifest);
       expect(m, isNotNull, reason: '$name must be declared in AndroidManifest.xml');
       expect(m!.group(0), contains('android:exported="false"'));
     }
