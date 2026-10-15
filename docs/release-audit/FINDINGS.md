@@ -111,3 +111,22 @@ Rows PGM-300 to PGM-327 come from the gate audit. Counts: MEDIUM 4, LOW 4, INFO 
 | PGM-325 | INFO | Positive | Migrations | All five historic schemas (built by the code of v0.1.0, v0.2.0, v0.4.2, v0.6.0 and v0.9.0, with books, reads, shelves, quotes, a locked book and a trashed book) open in the current app with every row kept, user_version 6, integrity_check ok, foreign_key_check empty, and accept every 0.12 and 0.13 write. | script pgm300_migration_test.dart |  | VERIFIED |
 | PGM-326 | INFO | Positive | Release integrity | Published v0.13.0 APKs verify (v2 scheme), are signed by the expected certificate (SHA-1 390459ad...), their SHA-256 matches the local build and the GitHub digest, no secrets or personal data in the built APK, allowBackup=false, no storage permissions, only the expected library components exported. CI is green on the tagged commit b1bbf51. | script pgm220_release_verify.sh, pgm200_apk_scan.py |  | VERIFIED |
 | PGM-327 | INFO | Positive | Layouts and large text | Side rail at 600 dp and two panes at 840 dp render and work (a tapped book fills the right pane). At font scale 2.0 the Library, Stats and a book page show no clipping or overflow. | auditor (evidence_1.0/f11_pane_book.png, g2_stats_f2.png, g3_book_f2.png) |  | VERIFIED |
+
+## S25 Ultra device test, 0.13.1 (2026-10-14)
+
+Rows PGM-330 to PGM-341. Full results: DEVICE_TEST_S25_ULTRA_0.13.1.md. 70 passed, 13 failed, 10 skipped, no crashes. PGM-330, 331, 332, 333, 334, 335, 336 and 337 are app problems; 338 to 341 are observations. Needs-info items (6.8, 8.3, 11.3) have no ID yet.
+
+| ID | Sev | Category | Component | Finding | Evidence | Fix commit | Status |
+|---|---|---|---|---|---|---|---|
+| PGM-330 | MEDIUM | GUI / landscape | Library (lib/ui/library.dart) | In landscape the Library cannot scroll past the Currently reading strip: search, chips and the strip fill the height. | device test 9.6 (S25 Ultra) |  | OPEN |
+| PGM-331 | MEDIUM | Navigation | Home shell (lib/ui/home.dart) | The back gesture on Stats, Locked or Settings closes the app instead of returning to Library. | device test 9.4 |  | OPEN |
+| PGM-332 | HIGH | Notifications | Reminders, Notifier (lib/reminders.dart, lib/notifier.dart) | The daily reading reminder set 2 minutes ahead never appeared on the S25 Ultra. Cause not found; the loan reminder could not be tested. Needs: did it ever arrive later, battery settings, channel shown in Android. | device test 8.2, 5.4 |  | OPEN |
+| PGM-333 | LOW | Input | EditBook (lib/ui/book_page.dart) | Edit accepts 0 or 99999 pages and any year; only lookups were bounded in 0.13.1. | device test 3.9 |  | OPEN |
+| PGM-334 | LOW | UX | Library bulk actions (lib/ui/library.dart _bulkShelf) | Add to shelf for selected books has no Undo, unlike Trash, Finished and Lock. | device test 4.6 |  | OPEN |
+| PGM-335 | LOW | Lookup | Refresh details (lib/finding.dart) | Choose another edition is missing when the lookup returned no Open Library work id. | device test 2.8 |  | OPEN |
+| PGM-336 | LOW | Messaging | Scan many books (lib/bulk_scan.dart) | A failed or busy lookup is shown as No internet; the real reason is lost, which looked like an internet issue on a not-found book. | device test 2.4 + owner note |  | OPEN |
+| PGM-337 | LOW | Messaging | Add a book (lib/ui/add_book.dart) | Offline search shows the Nothing found card in addition to the connection message. | device test 11.2 |  | OPEN |
+| PGM-338 | INFO | UX / design | Settings, Privacy and lock | No fingerprint switch in Settings after a PIN exists; fingerprint is a setup choice and a lock-screen button. Owner asks for other lock methods in Settings. | device test 6.6 |  | OPEN |
+| PGM-339 | INFO | Permissions | Samsung permission list | Settings shows Nearby devices for Pagemark. The manifest has no Bluetooth or Nearby permission; believed to be an Android 16 label for network access. Confirm it is not Allowed. | device test 13.1; code aapt2 dump permissions |  | OPEN |
+| PGM-340 | LOW | UX / testability | Lend this book (lib/reading_life_ui.dart) | The reminder choices start at 2 weeks, so a loan reminder cannot be tried in a day. Add Tomorrow and In a week. | device test 5.4 |  | OPEN |
+| PGM-341 | INFO | Test plan | Device test plan Rev 1.2 | Plan mistakes: 3.2 expected a slider, 5.4 expected a Tomorrow option, 6.6 expected a fingerprint switch. Plan to be corrected in Rev 1.3. | device test |  | OPEN |

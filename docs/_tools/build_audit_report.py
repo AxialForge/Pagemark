@@ -168,10 +168,23 @@ def build_pdf(out, title, meta, sections):
     cover = f'<div class="cover pb"><h1>{html.escape(title)}</h1>' + "".join(f"<p>{html.escape(m)}</p>" for m in meta) + "</div>"
     body = "".join(markdown.markdown(trim_findings(re.sub(r"\[ \]", "☐", re.sub(r"\[x\]", "☑", t))), extensions=["tables"]) + '<div class="pb"></div>' for _, t in sections)
     page = f"<!doctype html><meta charset=utf-8><title>{html.escape(title)}</title><style>{CSS}</style>{cover}{body}"
-    with tempfile.TemporaryDirectory() as d:
+    # scratch folder beside the output: the 8.3 short Windows temp path makes the browser print nothing
+    with tempfile.TemporaryDirectory(dir=str(pathlib.Path(out).parent)) as d:
         h = pathlib.Path(d) / "r.html"; h.write_text(page, encoding="utf-8")
-        subprocess.run([browser(), "--headless", "--disable-gpu", "--no-pdf-header-footer", f"--print-to-pdf={out}", h.as_uri()],
+        subprocess.run([browser(), "--headless", "--disable-gpu", "--no-pdf-header-footer", f"--user-data-dir={d}/profile", f"--print-to-pdf={out}", h.as_uri()],
                        check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=120)
+        # the browser can exit before it has finished writing, and the scratch folder must outlive it:
+        # wait until the file exists and stops growing
+        import time
+        last = -1
+        for _ in range(60):
+            size = pathlib.Path(out).stat().st_size if pathlib.Path(out).exists() else -1
+            if size > 0 and size == last:
+                break
+            last = size
+            time.sleep(0.5)
+        else:
+            sys.exit(f"the browser did not write {out}")
 
 
 def next_rev(out_dir, name):
@@ -188,13 +201,15 @@ def next_rev(out_dir, name):
 def main():
     a = argparse.ArgumentParser()
     a.add_argument("root"); a.add_argument("--title", required=True); a.add_argument("--version", default=""); a.add_argument("--commit", default="")
-    a.add_argument("--findings-from", default=""); a.add_argument("--out-name", default=""); a.add_argument("--out-dir", default="Documentation"); a.add_argument("--rev", default="")
+    a.add_argument("--findings-from", default=""); a.add_argument("--out-name", default=""); a.add_argument("--out-dir", default="Documentation"); a.add_argument("--rev", default=""); a.add_argument("--only", nargs="+", default=[])
     a = a.parse_args()
     root = pathlib.Path(a.root).resolve(); src = root / "docs" / "release-audit"
     sections = [("Readiness", read(src / "RELEASE_READINESS.md")),
                 ("Findings", from_heading(read(src / "FINDINGS.md"), a.findings_from)),
                 ("Status", read(src / "AUDIT_STATUS.md")),
                 ("Manual tests", read(src / "MANUAL_TEST_PLAN.md"))]
+    if a.only:
+        sections = [(f, read(src / f)) for f in a.only]
     sections = [(n, t) for n, t in sections if t.strip()]
     if not sections:
         sys.exit(f"nothing to report: no files in {src}")
