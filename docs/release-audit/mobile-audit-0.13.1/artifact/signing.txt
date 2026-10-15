@@ -1,0 +1,15 @@
+Verifies
+Verified using v1 scheme (JAR signing): false
+Verified using v2 scheme (APK Signature Scheme v2): true
+Verified using v3 scheme (APK Signature Scheme v3): false
+Verified using v3.1 scheme (APK Signature Scheme v3.1): false
+Verified using v4 scheme (APK Signature Scheme v4): false
+Verified for SourceStamp: false
+Number of signers: 1
+Signer #1 certificate DN: CN=Pagemark, O=AxialForge
+Signer #1 certificate SHA-256 digest: 26b4a4234bc4346eb7e63ebee49c114cbdadd1fa10e60a5cc34f324d6b1bac44
+Signer #1 certificate SHA-1 digest: 390459ad240f35994bcda58681af9c218cfd27f7
+Signer #1 certificate MD5 digest: 5daa6a89fc4d0b7a9eef76a84f093cd3
+Signer #1 key algorithm: RSA
+Signer #1 key size (bits): 2048
+Signer #1 public key SHA-256 digest: 8e09ef4905fd7c0728e51e0e1c5238b23d08f132e1939d22384064e0ab7927fa

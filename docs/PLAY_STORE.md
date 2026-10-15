@@ -33,7 +33,7 @@ The `play` flavor has no `REQUEST_INSTALL_PACKAGES` permission and no Updates sc
 
 - Does the app collect or share user data? **Pagemark itself collects nothing and has no server.** The only thing sent anywhere is a public book lookup:
   - **Book lookup:** the title, author or ISBN you type or scan is sent to Open Library and, unless the user turns it off, Google Books. Declare as "search query / app activity", not linked to identity, optional.
-- Camera: used only to read barcodes on the device; images are not stored or sent.
+- Camera: used only to read barcodes on the device; images are not stored or sent by Pagemark. The barcode reader is Google's ML Kit library, which may send anonymous technical/diagnostic data to Google. **You:** before answering the Data safety form, run the scanner once on a phone with a traffic capture; if anything leaves the phone, also declare "Diagnostics" (collected, not linked to identity, optional, app functionality). If nothing does, keep the answer above.
 - No ads, no analytics, no crash-reporting SDK. Data is encrypted in transit (HTTPS). Users can delete data by clearing app storage or deleting the backup files they saved.
 
 ## Content rating
@@ -48,6 +48,8 @@ Expect **Everyone**. The optional "heat level and content notes" field is a priv
 
 ## Before you submit (open items)
 
-- Verify the 0.7.1 fixes on a real phone (see `docs/release-audit/MANUAL_TEST_PLAN.md`).
-- Regenerate screenshots and the PDF manuals for the release you ship.
-- Make the 1024x500 feature graphic.
+- Run the real-phone pass in `docs/release-audit/MANUAL_TEST_PLAN.md` (timer, folder backup to a cloud folder, fingerprint, notifications, TalkBack, upgrade from the last published APK).
+- Capture the barcode scanner's network traffic once (see Data safety form above).
+- Regenerate screenshots and the PDF manuals for the release you ship (`python docs/_tools/build_docs.py`).
+- **You:** make the 1024x500 feature graphic.
+- Run Play's pre-launch report; leave the app lock off in the test build.

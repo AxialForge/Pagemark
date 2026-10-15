@@ -1,0 +1,413 @@
+Resolving dependencies...
+Downloading packages...
+  android_file_picker 2.0.1 (2.1.0 available)
+  archive 4.5.1 (4.5.2 available)
+  build 4.0.11 (5.0.0 available)
+  build_config 1.3.3 (1.4.0 available)
+  build_daemon 4.1.6 (4.1.7 available)
+  build_runner 2.16.2 (2.17.1 available)
+  cross_file 0.3.5+5 (0.4.0 available)
+  cupertino_icons 1.0.9 (2.0.0 available)
+  cupertino_ui 1.1.2 (1.1.3 available)
+  file_picker_darwin 2.2.0 (2.3.1 available)
+  file_picker_platform_interface 4.1.0 (4.2.0 available)
+  image_picker_ios 0.8.13+10 (0.8.13+12 available)
+  local_auth_android 2.2.0 (2.3.0 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  material_ui 1.6.0 (1.7.0 available)
+  qr 3.0.2 (4.0.0 available)
+  source_gen 4.3.0 (4.3.1 available)
+  sqflite 2.4.4+1 (2.4.4+2 available)
+  sqflite_android 2.4.4 (2.4.4+1 available)
+  sqflite_common 2.5.13+1 (2.5.14 available)
+  sqflite_darwin 2.4.4 (2.4.4+1 available)
+  sqlite3 3.7.0 (3.7.1 available)
+  synchronized 3.4.2 (3.5.0 available)
+  test_api 0.7.12 (0.7.15 available)
+Got dependencies!
+24 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading C:/Project Folder/Pagemark/test/a11y_test.dart
+00:00 +0: C:/Project Folder/Pagemark/test/a11y_test.dart: star rating works with a screen reader it is one control that says its value and can be swiped up and down in half-star steps
+00:00 +1: C:/Project Folder/Pagemark/test/adaptive_test.dart: rail from 600 dp, two panes from 840 dp
+00:00 +2: C:/Project Folder/Pagemark/test/adaptive_test.dart: rail from 600 dp, two panes from 840 dp
+00:00 +3: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-101 lockout cannot overflow after hundreds of misses the lockout is still positive and at most an hour
+00:00 +4: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-101 lockout cannot overflow after hundreds of misses the lockout is still positive and at most an hour
+00:00 +5: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-101 lockout cannot overflow after hundreds of misses the lockout is still positive and at most an hour
+00:00 +6: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-101 lockout cannot overflow after hundreds of misses the lockout is still positive and at most an hour
+00:00 +7: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-101 lockout cannot overflow after hundreds of misses the lockout is still positive and at most an hour
+00:00 +8: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-101 lockout cannot overflow after hundreds of misses the lockout is still positive and at most an hour
+00:00 +9: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-101 lockout cannot overflow after hundreds of misses the lockout is still positive and at most an hour
+00:00 +10: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-101 lockout cannot overflow after hundreds of misses the lockout is still positive and at most an hour
+00:00 +11: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-101 lockout cannot overflow after hundreds of misses the lockout is still positive and at most an hour
+00:00 +12: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-101 lockout cannot overflow after hundreds of misses the lockout is still positive and at most an hour
+00:00 +13: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-101 lockout cannot overflow after hundreds of misses the lockout is still positive and at most an hour
+00:00 +14: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-101 lockout cannot overflow after hundreds of misses the lockout is still positive and at most an hour
+00:00 +15: C:/Project Folder/Pagemark/test/branding_test.dart: logo asset loads and EmptyState shows message and action
+00:00 +16: C:/Project Folder/Pagemark/test/branding_test.dart: logo asset loads and EmptyState shows message and action
+00:00 +17: C:/Project Folder/Pagemark/test/branding_test.dart: logo asset loads and EmptyState shows message and action
+00:00 +18: C:/Project Folder/Pagemark/test/branding_test.dart: logo asset loads and EmptyState shows message and action
+00:00 +19: C:/Project Folder/Pagemark/test/branding_test.dart: logo asset loads and EmptyState shows message and action
+00:00 +20: C:/Project Folder/Pagemark/test/branding_test.dart: logo asset loads and EmptyState shows message and action
+00:00 +21: C:/Project Folder/Pagemark/test/branding_test.dart: logo asset loads and EmptyState shows message and action
+00:00 +22: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:00 +23: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:00 +24: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:00 +25: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:00 +26: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:00 +27: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +28: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +29: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +30: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +31: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +32: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +33: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +34: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +35: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +36: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +37: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +38: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +39: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +40: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +41: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +42: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +43: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +44: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +45: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +46: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +47: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +48: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +49: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +49: C:/Project Folder/Pagemark/test/bulk_test.dart: selection in every Library style grid: long-press selects, tap toggles while active, selected items show a check
+
+Warning: A call to tap() with finder "Found 1 widget with text "Book 0" (ignoring all but first): [
+  Text("Book 0", inherit: true, color: Color(alpha: 1.0000, red: 0.8667, green: 0.7490, blue: 0.4549, colorSpace: ColorSpace.sRGB), family: serif, size: 13.3, weight: 700, height: 1.1x, textAlign: center, overflow: ellipsis, maxLines: 5, dependencies: [DefaultSelectionStyle, DefaultTextStyle, MediaQuery]),
+]" derived an Offset (Offset(73.8, 99.8)) that would not hit test on the specified widget.
+Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
+The finder corresponds to this RenderBox: RenderParagraph#f2251 relayoutBoundary=up1
+The hit test result at that offset is: HitTestResult(RenderDecoratedBox#37e97@Offset(59.8, 89.8), RenderStack#8b85c@Offset(59.8, 89.8), RenderFlex#c68cc@Offset(59.8, 89.8), RenderPointerListener#9ac8c@Offset(59.8, 89.8), RenderSemanticsAnnotations#ed127@Offset(59.8, 89.8), RenderMouseRegion#ec571@Offset(59.8, 89.8), RenderSemanticsAnnotations#377d4@Offset(59.8, 89.8), RenderOpacity#74463@Offset(59.8, 89.8), RenderRepaintBoundary#e44a7@Offset(59.8, 89.8), RenderIndexedSemantics#278b5@Offset(59.8, 89.8), RenderSliverGrid@(mainAxis: 89.75, crossAxis: 59.83333333333334), RenderSliverPadding@(mainAxis: 99.75, crossAxis: 73.83333333333334), RenderViewport#5ec30@Offset(73.8, 99.8), RenderIgnorePointer#985ee@Offset(73.8, 99.8), RenderSemanticsAnnotations#b874e@Offset(73.8, 99.8), RenderPointerListener#57b45@Offset(73.8, 99.8), RenderSemanticsGestureHandler#97bfe@Offset(73.8, 99.8), RenderPointerListener#5587c@Offset(73.8, 99.8), _RenderScrollSemantics#acb42@Offset(73.8, 99.8), RenderClipRect#5cdb5@Offset(73.8, 99.8), _RenderLayoutBuilder#9cc3e@Offset(73.8, 99.8), RenderAnimatedOpacity#76e23@Offset(73.8, 99.8), RenderStack#4c346@Offset(73.8, 99.8), RenderCustomMultiChildLayoutBox#70bad@Offset(73.8, 99.8), _RenderInkFeatures#8cac9@Offset(73.8, 99.8), RenderPhysicalModel#5a4ed@Offset(73.8, 99.8), RenderSemanticsAnnotations#de3eb@Offset(73.8, 99.8), RenderRepaintBoundary#0d8ae@Offset(73.8, 99.8), RenderIgnorePointer#a1ce1@Offset(73.8, 99.8), RenderAnimatedOpacity#62433@Offset(73.8, 99.8), RenderAnimatedOpacity#37627@Offset(73.8, 99.8), _RenderColoredBox#cab98@Offset(73.8, 99.8), RenderAnimatedOpacity#5b187@Offset(73.8, 99.8), RenderIgnorePointer#e4c59@Offset(73.8, 99.8), RenderAnimatedOpacity#40ec8@Offset(73.8, 99.8), RenderRepaintBoundary#2da20@Offset(73.8, 99.8), RenderSemanticsAnnotations#969ff@Offset(73.8, 99.8), RenderOffstage#11ce9@Offset(73.8, 99.8), RenderSemanticsAnnotations#c54ff@Offset(73.8, 99.8), _RenderTheater#92f57@Offset(73.8, 99.8), RenderAbsorbPointer#44352@Offset(73.8, 99.8), RenderPointerListener#3fc82@Offset(73.8, 99.8), RenderSemanticsAnnotations#4f089@Offset(73.8, 99.8), RenderCustomPaint#efb2b@Offset(73.8, 99.8), RenderSemanticsAnnotations#0ff83@Offset(73.8, 99.8), RenderSemanticsAnnotations#6ccbe@Offset(73.8, 99.8), RenderSemanticsAnnotations#78b6e@Offset(73.8, 99.8), RenderTapRegionSurface#1ff58@Offset(73.8, 99.8), RenderSemanticsAnnotations#25b05@Offset(73.8, 99.8), RenderSemanticsAnnotations#4df78@Offset(73.8, 99.8), HitTestEntry<HitTestTarget>#18ee4(_ReusableRenderView#97d2e), HitTestEntry<HitTestTarget>#4eae2(<AutomatedTestWidgetsFlutterBinding>))
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
+#3      main.<anonymous closure>.<anonymous closure> (file:///C:/Project%20Folder/Pagemark/test/bulk_test.dart:115:17)
+<asynchronous suspension>
+#4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#5      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+#6      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+To silence this warning, pass "warnIfMissed: false" to "tap()".
+To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
+
+00:01 +50: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +51: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +52: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +53: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +54: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +55: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +56: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +57: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +57: C:/Project Folder/Pagemark/test/bulk_test.dart: selection in every Library style shelf: long-press selects, tap toggles while active, selected items show a check
+
+Warning: A call to tap() with finder "Found 1 widget with text "Book 0" (ignoring all but first): [
+  Text("Book 0", inherit: true, color: Color(alpha: 1.0000, red: 0.8667, green: 0.7490, blue: 0.4549, colorSpace: ColorSpace.sRGB), family: serif, size: 9.7, weight: 700, height: 1.1x, textAlign: center, overflow: ellipsis, maxLines: 5, dependencies: [DefaultSelectionStyle, DefaultTextStyle, MediaQuery]),
+]" derived an Offset (Offset(59.6, 87.4)) that would not hit test on the specified widget.
+Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
+The finder corresponds to this RenderBox: RenderParagraph#243d4 relayoutBoundary=up1
+The hit test result at that offset is: HitTestResult(RenderDecoratedBox#c4a85@Offset(43.6, 61.5), RenderStack#c3e9b@Offset(43.6, 61.5), RenderPointerListener#0d4e3@Offset(43.6, 61.5), RenderSemanticsGestureHandler#4e0af@Offset(43.6, 61.5), RenderSemanticsAnnotations#1b893@Offset(43.6, 61.5), RenderOpacity#7f455@Offset(43.6, 61.5), RenderPadding#9eeba@Offset(43.6, 61.5), RenderFlex#2262a@Offset(43.6, 65.4), RenderPadding#d4487@Offset(59.6, 75.4), _RenderColoredBox#7397e@Offset(59.6, 75.4), RenderFlex#94b0a@Offset(59.6, 75.4), RenderPadding#5628c@Offset(59.6, 75.4), RenderRepaintBoundary#fc99b@Offset(59.6, 75.4), RenderIndexedSemantics#70e76@Offset(59.6, 75.4), RenderSliverList@(mainAxis: 75.4375, crossAxis: 59.625), RenderSliverPadding@(mainAxis: 87.4375, crossAxis: 59.625), RenderViewport#56284@Offset(59.6, 87.4), RenderIgnorePointer#5ad6d@Offset(59.6, 87.4), RenderSemanticsAnnotations#cdbdb@Offset(59.6, 87.4), RenderPointerListener#5e129@Offset(59.6, 87.4), RenderSemanticsGestureHandler#ad7c1@Offset(59.6, 87.4), RenderPointerListener#0e998@Offset(59.6, 87.4), _RenderScrollSemantics#bd088@Offset(59.6, 87.4), RenderClipRect#402f9@Offset(59.6, 87.4), _RenderLayoutBuilder#e4a91@Offset(59.6, 87.4), RenderAnimatedOpacity#b122b@Offset(59.6, 87.4), RenderStack#c574c@Offset(59.6, 87.4), RenderCustomMultiChildLayoutBox#c42ea@Offset(59.6, 87.4), _RenderInkFeatures#9182d@Offset(59.6, 87.4), RenderPhysicalModel#4cb30@Offset(59.6, 87.4), RenderSemanticsAnnotations#b02fe@Offset(59.6, 87.4), RenderRepaintBoundary#e0d76@Offset(59.6, 87.4), RenderIgnorePointer#aca8e@Offset(59.6, 87.4), RenderAnimatedOpacity#1478f@Offset(59.6, 87.4), RenderAnimatedOpacity#d549d@Offset(59.6, 87.4), _RenderColoredBox#98862@Offset(59.6, 87.4), RenderAnimatedOpacity#13d36@Offset(59.6, 87.4), RenderIgnorePointer#252b9@Offset(59.6, 87.4), RenderAnimatedOpacity#70ba3@Offset(59.6, 87.4), RenderRepaintBoundary#494e3@Offset(59.6, 87.4), RenderSemanticsAnnotations#4d725@Offset(59.6, 87.4), RenderOffstage#f1183@Offset(59.6, 87.4), RenderSemanticsAnnotations#c9f70@Offset(59.6, 87.4), _RenderTheater#69761@Offset(59.6, 87.4), RenderAbsorbPointer#733cb@Offset(59.6, 87.4), RenderPointerListener#073b0@Offset(59.6, 87.4), RenderSemanticsAnnotations#b71c0@Offset(59.6, 87.4), RenderCustomPaint#3b2e4@Offset(59.6, 87.4), RenderSemanticsAnnotations#f3664@Offset(59.6, 87.4), RenderSemanticsAnnotations#3f019@Offset(59.6, 87.4), RenderSemanticsAnnotations#0a582@Offset(59.6, 87.4), RenderTapRegionSurface#458c7@Offset(59.6, 87.4), RenderSemanticsAnnotations#c118f@Offset(59.6, 87.4), RenderSemanticsAnnotations#70e18@Offset(59.6, 87.4), HitTestEntry<HitTestTarget>#d4ad0(_ReusableRenderView#97d2e), HitTestEntry<HitTestTarget>#0299b(<AutomatedTestWidgetsFlutterBinding>))
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
+#3      main.<anonymous closure>.<anonymous closure> (file:///C:/Project%20Folder/Pagemark/test/bulk_test.dart:115:17)
+<asynchronous suspension>
+#4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#5      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+#6      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+To silence this warning, pass "warnIfMissed: false" to "tap()".
+To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
+
+00:01 +58: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +59: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +60: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +61: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +62: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +63: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +64: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +65: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +66: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +67: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +67: C:/Project Folder/Pagemark/test/bulk_test.dart: selection in every Library style spines: long-press selects, tap toggles while active, selected items show a check
+
+Warning: A call to tap() with finder "Found 1 widget with text "Book 0" (ignoring all but first): [
+  Text("Book 0", inherit: true, color: Color(alpha: 1.0000, red: 0.8667, green: 0.7490, blue: 0.4549, colorSpace: ColorSpace.sRGB), family: serif, size: 11.1, weight: 600, letterSpacing: 0.6, overflow: ellipsis, maxLines: 1, dependencies: [DefaultSelectionStyle, DefaultTextStyle, MediaQuery]),
+]" derived an Offset (Offset(31.0, 168.9)) that would not hit test on the specified widget.
+Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
+The finder corresponds to this RenderBox: RenderParagraph#3ddfa relayoutBoundary=up2
+The hit test result at that offset is: HitTestResult(RenderDecoratedBox#3f582@Offset(15.0, 132.9), RenderStack#27cd3@Offset(15.0, 132.9), RenderPadding#7e06a@Offset(15.0, 132.9), RenderDecoratedBox#64bb5@Offset(15.0, 132.9), RenderConstrainedBox#21023@Offset(15.0, 132.9), RenderPointerListener#25399@Offset(15.0, 132.9), RenderSemanticsGestureHandler#aaf42@Offset(15.0, 132.9), RenderSemanticsAnnotations#9bad7@Offset(15.0, 132.9), RenderConstrainedBox#b433b@Offset(15.0, 132.9), RenderPositionedBox#d48a9@Offset(15.0, 132.9), RenderPadding#bebb1@Offset(15.0, 132.9), RenderFlex#fb279@Offset(15.0, 140.9), RenderPadding#0a089@Offset(31.0, 156.9), _RenderColoredBox#7598c@Offset(31.0, 156.9), RenderFlex#28b88@Offset(31.0, 156.9), RenderPadding#6acfe@Offset(31.0, 156.9), RenderRepaintBoundary#8d7af@Offset(31.0, 156.9), RenderIndexedSemantics#0f80c@Offset(31.0, 156.9), RenderSliverList@(mainAxis: 156.86665725708008, crossAxis: 31.000000000000007), RenderSliverPadding@(mainAxis: 168.86665725708008, crossAxis: 31.000000000000007), RenderViewport#2e3b6@Offset(31.0, 168.9), RenderIgnorePointer#c58c8@Offset(31.0, 168.9), RenderSemanticsAnnotations#2f179@Offset(31.0, 168.9), RenderPointerListener#18343@Offset(31.0, 168.9), RenderSemanticsGestureHandler#04325@Offset(31.0, 168.9), RenderPointerListener#f91dc@Offset(31.0, 168.9), _RenderScrollSemantics#27e46@Offset(31.0, 168.9), RenderClipRect#0a9b7@Offset(31.0, 168.9), _RenderLayoutBuilder#f8cb9@Offset(31.0, 168.9), RenderAnimatedOpacity#d3bff@Offset(31.0, 168.9), RenderStack#35c28@Offset(31.0, 168.9), RenderCustomMultiChildLayoutBox#9a81f@Offset(31.0, 168.9), _RenderInkFeatures#27271@Offset(31.0, 168.9), RenderPhysicalModel#537b7@Offset(31.0, 168.9), RenderSemanticsAnnotations#e64f3@Offset(31.0, 168.9), RenderRepaintBoundary#f431c@Offset(31.0, 168.9), RenderIgnorePointer#8bd7a@Offset(31.0, 168.9), RenderAnimatedOpacity#f579e@Offset(31.0, 168.9), RenderAnimatedOpacity#2850e@Offset(31.0, 168.9), _RenderColoredBox#60f45@Offset(31.0, 168.9), RenderAnimatedOpacity#d2ed9@Offset(31.0, 168.9), RenderIgnorePointer#4cfcf@Offset(31.0, 168.9), RenderAnimatedOpacity#2e34f@Offset(31.0, 168.9), RenderRepaintBoundary#4e1ce@Offset(31.0, 168.9), RenderSemanticsAnnotations#4ab41@Offset(31.0, 168.9), RenderOffstage#7ce4e@Offset(31.0, 168.9), RenderSemanticsAnnotations#5ccb0@Offset(31.0, 168.9), _RenderTheater#c1e48@Offset(31.0, 168.9), RenderAbsorbPointer#e1a86@Offset(31.0, 168.9), RenderPointerListener#7636a@Offset(31.0, 168.9), RenderSemanticsAnnotations#7d75c@Offset(31.0, 168.9), RenderCustomPaint#11ad3@Offset(31.0, 168.9), RenderSemanticsAnnotations#911ae@Offset(31.0, 168.9), RenderSemanticsAnnotations#412c0@Offset(31.0, 168.9), RenderSemanticsAnnotations#2f988@Offset(31.0, 168.9), RenderTapRegionSurface#2ff28@Offset(31.0, 168.9), RenderSemanticsAnnotations#51afe@Offset(31.0, 168.9), RenderSemanticsAnnotations#19e06@Offset(31.0, 168.9), HitTestEntry<HitTestTarget>#47daa(_ReusableRenderView#97d2e), HitTestEntry<HitTestTarget>#a2607(<AutomatedTestWidgetsFlutterBinding>))
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2165:25)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1947:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1080:7)
+#3      main.<anonymous closure>.<anonymous closure> (file:///C:/Project%20Folder/Pagemark/test/bulk_test.dart:115:17)
+<asynchronous suspension>
+#4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#5      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+#6      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+To silence this warning, pass "warnIfMissed: false" to "tap()".
+To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
+
+00:01 +68: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +69: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +70: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +71: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +72: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +72: C:/Project Folder/Pagemark/test/lookup_test.dart: search gives a readable error when the network is down or the server keeps failing
+2026-10-14T19:38:13.496159 W lookup: network error: SocketException: offline
+00:01 +73: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +73: C:/Project Folder/Pagemark/test/lookup_test.dart: search gives a readable error when the network is down or the server keeps failing
+2026-10-14T19:38:13.508271 W lookup: network error: SocketException: offline
+2026-10-14T19:38:13.509272 W lookup: network error: SocketException: offline
+00:01 +74: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +75: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +76: C:/Project Folder/Pagemark/test/audit_fixes_test.dart: PGM-200 a lost lock is never "no lock" a lock was set but secure storage came back empty: mode is lost
+00:01 +77: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:01 +78: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:01 +79: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:01 +79: C:/Project Folder/Pagemark/test/lookup_test.dart: description handles string and {value} forms and strips the source footer
+2026-10-14T19:38:13.532360 W lookup: description fetch failed: The book search had a problem. Please try again in a moment.
+00:01 +80: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:01 +81: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:01 +82: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:01 +83: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:01 +84: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:01 +85: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:01 +86: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +87: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +87: C:/Project Folder/Pagemark/test/tool_seed_demo_test.dart: seed demo library
+  Skip: set SEED_OUT to generate the demo database
+00:02 +87 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +88 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +89 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +90 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +91 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +92 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +92 ~1: C:/Project Folder/Pagemark/test/updater_test.dart: check readable errors for private repo, rate limit and offline
+2026-10-14T19:38:14.273711 W update: check failed: SocketException: offline
+00:02 +93 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +94 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +95 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +96 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +97 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +98 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +99 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +100 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +101 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +102 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +103 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +104 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +105 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +106 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +107 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +108 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +109 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +110 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +111 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +112 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +113 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +114 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +115 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +116 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +117 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +118 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +119 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +120 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +121 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:02 +122 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:03 +123 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:03 +124 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:03 +125 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: backup encryption round trip, wrong passphrase and tamper detection
+00:03 +126 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +127 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +127 ~1: C:/Project Folder/Pagemark/test/v0120_test.dart: year in books locked books never reach the card, the calendar or the report
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+00:03 +128 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +128 ~1: C:/Project Folder/Pagemark/test/v0120_test.dart: the PDF report builds, and non-Latin letters become ?
+Helvetica has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+Helvetica-Bold has no Unicode support see https://github.com/DavBfr/dart_pdf/wiki/Fonts-Management
+00:03 +129 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +130 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +131 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +132 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +133 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +134 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +135 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +136 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +137 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +138 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +139 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +140 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +141 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +142 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +143 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +144 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +145 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +146 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +147 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +148 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +149 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +150 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +151 ~1: C:/Project Folder/Pagemark/test/restore_safety_test.dart: restore swaps the library, keeps a restore point, and two restores in a row keep two points
+00:03 +152 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +153 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +154 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +155 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +156 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +157 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +158 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +159 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +160 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +161 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +162 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +163 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +164 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +165 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +166 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +167 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +168 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +169 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +170 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +171 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +172 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:03 +173 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +174 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +175 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +176 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +177 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +178 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +179 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +180 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +181 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +182 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +183 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +184 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +185 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +185 ~1: C:/Project Folder/Pagemark/test/v060_test.dart: cover store download: accepts a real image, refuses placeholders, errors and non-images
+2026-10-14T19:38:15.952755 W covers: download failed: SocketException: x
+00:04 +186 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +187 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +188 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +189 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +190 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +191 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +192 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +193 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +194 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +195 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +196 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +197 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +198 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +199 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +200 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +201 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +202 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +203 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +204 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +205 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +206 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +207 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +208 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +209 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +210 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +211 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +212 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +213 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +214 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +215 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +216 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +217 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +218 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +219 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +220 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +221 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +222 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +223 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +224 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +225 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +226 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +227 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +228 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +229 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +230 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +231 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +232 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +233 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +234 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +235 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +236 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +237 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:04 +238 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:05 +239 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock PIN set / verify / wrong, and nothing configured by default
+00:05 +240 ~1: C:/Project Folder/Pagemark/test/v060_ui_test.dart: local covers are drawn in every Library style Cover shows a saved picture from disk, and falls back to the initial tile when the file is missing
+00:05 +241 ~1: C:/Project Folder/Pagemark/test/skins_test.dart: every skin renders cleanly at phone and tablet widths shelf · 411dp · 40 books
+00:05 +242 ~1: C:/Project Folder/Pagemark/test/skins_test.dart: every skin renders cleanly at phone and tablet widths shelf · 411dp · 40 books
+00:05 +243 ~1: C:/Project Folder/Pagemark/test/v043_ui_test.dart: text at 200% (large accessibility font) compact survives 2x text on a phone
+00:05 +244 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +245 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +246 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +247 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +248 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +249 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +250 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +251 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +252 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +253 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +254 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +255 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +256 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +257 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +258 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +259 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +260 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +261 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +262 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +263 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +264 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +265 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +266 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:05 +267 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +268 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +269 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +270 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +271 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +272 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +273 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +274 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +275 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +276 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +277 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +278 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +279 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +280 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +281 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +282 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +283 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +284 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +285 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +286 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +287 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +288 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +289 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +290 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:06 +291 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock five misses lock out, even the right PIN is refused during lockout
+00:08 +292 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock recovery code resets the PIN once and issues a new code
+00:13 +293 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock legacy v0.1.0 PIN still works and is upgraded to PBKDF2
+00:15 +294 ~1: C:/Project Folder/Pagemark/test/data_safety_test.dart: lock clear() removes the lock entirely
+00:16 +295 ~1: All tests passed!
+done

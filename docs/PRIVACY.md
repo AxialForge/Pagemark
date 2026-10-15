@@ -1,6 +1,6 @@
 # Pagemark — Privacy Policy
 
-*Last updated 2026-10-12 · applies to Pagemark 0.4.3 and later*
+*Last updated 2026-10-14 · applies to Pagemark 0.13.2 and later*
 
 Pagemark is a private reading log. It has no accounts, no servers of its own, no advertising and no analytics. This page says exactly what the app stores and when anything leaves your phone.
 
@@ -39,10 +39,10 @@ Android's own cloud backup and device-transfer are switched off for this app, so
 Pagemark does **not** send anything to its developer or to any analytics, advertising or crash-reporting service.
 
 ## Locked library
-Locked books stay in the same database but are hidden from the main library, Stats, Trash, search and CSV/JSON exports. They **are** included in whole-database exports and Drive backups, which is why encrypting those with a passphrase is recommended. Searching for a book while in the locked library sends your search text to Open Library; add the book manually to avoid that.
+Locked books stay in the same database but are hidden from the main library, Stats, Trash, search and CSV/JSON exports. They **are** included in whole-database exports and folder backups, which is why encrypting those with a passphrase is recommended. Searching for a book while in the locked library sends your search text to Open Library; add the book manually to avoid that.
 
 ## Permissions
-Internet (lookup, updates, backup) · Camera (barcode scanner, only when you open it) · Biometric (fingerprint/device unlock) · Install packages (to install a downloaded update) · Notifications (a warning when scheduled backups keep failing) · Background work and network state (scheduled backups).
+Internet (lookup, updates, backup) · Camera (barcode scanner, only when you open it) · Biometric (fingerprint/device unlock) · Install packages (to install a downloaded update) · Notifications (a warning when scheduled backups keep failing) · Background work, network state, wake lock, foreground service and start-after-reboot (scheduled backups and reminders; they let the system run those jobs and re-schedule reminders after a restart) · Vibrate (notification vibration) · Fingerprint (older-Android fingerprint unlock). Pagemark does not ask for location, contacts, microphone, storage or accounts.
 
 ## Your control
 - Export everything any time (Settings → Import and export), or back it up yourself.

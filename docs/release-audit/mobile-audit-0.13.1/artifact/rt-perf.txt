@@ -1,0 +1,2 @@
+cold start TotalTime ms (arm64 APK translated on x86_64 emulator, Android 17): 4409 3021 2795
+           TOTAL PSS:   220604            TOTAL RSS:   364288      TOTAL SWAP (KB):        0

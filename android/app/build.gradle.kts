@@ -47,6 +47,10 @@ android {
 
     signingConfigs {
         create("release") {
+            // v1 is not needed at minSdk 24; v2 + v3 let the signing key be rotated later without breaking in-place updates.
+            enableV1Signing = false
+            enableV2Signing = true
+            enableV3Signing = true
             if (keyProps.containsKey("storeFile")) {
                 storeFile = file(keyProps.getProperty("storeFile"))
                 storePassword = keyProps.getProperty("storePassword")
