@@ -121,8 +121,8 @@ class _LibraryState extends State<Library> {
       ),
     );
     if (picked == null) return;
-    await db.addManyToShelf(ids, picked);
-    if (mounted) snack(context, 'Added ${ids.length} to the shelf');
+    final added = await db.addManyToShelf(ids, picked);
+    _undoBar(added.isEmpty ? 'Already on that shelf' : 'Added ${added.length} to the shelf', () => db.removeManyFromShelf(added, picked));
   }
 
   PreferredSizeWidget _selectionBar() {
@@ -280,7 +280,8 @@ class _LibraryState extends State<Library> {
               final reading = (snap.data ?? []).where((r) => r.status == 'reading').toList();
               final unfiltered = q.isEmpty && status == 'all' && format == 'all' && shelf == null;
               if (!unfiltered || reading.isEmpty) return list;
-              return Column(children: [
+              // a landscape phone is too short for the strip and a usable list: show just the list there
+              return LayoutBuilder(builder: (_, box) => box.maxHeight < 440 ? list : Column(children: [
                 Align(alignment: Alignment.centerLeft, child: Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 4), child: Text('Currently reading', style: Theme.of(context).textTheme.titleSmall))),
                 SizedBox(
                   height: 148,
@@ -306,7 +307,7 @@ class _LibraryState extends State<Library> {
                 ),
                 const Divider(height: 1),
                 Expanded(child: list),
-              ]);
+              ]));
             },
           ),
         ),

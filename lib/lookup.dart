@@ -306,6 +306,30 @@ class Lookup {
     return m;
   }
 
+  /// The Open Library work id of a book you already have (from its ISBN, else a title search), or '' when none is found. Never throws.
+  static Future<String> findWorkKey({String isbn = '', String title = '', String author = ''}) async {
+    try {
+      final code = Isbn.to13(isbn);
+      if (code != null) {
+        final j = _decode(await _get(Uri.https('openlibrary.org', '/isbn/$code.json')));
+        final works = j is Map ? _list(j['works']) : const [];
+        if (works.isNotEmpty && works.first is Map) {
+          final k = _str((works.first as Map)['key']);
+          if (k.startsWith('/works/')) return k;
+        }
+      }
+      if (title.trim().isNotEmpty) {
+        final found = await search('$title $author'.trim());
+        for (final m in found) {
+          if (!isJunk(m) && m.workKey.startsWith('/works/')) return m.workKey;
+        }
+      }
+    } catch (e) {
+      Log.w('lookup', 'work id not found: $e');
+    }
+    return '';
+  }
+
   /// Every edition Open Library lists for a work (publisher, year, pages, ISBN, cover), for the edition picker.
   static Future<List<BookMeta>> editions(String workKey) async {
     if (!workKey.startsWith('/works/')) return [];

@@ -113,7 +113,12 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                 if (shown == _Tab.locked && next != _Tab.locked) _lock(); // re-lock when leaving the locked tab
                 cur = next;
               });
-          final content = AnimatedSwitcher(
+          final content = PopScope(
+            canPop: shown == _Tab.library, // Back on Stats, Locked or Settings goes to Library first; Back on Library leaves the app
+            onPopInvokedWithResult: (didPop, _) {
+              if (!didPop) select(visible.indexOf(_Tab.library));
+            },
+            child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 250),
             switchInCurve: Curves.easeOutCubic,
             transitionBuilder: (child, anim) => FadeTransition(
@@ -139,7 +144,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                     ])
                   : page,
             ),
-          );
+          ));
           final destinations = [
             for (final t in visible)
               switch (t) {

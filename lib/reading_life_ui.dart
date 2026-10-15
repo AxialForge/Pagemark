@@ -313,6 +313,8 @@ class LoansSection extends StatelessWidget {
     final days = await showDialog<int>(
       context: context,
       builder: (c) => SimpleDialog(title: const Text('Remind you to ask for it back?'), children: [
+        SimpleDialogOption(onPressed: () => Navigator.pop(c, 1), child: const Text('Tomorrow')),
+        SimpleDialogOption(onPressed: () => Navigator.pop(c, 7), child: const Text('In a week')),
         SimpleDialogOption(onPressed: () => Navigator.pop(c, 14), child: const Text('In 2 weeks')),
         SimpleDialogOption(onPressed: () => Navigator.pop(c, 30), child: const Text('In a month')),
         SimpleDialogOption(onPressed: () => Navigator.pop(c, 60), child: const Text('In 2 months')),

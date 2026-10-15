@@ -32,6 +32,20 @@ Future<bool> confirmVaultLookup(BuildContext context) async {
   return ok == true;
 }
 
+/// A message when the pages or year typed into Edit book cannot be right (empty is fine), else null.
+String? checkBookNumbers(String pages, String year) {
+  final p = pages.trim(), y = year.trim();
+  if (p.isNotEmpty) {
+    final n = int.tryParse(p);
+    if (n == null || n < 1 || n > 20000) return 'Pages should be a number from 1 to 20,000.';
+  }
+  if (y.isNotEmpty) {
+    final n = int.tryParse(y);
+    if (n == null || n < 1000 || n > 2100) return 'Year should be between 1000 and 2100.';
+  }
+  return null;
+}
+
 // ───────────────────────── Refresh details ─────────────────────────
 /// One thing a lookup would change on a book. Details the book lacks ([fill]) are ticked by default; details you already have that
 /// differ are listed but start unticked, so a refresh never overwrites your own edits unless you say so.
@@ -106,6 +120,10 @@ Future<void> refreshDetails(BuildContext context, Book b) async {
   if (meta == null) {
     snack(context, 'Could not find this book online.');
     return;
+  }
+  if (meta.workKey.isEmpty) {
+    meta.workKey = await Lookup.findWorkKey(isbn: b.isbn, title: b.title, author: b.author); // the edition list needs it
+    if (!context.mounted) return;
   }
   var current = meta;
   while (true) {

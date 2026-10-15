@@ -15,6 +15,7 @@ class ScanItem {
   final String isbn;
   String title;
   ScanState state = ScanState.looking;
+  String note = ''; // why a lookup failed, in plain words
   ScanItem(this.isbn, this.title);
 }
 
@@ -68,6 +69,7 @@ class _BulkScanPageState extends State<BulkScanPage> {
     } catch (e) {
       Log.w('bulkscan', 'lookup failed: $e');
       item.state = ScanState.failed;
+      item.note = e is LookupException ? e.message : 'The lookup did not work. Scan it again.';
       seen.remove(isbn); // scanning it again tries again
     }
     if (mounted) setState(() {});
@@ -78,7 +80,7 @@ class _BulkScanPageState extends State<BulkScanPage> {
         ScanState.added => 'Added',
         ScanState.already => 'Already in this library',
         ScanState.notFound => 'Not found. Add it by hand later.',
-        ScanState.failed => 'No internet. Scan it again.',
+        ScanState.failed => i.note.isEmpty ? 'The lookup did not work. Scan it again.' : '${i.note} Scan it again.',
       };
 
   @override

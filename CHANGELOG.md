@@ -6,6 +6,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-10-15
+
+Fixes from the Galaxy S25 Ultra device test of 0.13.1 (PGM-330 to PGM-340).
+
+### Fixed
+- In landscape the Library can scroll again: on a short screen the "Currently reading" strip is left out so the list has room.
+- The back gesture on Stats, Locked or Settings now returns to the Library first; Back on the Library leaves the app.
+- Edit book no longer accepts 0 or 99999 pages, or a year outside 1000 to 2100.
+- Adding books to a shelf has an Undo, like the other bulk actions, and takes off only the books it added.
+- Refresh details finds the book's edition list more often, so "Choose another edition" shows up.
+- A scanned book that fails to look up now says why (busy, no internet), not always "No internet".
+- A search that could not reach the internet no longer also says "Nothing found".
+
+### Added
+- Lend this book offers Tomorrow and In a week as reminder times, as well as 2 weeks, 1 month and 2 months.
+
 ## [0.13.1] - 2026-10-14
 
 Fixes from the 1.0.0 gate audit (PGM-300 to PGM-322).

@@ -118,15 +118,15 @@ Rows PGM-330 to PGM-341. Full results: DEVICE_TEST_S25_ULTRA_0.13.1.md. 70 passe
 
 | ID | Sev | Category | Component | Finding | Evidence | Fix commit | Status |
 |---|---|---|---|---|---|---|---|
-| PGM-330 | MEDIUM | GUI / landscape | Library (lib/ui/library.dart) | In landscape the Library cannot scroll past the Currently reading strip: search, chips and the strip fill the height. | device test 9.6 (S25 Ultra) |  | OPEN |
-| PGM-331 | MEDIUM | Navigation | Home shell (lib/ui/home.dart) | The back gesture on Stats, Locked or Settings closes the app instead of returning to Library. | device test 9.4 |  | OPEN |
+| PGM-330 | MEDIUM | GUI / landscape | Library (lib/ui/library.dart) | In landscape the Library cannot scroll past the Currently reading strip: search, chips and the strip fill the height. | device test 9.6 (S25 Ultra) | 0.13.2 | READY FOR VERIFICATION |
+| PGM-331 | MEDIUM | Navigation | Home shell (lib/ui/home.dart) | The back gesture on Stats, Locked or Settings closes the app instead of returning to Library. | device test 9.4 | 0.13.2 | READY FOR VERIFICATION |
 | PGM-332 | HIGH | Notifications | Reminders, Notifier (lib/reminders.dart, lib/notifier.dart) | The daily reading reminder set 2 minutes ahead never appeared on the S25 Ultra. Cause not found; the loan reminder could not be tested. Needs: did it ever arrive later, battery settings, channel shown in Android. | device test 8.2, 5.4 |  | OPEN |
-| PGM-333 | LOW | Input | EditBook (lib/ui/book_page.dart) | Edit accepts 0 or 99999 pages and any year; only lookups were bounded in 0.13.1. | device test 3.9 |  | OPEN |
-| PGM-334 | LOW | UX | Library bulk actions (lib/ui/library.dart _bulkShelf) | Add to shelf for selected books has no Undo, unlike Trash, Finished and Lock. | device test 4.6 |  | OPEN |
-| PGM-335 | LOW | Lookup | Refresh details (lib/finding.dart) | Choose another edition is missing when the lookup returned no Open Library work id. | device test 2.8 |  | OPEN |
-| PGM-336 | LOW | Messaging | Scan many books (lib/bulk_scan.dart) | A failed or busy lookup is shown as No internet; the real reason is lost, which looked like an internet issue on a not-found book. | device test 2.4 + owner note |  | OPEN |
-| PGM-337 | LOW | Messaging | Add a book (lib/ui/add_book.dart) | Offline search shows the Nothing found card in addition to the connection message. | device test 11.2 |  | OPEN |
+| PGM-333 | LOW | Input | EditBook (lib/ui/book_page.dart) | Edit accepts 0 or 99999 pages and any year; only lookups were bounded in 0.13.1. | device test 3.9 | 0.13.2 | READY FOR VERIFICATION |
+| PGM-334 | LOW | UX | Library bulk actions (lib/ui/library.dart _bulkShelf) | Add to shelf for selected books has no Undo, unlike Trash, Finished and Lock. | device test 4.6 | 0.13.2 | READY FOR VERIFICATION |
+| PGM-335 | LOW | Lookup | Refresh details (lib/finding.dart) | Choose another edition is missing when the lookup returned no Open Library work id. | device test 2.8 | 0.13.2 | READY FOR VERIFICATION |
+| PGM-336 | LOW | Messaging | Scan many books (lib/bulk_scan.dart) | A failed or busy lookup is shown as No internet; the real reason is lost, which looked like an internet issue on a not-found book. | device test 2.4 + owner note | 0.13.2 | READY FOR VERIFICATION |
+| PGM-337 | LOW | Messaging | Add a book (lib/ui/add_book.dart) | Offline search shows the Nothing found card in addition to the connection message. | device test 11.2 | 0.13.2 | READY FOR VERIFICATION |
 | PGM-338 | INFO | UX / design | Settings, Privacy and lock | No fingerprint switch in Settings after a PIN exists; fingerprint is a setup choice and a lock-screen button. Owner asks for other lock methods in Settings. | device test 6.6 |  | OPEN |
 | PGM-339 | INFO | Permissions | Samsung permission list | Settings shows Nearby devices for Pagemark. The manifest has no Bluetooth or Nearby permission; believed to be an Android 16 label for network access. Confirm it is not Allowed. | device test 13.1; code aapt2 dump permissions |  | OPEN |
-| PGM-340 | LOW | UX / testability | Lend this book (lib/reading_life_ui.dart) | The reminder choices start at 2 weeks, so a loan reminder cannot be tried in a day. Add Tomorrow and In a week. | device test 5.4 |  | OPEN |
+| PGM-340 | LOW | UX / testability | Lend this book (lib/reading_life_ui.dart) | The reminder choices start at 2 weeks, so a loan reminder cannot be tried in a day. Add Tomorrow and In a week. | device test 5.4 | 0.13.2 | READY FOR VERIFICATION |
 | PGM-341 | INFO | Test plan | Device test plan Rev 1.2 | Plan mistakes: 3.2 expected a slider, 5.4 expected a Tomorrow option, 6.6 expected a fingerprint switch. Plan to be corrected in Rev 1.3. | device test |  | OPEN |

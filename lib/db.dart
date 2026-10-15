@@ -259,11 +259,18 @@ class AppDb extends _$AppDb {
         await (delete(reads)..where((x) => x.id.isIn(u.created) & x.thoughts.equals('') & x.rating.isNull())).go();
       });
 
-  Future<void> addManyToShelf(Iterable<int> ids, int shelfId) async {
-    for (final id in ids) {
+  /// Puts the books on a shelf and returns the ones that were not already there, so Undo takes off only those.
+  Future<List<int>> addManyToShelf(Iterable<int> ids, int shelfId) async {
+    final have = {for (final l in await (select(bookShelves)..where((l) => l.shelfId.equals(shelfId))).get()) l.bookId};
+    final added = [for (final id in ids) if (!have.contains(id)) id];
+    for (final id in added) {
       await setOnShelf(id, shelfId, true);
     }
+    return added;
   }
+
+  Future<void> removeManyFromShelf(Iterable<int> ids, int shelfId) =>
+      _inChunks(ids, (s) => (delete(bookShelves)..where((l) => l.shelfId.equals(shelfId) & l.bookId.isIn(s))).go());
 
   Future<void> purgeBook(int id) => (delete(books)..where((b) => b.id.equals(id))).go();
   Future<int> purgeExpiredTrash() {

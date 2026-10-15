@@ -47,6 +47,8 @@ class _AddBookState extends State<AddBook> {
       results = await f();
     } catch (e) {
       Log.w('addbook', 'lookup failed: $e');
+      searched = false; // it did not find nothing, it could not look: no "Nothing found" card
+      results = [];
       if (mounted) snack(context, e is LookupException ? '$e You can still add the book manually below.' : 'Lookup failed — you can add the book manually below.');
     }
     if (mounted) setState(() => busy = false);

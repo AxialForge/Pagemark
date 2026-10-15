@@ -190,6 +190,11 @@ class _EditBookState extends State<EditBook> {
         child: Scaffold(
         appBar: AppBar(title: const Text('Edit book'), actions: [
           TextButton(onPressed: () async {
+            final problem = checkBookNumbers(c['pages']!.text, c['year']!.text);
+            if (problem != null) {
+              snack(context, problem);
+              return;
+            }
             _saved = true;
             await (db.update(db.books)..where((x) => x.id.equals(widget.book.id))).write(BooksCompanion(
               title: Value(c['title']!.text), author: Value(c['author']!.text), series: Value(c['series']!.text), seriesNumber: Value(SeriesPage.parseNum(c['seriesNumber']!.text)), seriesTotal: Value(int.tryParse(c['seriesTotal']!.text.trim())), genre: Value(c['genre']!.text),
