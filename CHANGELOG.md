@@ -11,6 +11,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Fixes from the Galaxy S25 Ultra device test of 0.13.1 (PGM-330 to PGM-340).
 
 ### Fixed
+- **Reminders now arrive.** The daily reading reminder, the backup reminder and the lent-book reminder never appeared on a real phone: the app's manifest was missing the two receivers the notification plugin needs to show a scheduled notification, so the alarm fired and nothing answered. They are declared now, and a test guards them. Reminders set before this update start working after you open Pagemark once.
 - In landscape the Library can scroll again: on a short screen the "Currently reading" strip is left out so the list has room.
 - The back gesture on Stats, Locked or Settings now returns to the Library first; Back on the Library leaves the app.
 - Edit book no longer accepts 0 or 99999 pages, or a year outside 1000 to 2100.

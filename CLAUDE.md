@@ -57,6 +57,8 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
 
 ## Gotchas / constraints
 
+- **Scheduled notifications need the plugin's receivers in OUR manifest.** `flutter_local_notifications` (v16+) does not declare `ScheduledNotificationReceiver` / `ScheduledNotificationBootReceiver` itself. Without them `zonedSchedule` succeeds, the alarm shows in `dumpsys alarm`, and no notification ever appears, in release and debug alike (found only on a real phone, 0.13.1 device test, PGM-332). They are in `android/app/src/main/AndroidManifest.xml` and `test/manifest_test.dart` fails if they go. Check a reminder end to end on the emulator: set the time 2 minutes ahead, `adb shell dumpsys alarm | grep pagemark`, then `dumpsys notification | grep pagemark`.
+
 - **Generated documents go to `Documentation/`** (PDF, Word, reports), named `<name> Rev <major.minor>`. `docs/_tools/build_docs.py` and `build_ui_layout.py` copy their PDFs there as `Rev <app version>`; `build_audit_report.py` writes there by default and bumps the revision on each rebuild. Sources stay in `docs/`.
 
 - **Two lookup sources (`lib/lookup.dart`, `lib/finding.dart`).** `Lookup.search` / `byIsbn` stay Open Library only (the older tests rely on that); the UI calls `searchAll` / `byIsbnAll` with `google: googleOn()`. `merge`/`fillGaps` only fill empty fields, never overwrite. Any new host needs a line on the promise screen and an entry in `promiseHosts` (a test enforces it). Refresh must never replace an ISBN or a `local:` cover, and a lookup for a locked book goes through `confirmVaultLookup` first. Suggestions (`suggestNext`) are fed `watchLibrary(locked: false)` only.
