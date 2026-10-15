@@ -1,0 +1,267 @@
+From d48582f849a25d9673a9cab8e7134192187110ee Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 12 Oct 2026 06:46:14 -0400
+Subject: [PATCH] Add Google Play build flavor, privacy policy and Play release
+ guide
+
+Play flavor strips the in-app updater and REQUEST_INSTALL_PACKAGES;
+sideload flavor (default) keeps current behavior.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01QsfPcQUzRyoVa45NkQow4c
+---
+ .github/workflows/ci.yml                     |  2 +
+ CHANGELOG.md                                 |  2 +
+ CLAUDE.md                                    |  4 ++
+ README.md                                    |  3 +-
+ android/app/build.gradle.kts                 |  7 ++++
+ android/app/src/main/AndroidManifest.xml     |  3 +-
+ android/app/src/play/AndroidManifest.xml     |  5 +++
+ android/app/src/sideload/AndroidManifest.xml |  4 ++
+ docs/PLAY_STORE.md                           | 43 ++++++++++++++++++++
+ docs/PRIVACY.md                              | 25 ++++++++++++
+ lib/updater_ui.dart                          | 14 ++++++-
+ pubspec.yaml                                 |  1 +
+ 12 files changed, 109 insertions(+), 4 deletions(-)
+ create mode 100644 android/app/src/play/AndroidManifest.xml
+ create mode 100644 android/app/src/sideload/AndroidManifest.xml
+ create mode 100644 docs/PLAY_STORE.md
+ create mode 100644 docs/PRIVACY.md
+
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 7e6d297..93b3672 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -27,3 +27,5 @@ jobs:
+           distribution: temurin
+           java-version: 21
+       - run: flutter build apk --debug
++      # Play flavor: no updater, no REQUEST_INSTALL_PACKAGES. Proves the Play variant compiles.
++      - run: flutter build apk --debug --flavor play --dart-define=PLAY_BUILD=true
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index cea1096..dc24b42 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -8,6 +8,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+ 
+ ### Added
+ 
++- Google Play build flavor (`--flavor play --dart-define=PLAY_BUILD=true`): no in-app updater, no install-packages permission; Settings shows Version history instead.
++
+ ### Changed
+ 
+ ### Fixed
+diff --git a/CLAUDE.md b/CLAUDE.md
+index fb353cb..8bba95c 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -99,6 +99,10 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
+ - A Flutter CI workflow (the template has none for Flutter). Release signing is local: `android/key.properties` (gitignored) points at `~/.android/pagemark-release.jks` — back that keystore up; losing it means users can't upgrade in place.
+ - Reading goals/streaks, series grouping, CSV/Goodreads import, iOS build (needs a Mac).
+ 
++## Google Play
++
++Two Android flavors: `sideload` (default, GitHub APK, in-app updater, `REQUEST_INSTALL_PACKAGES` from `src/sideload`) and `play` (AAB, `kPlayBuild` true, permission stripped in `src/play`). Play forbids self-updating APKs - never let the play flavor reach `Updater`. Checklist and listing copy: [docs/PLAY_STORE.md](docs/PLAY_STORE.md).
++
+ ## Release
+ 
+ Bump `version:` in `pubspec.yaml` and update `CHANGELOG.md` in one commit, then:
+diff --git a/README.md b/README.md
+index 5504730..eb0bb9b 100644
+--- a/README.md
++++ b/README.md
+@@ -46,7 +46,8 @@ Download the **arm64** APK from the [Releases page](https://github.com/AxialForg
+ flutter pub get
+ dart run build_runner build --delete-conflicting-outputs
+ flutter analyze && flutter test
+-flutter build apk --release --split-per-abi
++flutter build apk --release --split-per-abi          # GitHub release (sideload flavor, default)
++flutter build appbundle --release --flavor play --dart-define=PLAY_BUILD=true   # Google Play AAB
+ ```
+ 
+ Flutter 3.47+, Android SDK, JDK 17+. On Windows with JDK 25 see the loopback note in [CLAUDE.md](CLAUDE.md) (Gotchas).
+diff --git a/android/app/build.gradle.kts b/android/app/build.gradle.kts
+index 0e7fc47..800f20b 100644
+--- a/android/app/build.gradle.kts
++++ b/android/app/build.gradle.kts
+@@ -36,6 +36,13 @@ android {
+         versionName = flutter.versionName
+     }
+ 
++    // sideload = GitHub-release APK with the in-app updater; play = Google Play AAB (no updater, no install permission).
++    flavorDimensions += "dist"
++    productFlavors {
++        create("sideload") { dimension = "dist" }
++        create("play") { dimension = "dist" }
++    }
++
+     signingConfigs {
+         create("release") {
+             if (keyProps.containsKey("storeFile")) {
+diff --git a/android/app/src/main/AndroidManifest.xml b/android/app/src/main/AndroidManifest.xml
+index 18f533c..36a2d94 100644
+--- a/android/app/src/main/AndroidManifest.xml
++++ b/android/app/src/main/AndroidManifest.xml
+@@ -2,8 +2,7 @@
+     <uses-permission android:name="android.permission.INTERNET"/>
+     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+     <uses-permission android:name="android.permission.CAMERA"/>
+-    <!-- In-app updates: lets Android offer to install the downloaded Pagemark APK. -->
+-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
++    <!-- REQUEST_INSTALL_PACKAGES (in-app APK updates) lives in src/sideload/AndroidManifest.xml; Google Play forbids it. -->
+     <!-- allowBackup off: Android must not copy the library (incl. locked books) to the cloud or via adb. -->
+     <application
+         android:allowBackup="false"
+diff --git a/android/app/src/play/AndroidManifest.xml b/android/app/src/play/AndroidManifest.xml
+new file mode 100644
+index 0000000..9d76835
+--- /dev/null
++++ b/android/app/src/play/AndroidManifest.xml
+@@ -0,0 +1,5 @@
++<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:tools="http://schemas.android.com/tools">
++    <!-- Google Play policy: no self-updating APKs. Strip the permission even if a plugin merges it in. -->
++    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove"/>
++</manifest>
+diff --git a/android/app/src/sideload/AndroidManifest.xml b/android/app/src/sideload/AndroidManifest.xml
+new file mode 100644
+index 0000000..337c236
+--- /dev/null
++++ b/android/app/src/sideload/AndroidManifest.xml
+@@ -0,0 +1,4 @@
++<manifest xmlns:android="http://schemas.android.com/apk/res/android">
++    <!-- In-app updates: lets Android offer to install the downloaded Pagemark APK. Sideload build only. -->
++    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
++</manifest>
+diff --git a/docs/PLAY_STORE.md b/docs/PLAY_STORE.md
+new file mode 100644
+index 0000000..2e59dbb
+--- /dev/null
++++ b/docs/PLAY_STORE.md
+@@ -0,0 +1,43 @@
++# Google Play release guide
++
++## Build the bundle
++```bash
++flutter pub get
++dart run build_runner build --delete-conflicting-outputs
++flutter analyze && flutter test
++flutter build appbundle --release --flavor play --dart-define=PLAY_BUILD=true
++# -> build/app/outputs/bundle/playRelease/app-play-release.aab
++```
++Bump `version:` in `pubspec.yaml` first; `+N` is the Play versionCode and must increase on every upload.
++
++## Signing
++Use Play App Signing (default). Sign the AAB with your existing upload key (`android/key.properties`, `~/.android/pagemark-release.jks`) or generate a new upload key. Back the keystore up. **The sideload APK and the Play build will be signed by different keys**, so existing GitHub-APK users cannot update in place to the Play version (uninstall/restore from backup).
++
++## Drive backup on Play builds
++Google sign-in needs an Android OAuth client using the **Play App Signing SHA-1** (Play Console -> Test and release -> App signing) in addition to your upload-key SHA-1. Update `docs/DRIVE_SETUP.md` steps accordingly. Test backup from a Play internal-testing install.
++
++## Developer account
++One-time $25. New personal accounts must run a **closed test with 12+ testers for 14 consecutive days** before applying for production. Start this early.
++
++## Store listing
++- **App name:** Pagemark
++- **Short description (80):** Private, offline book tracker. Log reads, rate, and keep your thoughts.
++- **Full description:** Pagemark is a private, fully local book tracker. Log what you read or listen to (print, e-book, audiobook), rate it, track progress and goals, and keep private thoughts. Search Open Library, scan an ISBN barcode, or add by hand. Organise with shelves, series and tags. Lock a private library behind a PIN or fingerprint. Export CSV/JSON, back up to your own Google Drive, restore safely. No accounts, no ads, no analytics.
++- **Category:** Books & Reference. **Contact email + privacy policy URL:** https://github.com/AxialForge/Pagemark/blob/main/docs/PRIVACY.md
++- **Graphics needed:** icon 512x512 PNG, feature graphic 1024x500, 2-8 phone screenshots (use the light-theme ones in `docs/screenshots/`).
++
++## Data safety form (verify each answer in Console)
++- Data collected by the developer: **None.**
++- Data shared: ISBN/title search text goes to Open Library (third-party service, no identifiers). Declare per current Play guidance for user-initiated lookups.
++- Drive backup: user-initiated transfer to the user's own Google account.
++- Security: data encrypted in transit (HTTPS); users can request deletion (uninstall / Drive settings).
++- No ads. Content rating questionnaire: no violence/sexual content/etc. -> expect Everyone. Target audience: 13+ or 18+ (not children).
++
++## Permissions
++INTERNET, CAMERA (barcode scan), USE_BIOMETRIC (vault). `REQUEST_INSTALL_PACKAGES` is stripped in the play flavor.
++
++## Pre-submit checks
++- [ ] `flutter build appbundle --flavor play` succeeds; merged manifest has no REQUEST_INSTALL_PACKAGES (`bundletool` or Android Studio manifest viewer)
++- [ ] Settings shows "Version history", no Updates tile
++- [ ] Release install on a real phone: scan, biometrics, Drive backup/restore, export
++- [ ] Verify targetSdk meets Play's current requirement (Flutter's default tracks it)
+diff --git a/docs/PRIVACY.md b/docs/PRIVACY.md
+new file mode 100644
+index 0000000..c0dc16f
+--- /dev/null
++++ b/docs/PRIVACY.md
+@@ -0,0 +1,25 @@
++# Pagemark Privacy Policy
++
++Last updated: 2026-10-12
++
++Pagemark is a private, fully local book tracker. It has no accounts, no server, no analytics, no advertising and no telemetry. The developer (AxialForge) receives no data from the app.
++
++## What is stored
++Your books, reads, ratings, notes, shelves, tags and settings are stored only in a database on your device. Your optional PIN is stored as a salted PBKDF2 hash in the device's secure storage. The app's event log (errors only, never book titles or thoughts) stays on the device.
++
++## What leaves your device
++- **Book lookup:** when you search by title or ISBN, the search text or ISBN is sent to Open Library (openlibrary.org) to fetch book details and covers. No account or identifier is attached by Pagemark. Open Library's own privacy policy applies.
++- **Google Drive backup (optional, off by default):** if you set it up and sign in, an encrypted-or-plain copy of your database is uploaded to the hidden app-data folder of *your own* Google Drive. Pagemark never sees your Google credentials, and the developer cannot access the backup.
++- **Camera:** used only to scan ISBN barcodes on the device. Images are not stored or transmitted.
++
++## Exports
++CSV/JSON exports and database exports are saved or shared only where you choose. Locked-library books are excluded from CSV/JSON exports; the full database export and Drive backup include them.
++
++## Deleting your data
++Uninstalling Pagemark deletes its local data. Drive backups can be deleted from Google Drive settings (Manage apps).
++
++## Children
++Pagemark is not directed at children under 13 and collects no personal information.
++
++## Contact
++Open an issue at https://github.com/AxialForge/Pagemark/issues or email josephkresevic@gmail.com.
+diff --git a/lib/updater_ui.dart b/lib/updater_ui.dart
+index 6038919..7166e0e 100644
+--- a/lib/updater_ui.dart
++++ b/lib/updater_ui.dart
+@@ -7,11 +7,16 @@ import 'log.dart';
+ import 'main.dart';
+ import 'updater.dart';
+ 
++/// True for the Google Play build (`--dart-define=PLAY_BUILD=true`): Play forbids self-updating APKs, so the
++/// updater, its network check and the install permission are all absent; updates come from Play.
++const bool kPlayBuild = bool.fromEnvironment('PLAY_BUILD');
++
+ /// Set when a check found a newer release; drives the badge on Settings.
+ final updateAvailable = ValueNotifier<UpdateInfo?>(null);
+ 
+ /// Quiet check at most once a day, only if the user hasn't turned it off. Never throws.
+ Future<void> autoCheckUpdates() async {
++  if (kPlayBuild) return;
+   if (prefs.getBool('upd_auto') == false) return;
+   final last = DateTime.tryParse(prefs.getString('upd_last') ?? '');
+   if (last != null && DateTime.now().difference(last) < const Duration(hours: 24)) return;
+@@ -40,7 +45,14 @@ Future<void> announceNewVersion(BuildContext context) async {
+ class UpdateTile extends StatelessWidget {
+   const UpdateTile({super.key});
+   @override
+-  Widget build(BuildContext context) => ValueListenableBuilder<UpdateInfo?>(
++  Widget build(BuildContext context) => kPlayBuild
++      ? ListTile(
++          leading: const Icon(Icons.history),
++          title: const Text('Version history'),
++          subtitle: const Text('What changed in each release'),
++          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangelogPage())),
++        )
++      : ValueListenableBuilder<UpdateInfo?>(
+         valueListenable: updateAvailable,
+         builder: (_, info, _) => ListTile(
+           leading: Badge(isLabelVisible: info != null, child: const Icon(Icons.system_update_alt)),
+diff --git a/pubspec.yaml b/pubspec.yaml
+index 104e9e5..a9c608c 100644
+--- a/pubspec.yaml
++++ b/pubspec.yaml
+@@ -79,6 +79,7 @@ dev_dependencies:
+ 
+ # The following section is specific to Flutter packages.
+ flutter:
++  default-flavor: sideload
+ 
+   # The following line ensures that the Material Icons font is
+   # included with your application, so that you can use the icons in
+-- 
+2.53.0.windows.2
+

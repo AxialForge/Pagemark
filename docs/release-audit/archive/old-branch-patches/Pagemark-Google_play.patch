@@ -1,0 +1,1701 @@
+From d48582f849a25d9673a9cab8e7134192187110ee Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 12 Oct 2026 06:46:14 -0400
+Subject: [PATCH 1/3] Add Google Play build flavor, privacy policy and Play
+ release guide
+
+Play flavor strips the in-app updater and REQUEST_INSTALL_PACKAGES;
+sideload flavor (default) keeps current behavior.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01QsfPcQUzRyoVa45NkQow4c
+---
+ .github/workflows/ci.yml                     |  2 +
+ CHANGELOG.md                                 |  2 +
+ CLAUDE.md                                    |  4 ++
+ README.md                                    |  3 +-
+ android/app/build.gradle.kts                 |  7 ++++
+ android/app/src/main/AndroidManifest.xml     |  3 +-
+ android/app/src/play/AndroidManifest.xml     |  5 +++
+ android/app/src/sideload/AndroidManifest.xml |  4 ++
+ docs/PLAY_STORE.md                           | 43 ++++++++++++++++++++
+ docs/PRIVACY.md                              | 25 ++++++++++++
+ lib/updater_ui.dart                          | 14 ++++++-
+ pubspec.yaml                                 |  1 +
+ 12 files changed, 109 insertions(+), 4 deletions(-)
+ create mode 100644 android/app/src/play/AndroidManifest.xml
+ create mode 100644 android/app/src/sideload/AndroidManifest.xml
+ create mode 100644 docs/PLAY_STORE.md
+ create mode 100644 docs/PRIVACY.md
+
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 7e6d297..93b3672 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -27,3 +27,5 @@ jobs:
+           distribution: temurin
+           java-version: 21
+       - run: flutter build apk --debug
++      # Play flavor: no updater, no REQUEST_INSTALL_PACKAGES. Proves the Play variant compiles.
++      - run: flutter build apk --debug --flavor play --dart-define=PLAY_BUILD=true
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index cea1096..dc24b42 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -8,6 +8,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+ 
+ ### Added
+ 
++- Google Play build flavor (`--flavor play --dart-define=PLAY_BUILD=true`): no in-app updater, no install-packages permission; Settings shows Version history instead.
++
+ ### Changed
+ 
+ ### Fixed
+diff --git a/CLAUDE.md b/CLAUDE.md
+index fb353cb..8bba95c 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -99,6 +99,10 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
+ - A Flutter CI workflow (the template has none for Flutter). Release signing is local: `android/key.properties` (gitignored) points at `~/.android/pagemark-release.jks` — back that keystore up; losing it means users can't upgrade in place.
+ - Reading goals/streaks, series grouping, CSV/Goodreads import, iOS build (needs a Mac).
+ 
++## Google Play
++
++Two Android flavors: `sideload` (default, GitHub APK, in-app updater, `REQUEST_INSTALL_PACKAGES` from `src/sideload`) and `play` (AAB, `kPlayBuild` true, permission stripped in `src/play`). Play forbids self-updating APKs - never let the play flavor reach `Updater`. Checklist and listing copy: [docs/PLAY_STORE.md](docs/PLAY_STORE.md).
++
+ ## Release
+ 
+ Bump `version:` in `pubspec.yaml` and update `CHANGELOG.md` in one commit, then:
+diff --git a/README.md b/README.md
+index 5504730..eb0bb9b 100644
+--- a/README.md
++++ b/README.md
+@@ -46,7 +46,8 @@ Download the **arm64** APK from the [Releases page](https://github.com/AxialForg
+ flutter pub get
+ dart run build_runner build --delete-conflicting-outputs
+ flutter analyze && flutter test
+-flutter build apk --release --split-per-abi
++flutter build apk --release --split-per-abi          # GitHub release (sideload flavor, default)
++flutter build appbundle --release --flavor play --dart-define=PLAY_BUILD=true   # Google Play AAB
+ ```
+ 
+ Flutter 3.47+, Android SDK, JDK 17+. On Windows with JDK 25 see the loopback note in [CLAUDE.md](CLAUDE.md) (Gotchas).
+diff --git a/android/app/build.gradle.kts b/android/app/build.gradle.kts
+index 0e7fc47..800f20b 100644
+--- a/android/app/build.gradle.kts
++++ b/android/app/build.gradle.kts
+@@ -36,6 +36,13 @@ android {
+         versionName = flutter.versionName
+     }
+ 
++    // sideload = GitHub-release APK with the in-app updater; play = Google Play AAB (no updater, no install permission).
++    flavorDimensions += "dist"
++    productFlavors {
++        create("sideload") { dimension = "dist" }
++        create("play") { dimension = "dist" }
++    }
++
+     signingConfigs {
+         create("release") {
+             if (keyProps.containsKey("storeFile")) {
+diff --git a/android/app/src/main/AndroidManifest.xml b/android/app/src/main/AndroidManifest.xml
+index 18f533c..36a2d94 100644
+--- a/android/app/src/main/AndroidManifest.xml
++++ b/android/app/src/main/AndroidManifest.xml
+@@ -2,8 +2,7 @@
+     <uses-permission android:name="android.permission.INTERNET"/>
+     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+     <uses-permission android:name="android.permission.CAMERA"/>
+-    <!-- In-app updates: lets Android offer to install the downloaded Pagemark APK. -->
+-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
++    <!-- REQUEST_INSTALL_PACKAGES (in-app APK updates) lives in src/sideload/AndroidManifest.xml; Google Play forbids it. -->
+     <!-- allowBackup off: Android must not copy the library (incl. locked books) to the cloud or via adb. -->
+     <application
+         android:allowBackup="false"
+diff --git a/android/app/src/play/AndroidManifest.xml b/android/app/src/play/AndroidManifest.xml
+new file mode 100644
+index 0000000..9d76835
+--- /dev/null
++++ b/android/app/src/play/AndroidManifest.xml
+@@ -0,0 +1,5 @@
++<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:tools="http://schemas.android.com/tools">
++    <!-- Google Play policy: no self-updating APKs. Strip the permission even if a plugin merges it in. -->
++    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove"/>
++</manifest>
+diff --git a/android/app/src/sideload/AndroidManifest.xml b/android/app/src/sideload/AndroidManifest.xml
+new file mode 100644
+index 0000000..337c236
+--- /dev/null
++++ b/android/app/src/sideload/AndroidManifest.xml
+@@ -0,0 +1,4 @@
++<manifest xmlns:android="http://schemas.android.com/apk/res/android">
++    <!-- In-app updates: lets Android offer to install the downloaded Pagemark APK. Sideload build only. -->
++    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
++</manifest>
+diff --git a/docs/PLAY_STORE.md b/docs/PLAY_STORE.md
+new file mode 100644
+index 0000000..2e59dbb
+--- /dev/null
++++ b/docs/PLAY_STORE.md
+@@ -0,0 +1,43 @@
++# Google Play release guide
++
++## Build the bundle
++```bash
++flutter pub get
++dart run build_runner build --delete-conflicting-outputs
++flutter analyze && flutter test
++flutter build appbundle --release --flavor play --dart-define=PLAY_BUILD=true
++# -> build/app/outputs/bundle/playRelease/app-play-release.aab
++```
++Bump `version:` in `pubspec.yaml` first; `+N` is the Play versionCode and must increase on every upload.
++
++## Signing
++Use Play App Signing (default). Sign the AAB with your existing upload key (`android/key.properties`, `~/.android/pagemark-release.jks`) or generate a new upload key. Back the keystore up. **The sideload APK and the Play build will be signed by different keys**, so existing GitHub-APK users cannot update in place to the Play version (uninstall/restore from backup).
++
++## Drive backup on Play builds
++Google sign-in needs an Android OAuth client using the **Play App Signing SHA-1** (Play Console -> Test and release -> App signing) in addition to your upload-key SHA-1. Update `docs/DRIVE_SETUP.md` steps accordingly. Test backup from a Play internal-testing install.
++
++## Developer account
++One-time $25. New personal accounts must run a **closed test with 12+ testers for 14 consecutive days** before applying for production. Start this early.
++
++## Store listing
++- **App name:** Pagemark
++- **Short description (80):** Private, offline book tracker. Log reads, rate, and keep your thoughts.
++- **Full description:** Pagemark is a private, fully local book tracker. Log what you read or listen to (print, e-book, audiobook), rate it, track progress and goals, and keep private thoughts. Search Open Library, scan an ISBN barcode, or add by hand. Organise with shelves, series and tags. Lock a private library behind a PIN or fingerprint. Export CSV/JSON, back up to your own Google Drive, restore safely. No accounts, no ads, no analytics.
++- **Category:** Books & Reference. **Contact email + privacy policy URL:** https://github.com/AxialForge/Pagemark/blob/main/docs/PRIVACY.md
++- **Graphics needed:** icon 512x512 PNG, feature graphic 1024x500, 2-8 phone screenshots (use the light-theme ones in `docs/screenshots/`).
++
++## Data safety form (verify each answer in Console)
++- Data collected by the developer: **None.**
++- Data shared: ISBN/title search text goes to Open Library (third-party service, no identifiers). Declare per current Play guidance for user-initiated lookups.
++- Drive backup: user-initiated transfer to the user's own Google account.
++- Security: data encrypted in transit (HTTPS); users can request deletion (uninstall / Drive settings).
++- No ads. Content rating questionnaire: no violence/sexual content/etc. -> expect Everyone. Target audience: 13+ or 18+ (not children).
++
++## Permissions
++INTERNET, CAMERA (barcode scan), USE_BIOMETRIC (vault). `REQUEST_INSTALL_PACKAGES` is stripped in the play flavor.
++
++## Pre-submit checks
++- [ ] `flutter build appbundle --flavor play` succeeds; merged manifest has no REQUEST_INSTALL_PACKAGES (`bundletool` or Android Studio manifest viewer)
++- [ ] Settings shows "Version history", no Updates tile
++- [ ] Release install on a real phone: scan, biometrics, Drive backup/restore, export
++- [ ] Verify targetSdk meets Play's current requirement (Flutter's default tracks it)
+diff --git a/docs/PRIVACY.md b/docs/PRIVACY.md
+new file mode 100644
+index 0000000..c0dc16f
+--- /dev/null
++++ b/docs/PRIVACY.md
+@@ -0,0 +1,25 @@
++# Pagemark Privacy Policy
++
++Last updated: 2026-10-12
++
++Pagemark is a private, fully local book tracker. It has no accounts, no server, no analytics, no advertising and no telemetry. The developer (AxialForge) receives no data from the app.
++
++## What is stored
++Your books, reads, ratings, notes, shelves, tags and settings are stored only in a database on your device. Your optional PIN is stored as a salted PBKDF2 hash in the device's secure storage. The app's event log (errors only, never book titles or thoughts) stays on the device.
++
++## What leaves your device
++- **Book lookup:** when you search by title or ISBN, the search text or ISBN is sent to Open Library (openlibrary.org) to fetch book details and covers. No account or identifier is attached by Pagemark. Open Library's own privacy policy applies.
++- **Google Drive backup (optional, off by default):** if you set it up and sign in, an encrypted-or-plain copy of your database is uploaded to the hidden app-data folder of *your own* Google Drive. Pagemark never sees your Google credentials, and the developer cannot access the backup.
++- **Camera:** used only to scan ISBN barcodes on the device. Images are not stored or transmitted.
++
++## Exports
++CSV/JSON exports and database exports are saved or shared only where you choose. Locked-library books are excluded from CSV/JSON exports; the full database export and Drive backup include them.
++
++## Deleting your data
++Uninstalling Pagemark deletes its local data. Drive backups can be deleted from Google Drive settings (Manage apps).
++
++## Children
++Pagemark is not directed at children under 13 and collects no personal information.
++
++## Contact
++Open an issue at https://github.com/AxialForge/Pagemark/issues or email josephkresevic@gmail.com.
+diff --git a/lib/updater_ui.dart b/lib/updater_ui.dart
+index 6038919..7166e0e 100644
+--- a/lib/updater_ui.dart
++++ b/lib/updater_ui.dart
+@@ -7,11 +7,16 @@ import 'log.dart';
+ import 'main.dart';
+ import 'updater.dart';
+ 
++/// True for the Google Play build (`--dart-define=PLAY_BUILD=true`): Play forbids self-updating APKs, so the
++/// updater, its network check and the install permission are all absent; updates come from Play.
++const bool kPlayBuild = bool.fromEnvironment('PLAY_BUILD');
++
+ /// Set when a check found a newer release; drives the badge on Settings.
+ final updateAvailable = ValueNotifier<UpdateInfo?>(null);
+ 
+ /// Quiet check at most once a day, only if the user hasn't turned it off. Never throws.
+ Future<void> autoCheckUpdates() async {
++  if (kPlayBuild) return;
+   if (prefs.getBool('upd_auto') == false) return;
+   final last = DateTime.tryParse(prefs.getString('upd_last') ?? '');
+   if (last != null && DateTime.now().difference(last) < const Duration(hours: 24)) return;
+@@ -40,7 +45,14 @@ Future<void> announceNewVersion(BuildContext context) async {
+ class UpdateTile extends StatelessWidget {
+   const UpdateTile({super.key});
+   @override
+-  Widget build(BuildContext context) => ValueListenableBuilder<UpdateInfo?>(
++  Widget build(BuildContext context) => kPlayBuild
++      ? ListTile(
++          leading: const Icon(Icons.history),
++          title: const Text('Version history'),
++          subtitle: const Text('What changed in each release'),
++          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangelogPage())),
++        )
++      : ValueListenableBuilder<UpdateInfo?>(
+         valueListenable: updateAvailable,
+         builder: (_, info, _) => ListTile(
+           leading: Badge(isLabelVisible: info != null, child: const Icon(Icons.system_update_alt)),
+diff --git a/pubspec.yaml b/pubspec.yaml
+index 104e9e5..a9c608c 100644
+--- a/pubspec.yaml
++++ b/pubspec.yaml
+@@ -79,6 +79,7 @@ dev_dependencies:
+ 
+ # The following section is specific to Flutter packages.
+ flutter:
++  default-flavor: sideload
+ 
+   # The following line ensures that the Material Icons font is
+   # included with your application, so that you can use the icons in
+-- 
+2.53.0.windows.2
+
+
+From 98066d24c8bad6cb32c10c90ae1f94849a9034e4 Mon Sep 17 00:00:00 2001
+From: AxialForge <josephkresevic@gmail.com>
+Date: Mon, 12 Oct 2026 07:43:49 -0400
+Subject: [PATCH 2/3] add Google Play roadmap with launch gates and priorities
+
+---
+ docs/PLAY_ROADMAP.md | 96 ++++++++++++++++++++++++++++++++++++++++++++
+ docs/ROADMAP.md      |  2 +-
+ 2 files changed, 97 insertions(+), 1 deletion(-)
+ create mode 100644 docs/PLAY_ROADMAP.md
+
+diff --git a/docs/PLAY_ROADMAP.md b/docs/PLAY_ROADMAP.md
+new file mode 100644
+index 0000000..11b6dca
+--- /dev/null
++++ b/docs/PLAY_ROADMAP.md
+@@ -0,0 +1,96 @@
++# Pagemark - Road to Google Play
++
++Branch: `Pagemark-Google_play` (flavor `play`). The GitHub APK line stays on `Pagemark-APK` / `main`.
++This sits on top of [ROADMAP.md](ROADMAP.md) (feature specs, IDs like `0.5.0-A`) and [PLAY_STORE.md](PLAY_STORE.md) (listing copy, Data safety, build command). It decides **what must ship before publishing** and in what order.
++
++Tags: **MUST** = blocks publishing. **SHOULD** = ship before launch unless you consciously cut it. **LATER** = after launch.
++Size: S (hours) / M (a day or two) / L (several days) / XL (risky, device testing).
++
++## The long pole: the 14-day closed test
++A new personal Play account needs a closed test with 12+ opted-in testers for 14 continuous days before it can request production (verify current rule in Play Console). Start the clock as early as Phase 1 passes, and keep building during the 14 days. Everything below is ordered around that.
++
++---
++
++## Phase 0 - Play plumbing (this branch)
++| | Item | Size | Status |
++|---|---|---|---|
++| MUST | `play` flavor: no updater, no `REQUEST_INSTALL_PACKAGES` | S | done, **uncompiled** |
++| MUST | Privacy policy `docs/PRIVACY.md` (public URL) | S | done |
++| MUST | Verify `flutter build appbundle --flavor play` + CI green; merged manifest has no install permission | S | you (PC) |
++| MUST | Play-flavor privacy text: no GitHub update check in this build (manuals, in-app About) | S | todo |
++| MUST | Play developer account ($25), identity verification, app created in Console | S | you |
++| MUST | Upload key + Play App Signing; add Play signing SHA-1 as Android OAuth client (Drive backup) | S | you |
++| MUST | `targetSdk` meets Play's current minimum (check Flutter 3.47 default) | S | verify |
++| MUST | Native libs 16 KB page-size aligned (sqlite3, mobile_scanner, cryptography_flutter) - needed for Android 15+ targets | M | verify |
++| MUST | Store assets: 512 icon, 1024x500 feature graphic, 4-8 **light-theme** phone screenshots | M | todo |
++| MUST | Data safety form, content rating, target audience (13+), ads=no, app access=none | S | cheat-sheet in PLAY_STORE.md |
++| SHOULD | `<uses-feature android:name="android.hardware.camera" android:required="false"/>` so camera-less devices can install | S | todo |
++| SHOULD | Versioning rule: `+N` strictly increasing, one counter shared by both flavors' tags | S | todo |
++
++## Phase 1 - v0.4.2 "Close the gaps" (ROADMAP section 1) - then start closed test
++| | Item | Size |
++|---|---|---|
++| MUST | **0.4.2-B strip unused permissions** (READ_MEDIA_*, READ_EXTERNAL_STORAGE, FOREGROUND_SERVICE_* you don't use). Leftover media/foreground-service permissions trigger Play declaration forms | S |
++| MUST | 0.4.2-A Vault Trash (locked books can't be restored today) | M |
++| SHOULD | 0.4.2-C PIN note after restore | S |
++| SHOULD | 0.4.2-D Search noise ranking (first impression for new users) | M |
++| LATER | 0.4.2-E debug updater preview (APK flavor only) | S |
++| n/a | 0.4.2-F release workflow: APK line only; add a second job for the AAB (needs upload-key secrets) | M |
++| SHOULD | **New:** "Delete all data" in Settings (wipes DB, covers, prefs, secure storage); supports the Data safety deletion answer | M |
++| SHOULD | **New:** "Copy diagnostic log" + support link (no telemetry, so this is the only bug-report path) | S |
++
++**Gate A - open closed test** (internal test first, then closed with 12+ testers on 0.4.2 AAB). Real-phone pass: scan, biometrics, Drive backup/restore from a Play-installed build, export, restore on a second device.
++
++## Phase 2 - v0.5.0 "Bring your books, see your books" (during the test)
++| | Item | Size |
++|---|---|---|
++| SHOULD | 0.5.0-A Pagemark CSV/JSON import | L |
++| SHOULD | 0.5.0-B Goodreads CSV import (biggest acquisition feature) | L |
++| LATER | 0.5.0-C StoryGraph CSV | M |
++| SHOULD | 0.5.0-D grid / cover-wall view | M |
++| SHOULD | 0.5.0-E multi-select, bulk actions, swipe, undo | L |
++
++## Phase 3 - v0.6.0 "Capture more"
++| | Item | Size |
++|---|---|---|
++| SHOULD | 0.6.0-A quotes & highlights (schema 4, export v2) | L |
++| SHOULD | 0.6.0-B local covers + zip backup container (offline library, backups include covers) | XL |
++| LATER | 0.6.0-C heat/content notes (adult-flavored; default off, never exported unless enabled) | M |
++| LATER | 0.6.0-D author pages, series totals | M |
++| LATER | 0.6.0-E sub-ratings | M |
++
++## Phase 4 - v0.7.0 "Security depth" (before public launch)
++| | Item | Size |
++|---|---|---|
++| SHOULD | 0.7.0-A SQLCipher encrypted DB + migration. High risk; the privacy-first pitch is stronger with it. Ship only after emulator + real-phone migration tests | XL |
++| SHOULD | 0.7.0-B auto-lock timeout, whole-app lock | M |
++| SHOULD | 0.7.0-C backup-failure notification (adds POST_NOTIFICATIONS; permission prompt + Data safety unaffected) | M |
++| SHOULD | 0.7.0-D R8/shrink + keep rules; upload `mapping.txt` to Play. Device-test every plugin path | L |
++| done | 0.7.0-E privacy/Play docs (this branch) | - |
++
++## Phase 5 - Quality bar for a public listing (from ROADMAP 0.9.0, pulled forward)
++| | Item | Size |
++|---|---|---|
++| SHOULD | Accessibility pass: TalkBack labels, 48 dp targets, 200% text, no overflow | L |
++| SHOULD | Tablet/landscape two-pane at >= 840 dp (Play large-screen quality) | L |
++| SHOULD | Edge-to-edge + predictive back on Android 15/16 | M |
++| LATER | Localization (ARB; en first), RTL check | L |
++| LATER | iOS (needs a Mac) - separate track, not a Play gate | XL |
++
++## Gate B - production request
++- [ ] Closed test ran 14 continuous days with 12+ testers; crashes/ANRs in Play vitals reviewed
++- [ ] All MUST rows done; all SHOULD rows done or consciously cut (write the cut list in the changelog)
++- [ ] No open data-loss/leak issue; `flutter analyze` clean, `flutter test` green
++- [ ] Release AAB signed with upload key; mapping uploaded; versionCode higher than the test builds
++- [ ] Store listing, graphics, privacy URL, Data safety, content rating all submitted and "Ready to publish"
++- [ ] Manuals regenerated for the Play flavor (no sideload/updater text), light-theme screenshots
++
++Production launch version: **1.0.0** (Play), tagged on this branch.
++
++## Post-launch (1.1+)
++Reminders, home-screen widget, share target, app shortcuts (ROADMAP section 5); StoryGraph import; localization; parking-lot items; iOS.
++
++## Decisions for you
++1. **Cut line:** is Phase 3 (quotes, local covers) in launch, or ship after Phase 2 + 4?
++2. **SQLCipher before launch?** Safer pitch vs. highest-risk change in the whole plan.
++3. **Two lines long-term:** keep `Pagemark-APK` alive (updater) or move everyone to Play after launch? Existing APK users can't upgrade in place (different signing key).
+diff --git a/docs/ROADMAP.md b/docs/ROADMAP.md
+index a8fe6bc..2b171f2 100644
+--- a/docs/ROADMAP.md
++++ b/docs/ROADMAP.md
+@@ -1,7 +1,7 @@
+ # Pagemark — Roadmap (0.4.2 → 1.0)
+ 
+ Written 2026-10-12 after v0.4.1. This file is meant to be picked up cold — from another computer, or by a fresh Claude Code
+-session — without the history of how we got here. Pair it with [CLAUDE.md](../CLAUDE.md) (architecture + every gotcha) and
++session — without the history of how we got here. For the Google Play launch order and publish gates see [PLAY_ROADMAP.md](PLAY_ROADMAP.md). Pair it with [CLAUDE.md](../CLAUDE.md) (architecture + every gotcha) and
+ [ROUNDING_OUT_REPORT.md](ROUNDING_OUT_REPORT.md) (the 330-item backlog; IDs like `IB-41` below refer to it).
+ 
+ ## 0. Working away from home
+-- 
+2.53.0.windows.2
+
+
+From 71ab8f4bffd6cb577ce32f1a861aa4d7ebad8984 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 12 Oct 2026 11:31:40 -0400
+Subject: [PATCH 3/3] Replace Drive backup with folder backup, backup file and
+ Auto Backup
+
+- Backup folder (Storage Access Framework): scheduled via WorkManager with a
+  foreground fallback, newest 5 kept, size-verified before pruning
+- Backup file save/restore on the Backup & restore page
+- Android Auto Backup, include-only: one passphrase-encrypted copy; first-run
+  restore offer on a new phone
+- Remove google_sign_in/googleapis and DRIVE_SETUP; update docs and tests
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_012PfZ1PdDJxhYEkxKo9CqMQ
+---
+ CHANGELOG.md                                  |   2 +
+ CLAUDE.md                                     |  17 +-
+ README.md                                     |   5 +-
+ android/app/src/main/AndroidManifest.xml      |   7 +-
+ android/app/src/main/res/xml/backup_rules.xml |   5 +
+ .../main/res/xml/data_extraction_rules.xml    |  15 +-
+ docs/DRIVE_SETUP.md                           |  28 --
+ docs/PLAY_ROADMAP.md                          |   4 +-
+ docs/PLAY_STORE.md                            |  10 +-
+ docs/PRIVACY.md                               |   7 +-
+ docs/release-package/INSTALL_MANUAL.md        |  18 +-
+ docs/release-package/PACKAGE_OVERVIEW.md      |   6 +-
+ docs/release-package/USER_MANUAL.md           |  22 +-
+ lib/backup.dart                               | 322 +++++++++++-------
+ lib/backup_page.dart                          | 219 +++++++-----
+ lib/ui.dart                                   |  20 +-
+ pubspec.yaml                                  |   4 +-
+ test/backup_test.dart                         |  40 +++
+ 18 files changed, 450 insertions(+), 301 deletions(-)
+ create mode 100644 android/app/src/main/res/xml/backup_rules.xml
+ delete mode 100644 docs/DRIVE_SETUP.md
+ create mode 100644 test/backup_test.dart
+
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index dc24b42..6fc004b 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -12,6 +12,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+ 
+ ### Changed
+ 
++- Backups no longer use Google Drive or Google sign-in. Choose a backup folder (any folder, including cloud-synced ones), save/restore a one-off backup file, and get an automatic phone backup (Android Auto Backup) of an encrypted copy when a passphrase is set. Newest 5 folder backups are kept.
++
+ ### Fixed
+ 
+ ## [0.4.1] - 2026-10-12
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 8bba95c..cd2a62a 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -1,13 +1,13 @@
+ # Pagemark — project guide for Claude Code
+ 
+-Pagemark is a fully local book tracker for Android (iOS later): a log of what you read or listened to, with ratings and private thoughts, for any genre. Metadata and covers come from the free Open Library API; everything else lives in a SQLite file on the phone. It exports the log (CSV/JSON) and the whole database, and can back the database up to the user's own Google Drive on a schedule. It is not a social network, has no accounts of its own and no server.
++Pagemark is a fully local book tracker for Android (iOS later): a log of what you read or listened to, with ratings and private thoughts, for any genre. Metadata and covers come from the free Open Library API; everything else lives in a SQLite file on the phone. It exports the log (CSV/JSON) and the whole database, and can back the database up on a schedule to a folder the user picks, plus an encrypted Android Auto Backup copy. It is not a social network, has no accounts of its own and no server.
+ 
+ ## Non-negotiables (don't regress these)
+ 
+-- **Local-first.** The only network calls are Open Library lookups/covers, the user-initiated or scheduled Drive backup, and the update check against GitHub Releases (a plain release-list request; switchable off). No analytics, no telemetry, no backend.
+-- **No paid services.** Open Library (no key) and Drive's free `appDataFolder` only. Don't add paid APIs or require code-signing certs.
+-- **Locked library never leaks.** CSV/JSON exports exclude locked books; the locked tab re-locks when you leave it. The full database export and Drive backup *do* include them (documented in the UI).
+-- **No secrets in source.** The Google Web client ID is typed into the app (SharedPreferences), never committed. PIN is PBKDF2-HMAC-SHA256 with a random salt in `flutter_secure_storage`.
++- **Local-first.** The only network calls are Open Library lookups/covers and the update check against GitHub Releases (a plain release-list request; switchable off). Backups use no network of their own. No analytics, no telemetry, no backend.
++- **No paid services.** Open Library (no key) only. Don't add paid APIs or require code-signing certs.
++- **Locked library never leaks.** CSV/JSON exports exclude locked books; the locked tab re-locks when you leave it. The full database export and backups *do* include them (documented in the UI).
++- **No secrets in source.** No Google client IDs or sign-in. PIN is PBKDF2-HMAC-SHA256 with a random salt in `flutter_secure_storage`.
+ - **Android first, iOS later.** Keep code platform-neutral; Android-only calls (WorkManager) are guarded by `defaultTargetPlatform`.
+ 
+ ## Commands
+@@ -45,9 +45,8 @@ lib/
+   privacy.dart      FLAG_SECURE channel, locked-cover cache, temp-export cleanup, navigator key
+   crypto_backup.dart  AES-256-GCM passphrase container for backups/exports (PGMKENC1)
+   export.dart       CSV/JSON of main library, VACUUM INTO db snapshot, restore
+-  backup.dart       Google Drive appDataFolder backup, WorkManager schedule, background dispatcher
++  backup.dart       folder backup (SAF), Auto Backup phone copy, WorkManager schedule, pure helpers (tested)
+   backup_page.dart  backup settings/restore UI
+-docs/DRIVE_SETUP.md one-time Google Cloud OAuth setup for the user
+ android/            MainActivity is FlutterFragmentActivity (needed by local_auth); manifest has INTERNET/USE_BIOMETRIC/CAMERA
+ ```
+ 
+@@ -58,9 +57,9 @@ There is no plugin system. To add a metadata source, add a function to `lookup.d
+ ## Gotchas / constraints
+ 
+ - **Gradle: "Unable to establish loopback connection".** Symptom: every Gradle/Flutter Android build fails instantly. Cause: JDK 25 (Android Studio JBR) creates a unix-domain-socket pipe in `java.io.tmpdir`, which here is the 8.3 short path `C:\Users\JOSEPH~1\...` and fails with `Invalid argument: connect` (plain `Selector.open()` reproduces it). NordVPN is *not* the cause. Fix: `-Djdk.net.unixdomain.tmpdir=C:/tmpj` via `JAVA_TOOL_OPTIONS` (the client JVM needs it; the daemon also gets it from `org.gradle.jvmargs` in `android/gradle.properties`). Overriding `java.io.tmpdir` alone does not help.
+-- **Background backups run in a separate isolate.** `backupDispatcher` opens its own `AppDb()`; never reuse the UI isolate's `db` there. Silent token refresh uses `attemptLightweightAuthentication` + `authorizationForScopes`, which only works after the user has signed in and granted the scope once in the foreground.
++- **Background backups run in a separate isolate.** `backupDispatcher` opens its own `AppDb()`; never reuse the UI isolate's `db` there. Writing to the SAF folder from that isolate is unverified on real devices, so `Backup.runIfDue` also runs on app start and the Home screen refreshes the phone copy on pause.
+ - **Restore must delete `-wal`/`-shm`** next to `pagemark.sqlite` before copying the backup over, then the app exits (the open connection is stale). `restoreDb` does this.
+-- **google_sign_in 7 on Android needs a *Web* client ID** (`serverClientId`) plus an *Android* client with the package name and signing SHA-1; a release key needs its own Android client.
++- **Auto Backup is include-only** (`backup_rules.xml`, `data_extraction_rules.xml`): just `files/auto-backup/pagemark.pgbak`, written only when a passphrase is set. Never include the live DB. Prefs/secure storage don't restore, so the passphrase is retyped on a new phone; `maybeOfferPhoneRestore` handles first run and `bk_first_done` blocks refreshes until it ran.
+ - `file_picker` 13 uses `FilePicker.pickFile()`, not `FilePicker.platform.pickFiles()`; `csv` 8 uses `csv.encode(rows)`.
+ 
+ - **Foreign keys are OFF by default in SQLite.** `AppDb.beforeOpen` runs `PRAGMA foreign_keys = ON`; without it `ON DELETE CASCADE` silently does nothing. Don't remove it (a test guards it).
+diff --git a/README.md b/README.md
+index eb0bb9b..48a20ae 100644
+--- a/README.md
++++ b/README.md
+@@ -21,7 +21,7 @@ A private, fully local book tracker for Android (iOS planned): log what you read
+ - **Organise**: shelves, series with numbers, tags, filters, sort, "Currently reading" strip.
+ - **Locked library**: PIN (attempt limits + recovery code) or fingerprint; re-locks on background; blocks screenshots.
+ - **Your data, your files**: CSV/JSON export; whole-database export with optional passphrase encryption.
+-- **Backups**: scheduled, verified, optionally encrypted backups to *your own* Google Drive; safe restore.
++- **Backups**: scheduled, verified, optionally encrypted backups to a folder you pick (any cloud-synced folder works), a one-off backup file, and Android's automatic phone backup (encrypted copy only); safe restore.
+ - **Themes**: light/dark in two palettes, with smooth transitions.
+ - **Updates**: in-app updater with release notes and an offline version history.
+ 
+@@ -34,7 +34,6 @@ A private, fully local book tracker for Android (iOS planned): log what you read
+ | [Release Notes](docs/release-package/RELEASE_NOTES.md) | What changed in each version ([PDF](docs/release-package/Pagemark-Release-Notes.pdf)) |
+ | [Package Overview](docs/release-package/PACKAGE_OVERVIEW.md) | Simple / medium / advanced description ([PDF](docs/release-package/Pagemark-Package-Overview.pdf)) |
+ | [Complete documentation (one PDF)](docs/release-package/Pagemark-Documentation.pdf) | The four documents above in one file, with a cover and contents |
+-| [Drive backup setup](docs/DRIVE_SETUP.md) | One-time free Google Cloud setup |
+ 
+ ## Install
+ 
+@@ -54,7 +53,7 @@ Flutter 3.47+, Android SDK, JDK 17+. On Windows with JDK 25 see the loopback not
+ 
+ ## Privacy
+ 
+-No accounts, analytics or ads. The network is used for book lookup (Open Library), the update check (GitHub Releases) and — only if you set it up — Drive backup. Details in the User Manual, §16.
++No accounts, analytics or ads. The network is used for book lookup (Open Library), the update check (GitHub Releases) and nothing else unless you share a backup yourself. No Google sign-in is used. Details in the User Manual, §16.
+ 
+ ## Development
+ 
+diff --git a/android/app/src/main/AndroidManifest.xml b/android/app/src/main/AndroidManifest.xml
+index 36a2d94..3e4a8ca 100644
+--- a/android/app/src/main/AndroidManifest.xml
++++ b/android/app/src/main/AndroidManifest.xml
+@@ -3,10 +3,11 @@
+     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+     <uses-permission android:name="android.permission.CAMERA"/>
+     <!-- REQUEST_INSTALL_PACKAGES (in-app APK updates) lives in src/sideload/AndroidManifest.xml; Google Play forbids it. -->
+-    <!-- allowBackup off: Android must not copy the library (incl. locked books) to the cloud or via adb. -->
++    <!-- Auto Backup is on but include-only: just files/auto-backup/ (one passphrase-ENCRYPTED copy, written only
++         when a backup passphrase is set) is saved. The live database, prefs and secure storage are never included. -->
+     <application
+-        android:allowBackup="false"
+-        android:fullBackupContent="false"
++        android:allowBackup="true"
++        android:fullBackupContent="@xml/backup_rules"
+         android:dataExtractionRules="@xml/data_extraction_rules"
+         android:label="Pagemark"
+         android:name="${applicationName}"
+diff --git a/android/app/src/main/res/xml/backup_rules.xml b/android/app/src/main/res/xml/backup_rules.xml
+new file mode 100644
+index 0000000..54702c9
+--- /dev/null
++++ b/android/app/src/main/res/xml/backup_rules.xml
+@@ -0,0 +1,5 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!-- Android 11 and older: same include-only rule as data_extraction_rules.xml. -->
++<full-backup-content>
++    <include domain="file" path="auto-backup"/>
++</full-backup-content>
+diff --git a/android/app/src/main/res/xml/data_extraction_rules.xml b/android/app/src/main/res/xml/data_extraction_rules.xml
+index ce872c7..1e01951 100644
+--- a/android/app/src/main/res/xml/data_extraction_rules.xml
++++ b/android/app/src/main/res/xml/data_extraction_rules.xml
+@@ -1,18 +1,11 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<!-- Android 12+: exclude everything from cloud backup and device-to-device transfer. -->
++<!-- Android 12+: only the encrypted phone-backup copy leaves the app (cloud backup and device transfer).
++     An <include> makes everything else excluded, so the live database never goes. -->
+ <data-extraction-rules>
+     <cloud-backup>
+-        <exclude domain="root"/>
+-        <exclude domain="file"/>
+-        <exclude domain="database"/>
+-        <exclude domain="sharedpref"/>
+-        <exclude domain="external"/>
++        <include domain="file" path="auto-backup"/>
+     </cloud-backup>
+     <device-transfer>
+-        <exclude domain="root"/>
+-        <exclude domain="file"/>
+-        <exclude domain="database"/>
+-        <exclude domain="sharedpref"/>
+-        <exclude domain="external"/>
++        <include domain="file" path="auto-backup"/>
+     </device-transfer>
+ </data-extraction-rules>
+diff --git a/docs/DRIVE_SETUP.md b/docs/DRIVE_SETUP.md
+deleted file mode 100644
+index d487255..0000000
+--- a/docs/DRIVE_SETUP.md
++++ /dev/null
+@@ -1,28 +0,0 @@
+-# Google Drive backup — one-time setup (free)
+-
+-Pagemark backs up to a private app-data folder on your own Drive. Google requires you to
+-register the app once. No billing is needed.
+-
+-1. Go to https://console.cloud.google.com and create a project (e.g. "Pagemark").
+-2. **APIs & Services → Library**: enable **Google Drive API**.
+-3. **APIs & Services → OAuth consent screen** (Google Auth Platform): choose **External**,
+-   fill the app name and your email, and add yourself under **Test users**.
+-   Add the scope `.../auth/drive.appdata`. Leaving it in "Testing" is fine for personal use
+-   (test-user tokens expire every 7 days, so click **Publish app** to avoid re-signing in weekly;
+-   the appdata scope is non-sensitive and needs no verification).
+-4. **Credentials → Create credentials → OAuth client ID**, two of them:
+-   - **Android**: package name `com.axialforge.pagemark`, SHA-1 of your signing key.
+-     Debug key SHA-1 on this PC: `49:F9:4A:A8:40:A7:EE:01:D1:B0:06:2E:9B:5C:35:4B:52:10:FC:CB`
+-     (a release key will have a different SHA-1 — add another Android client for it).
+-   - **Web application**: no redirect URIs needed. Copy its **Client ID**.
+-5. In Pagemark: **Settings → Google Drive backup**, paste the **Web client ID**, tap **Sign in**,
+-   then turn on **Automatic backup**.
+-
+-Notes
+-- Android runs the schedule via WorkManager: "daily/weekly" is approximate and may be delayed by battery saver.
+-- Backups include locked books and are not encrypted by Pagemark; they sit in your private Drive app folder.
+-- Restore: **Restore from Drive…** replaces the whole library, then the app closes.
+-
+-## Release key
+-
+-The release APK is signed with `~/.android/pagemark-release.jks`. Add a **second Android OAuth client** for it with SHA-1 `39:04:59:AD:24:0F:35:99:4B:CD:A5:86:81:AF:9C:21:8C:FD:27:F7` (package `com.axialforge.pagemark`), or Drive sign-in fails in the release app.
+diff --git a/docs/PLAY_ROADMAP.md b/docs/PLAY_ROADMAP.md
+index 11b6dca..6183749 100644
+--- a/docs/PLAY_ROADMAP.md
++++ b/docs/PLAY_ROADMAP.md
+@@ -19,7 +19,7 @@ A new personal Play account needs a closed test with 12+ opted-in testers for 14
+ | MUST | Verify `flutter build appbundle --flavor play` + CI green; merged manifest has no install permission | S | you (PC) |
+ | MUST | Play-flavor privacy text: no GitHub update check in this build (manuals, in-app About) | S | todo |
+ | MUST | Play developer account ($25), identity verification, app created in Console | S | you |
+-| MUST | Upload key + Play App Signing; add Play signing SHA-1 as Android OAuth client (Drive backup) | S | you |
++| MUST | Upload key + Play App Signing (no OAuth client needed any more - Drive backup removed) | S | you |
+ | MUST | `targetSdk` meets Play's current minimum (check Flutter 3.47 default) | S | verify |
+ | MUST | Native libs 16 KB page-size aligned (sqlite3, mobile_scanner, cryptography_flutter) - needed for Android 15+ targets | M | verify |
+ | MUST | Store assets: 512 icon, 1024x500 feature graphic, 4-8 **light-theme** phone screenshots | M | todo |
+@@ -39,7 +39,7 @@ A new personal Play account needs a closed test with 12+ opted-in testers for 14
+ | SHOULD | **New:** "Delete all data" in Settings (wipes DB, covers, prefs, secure storage); supports the Data safety deletion answer | M |
+ | SHOULD | **New:** "Copy diagnostic log" + support link (no telemetry, so this is the only bug-report path) | S |
+ 
+-**Gate A - open closed test** (internal test first, then closed with 12+ testers on 0.4.2 AAB). Real-phone pass: scan, biometrics, Drive backup/restore from a Play-installed build, export, restore on a second device.
++**Gate A - open closed test** (internal test first, then closed with 12+ testers on 0.4.2 AAB). Real-phone pass: scan, biometrics, folder backup, Auto Backup restore on a second device, restore, export, restore on a second device.
+ 
+ ## Phase 2 - v0.5.0 "Bring your books, see your books" (during the test)
+ | | Item | Size |
+diff --git a/docs/PLAY_STORE.md b/docs/PLAY_STORE.md
+index 2e59dbb..1573664 100644
+--- a/docs/PLAY_STORE.md
++++ b/docs/PLAY_STORE.md
+@@ -13,8 +13,8 @@ Bump `version:` in `pubspec.yaml` first; `+N` is the Play versionCode and must i
+ ## Signing
+ Use Play App Signing (default). Sign the AAB with your existing upload key (`android/key.properties`, `~/.android/pagemark-release.jks`) or generate a new upload key. Back the keystore up. **The sideload APK and the Play build will be signed by different keys**, so existing GitHub-APK users cannot update in place to the Play version (uninstall/restore from backup).
+ 
+-## Drive backup on Play builds
+-Google sign-in needs an Android OAuth client using the **Play App Signing SHA-1** (Play Console -> Test and release -> App signing) in addition to your upload-key SHA-1. Update `docs/DRIVE_SETUP.md` steps accordingly. Test backup from a Play internal-testing install.
++## Backups on Play builds
++No Google sign-in or OAuth setup is needed. Backups go to a user-picked folder (Storage Access Framework), plus an include-only Android Auto Backup of one passphrase-encrypted file. Test both from a Play internal-testing install (folder backup, then Auto Backup restore on a second device).
+ 
+ ## Developer account
+ One-time $25. New personal accounts must run a **closed test with 12+ testers for 14 consecutive days** before applying for production. Start this early.
+@@ -29,8 +29,8 @@ One-time $25. New personal accounts must run a **closed test with 12+ testers fo
+ ## Data safety form (verify each answer in Console)
+ - Data collected by the developer: **None.**
+ - Data shared: ISBN/title search text goes to Open Library (third-party service, no identifiers). Declare per current Play guidance for user-initiated lookups.
+-- Drive backup: user-initiated transfer to the user's own Google account.
+-- Security: data encrypted in transit (HTTPS); users can request deletion (uninstall / Drive settings).
++- Backups: user-chosen folder, plus Android Auto Backup of an encrypted copy (only when the user sets a passphrase).
++- Security: data encrypted in transit (HTTPS); users can request deletion (uninstall / Android backup settings).
+ - No ads. Content rating questionnaire: no violence/sexual content/etc. -> expect Everyone. Target audience: 13+ or 18+ (not children).
+ 
+ ## Permissions
+@@ -39,5 +39,5 @@ INTERNET, CAMERA (barcode scan), USE_BIOMETRIC (vault). `REQUEST_INSTALL_PACKAGE
+ ## Pre-submit checks
+ - [ ] `flutter build appbundle --flavor play` succeeds; merged manifest has no REQUEST_INSTALL_PACKAGES (`bundletool` or Android Studio manifest viewer)
+ - [ ] Settings shows "Version history", no Updates tile
+-- [ ] Release install on a real phone: scan, biometrics, Drive backup/restore, export
++- [ ] Release install on a real phone: scan, biometrics, backup/restore, export
+ - [ ] Verify targetSdk meets Play's current requirement (Flutter's default tracks it)
+diff --git a/docs/PRIVACY.md b/docs/PRIVACY.md
+index c0dc16f..9f8b50b 100644
+--- a/docs/PRIVACY.md
++++ b/docs/PRIVACY.md
+@@ -9,14 +9,15 @@ Your books, reads, ratings, notes, shelves, tags and settings are stored only in
+ 
+ ## What leaves your device
+ - **Book lookup:** when you search by title or ISBN, the search text or ISBN is sent to Open Library (openlibrary.org) to fetch book details and covers. No account or identifier is attached by Pagemark. Open Library's own privacy policy applies.
+-- **Google Drive backup (optional, off by default):** if you set it up and sign in, an encrypted-or-plain copy of your database is uploaded to the hidden app-data folder of *your own* Google Drive. Pagemark never sees your Google credentials, and the developer cannot access the backup.
++- **Backup folder (optional, off by default):** if you choose a folder, Pagemark writes a copy of your database there (encrypted if you set a passphrase). Where it goes after that is up to the folder - for example a Drive or OneDrive synced folder. Pagemark has no Google sign-in and the developer cannot access it.
++- **Phone backup (Android Auto Backup):** if you set a backup passphrase, Pagemark keeps one *encrypted* copy that Android may save to your Google account so your library can come back on a new phone. Without a passphrase nothing is included. The live database, settings and passphrase are never part of it.
+ - **Camera:** used only to scan ISBN barcodes on the device. Images are not stored or transmitted.
+ 
+ ## Exports
+-CSV/JSON exports and database exports are saved or shared only where you choose. Locked-library books are excluded from CSV/JSON exports; the full database export and Drive backup include them.
++CSV/JSON exports and database exports are saved or shared only where you choose. Locked-library books are excluded from CSV/JSON exports; the full database export and backups include them (encrypted when a passphrase is set).
+ 
+ ## Deleting your data
+-Uninstalling Pagemark deletes its local data. Drive backups can be deleted from Google Drive settings (Manage apps).
++Uninstalling Pagemark deletes its local data. Backups in your chosen folder are yours to delete; the phone backup can be removed in Android Settings > Google > Backup.
+ 
+ ## Children
+ Pagemark is not directed at children under 13 and collects no personal information.
+diff --git a/docs/release-package/INSTALL_MANUAL.md b/docs/release-package/INSTALL_MANUAL.md
+index 63aeb0c..90fc16f 100644
+--- a/docs/release-package/INSTALL_MANUAL.md
++++ b/docs/release-package/INSTALL_MANUAL.md
+@@ -8,7 +8,7 @@
+ 
+ - An Android phone or tablet running **Android 7.0 (API 24) or newer**.
+ - About **100 MB** free storage (the app is ~30 MB; the library and cached covers are small).
+-- Optional, for specific features: a camera (barcode scanning), a screen lock or fingerprint (locked library), a Google account (Drive backup), an internet connection (book lookup, updates, backup).
++- Optional, for specific features: a camera (barcode scanning), a screen lock or fingerprint (locked library), an internet connection (book lookup, updates, backup).
+ 
+ ## 2. Download
+ 
+@@ -43,11 +43,11 @@ Pagemark opens on an empty Library. Tap **Add book** to start. Allow the **camer
+ 
+ | Permission | Why |
+ |---|---|
+-| Internet | Book lookup (Open Library), update check (GitHub), optional Drive backup |
++| Internet | Book lookup (Open Library), update check (GitHub), and nothing else for backups |
+ | Camera | Scanning ISBN barcodes (asked only when you open the scanner) |
+ | Biometric | Fingerprint/device unlock for the locked library |
+ | Install packages | Lets Android offer to install a downloaded update |
+-| Background work / network state | Running the scheduled Drive backup |
++| Background work / network state | Running the scheduled folder backup |
+ 
+ The Android build also lists a few storage/notification permissions that come bundled with libraries it uses; Pagemark does not read your photos or other media. (A later release will strip them from the manifest.)
+ 
+@@ -57,24 +57,20 @@ The Android build also lists a few storage/notification permissions that come bu
+ 
+ **By hand:** download the newer APK from Releases and open it — it installs over the old version.
+ 
+-Your library, shelves, settings and PIN are all kept. **Make a backup first** if the library matters to you (Settings → Export database file, or Drive backup).
++Your library, shelves, settings and PIN are all kept. **Make a backup first** if the library matters to you (Settings → Export database file, or a backup folder).
+ 
+ ## 6. Uninstalling — read this first
+ 
+ Uninstalling Pagemark **deletes your library** from the phone (Android's own backup is disabled on purpose). Before you uninstall or switch phones:
+ 
+-1. Settings → **Export database file** (set a passphrase) and keep the file safely, **or** make sure a Google Drive backup is current.
++1. Settings → **Export database file** (set a passphrase) and keep the file safely, **or** make sure a folder backup is current.
+ 2. On the new phone, install Pagemark and use **Restore** — a backup from an older Pagemark version restores fine; one from a newer version does not.
+ 
+ The PIN is not stored in backups. After restoring, set a new PIN for the locked library.
+ 
+-## 7. Setting up Google Drive backup (optional, free)
++## 7. Backups (optional)
+ 
+-Needs a one-time Google Cloud project because Google requires every app that uses Drive to be registered. Follow **`docs/DRIVE_SETUP.md`** in the repository (enable the Drive API, create an Android OAuth client with package `com.axialforge.pagemark` and your signing key's SHA-1, create a Web client, copy its Client ID into Pagemark, and publish the consent screen).
+-
+-For the official release APK, the signing-key SHA-1 is:
+-
+-`39:04:59:AD:24:0F:35:99:4B:CD:A5:86:81:AF:9C:21:8C:FD:27:F7`
++No setup or Google account is needed. In Pagemark open Settings → **Backup & restore**, set a passphrase and choose a backup folder.
+ 
+ ## 8. Building from source (developers)
+ 
+diff --git a/docs/release-package/PACKAGE_OVERVIEW.md b/docs/release-package/PACKAGE_OVERVIEW.md
+index 0531574..5e38a12 100644
+--- a/docs/release-package/PACKAGE_OVERVIEW.md
++++ b/docs/release-package/PACKAGE_OVERVIEW.md
+@@ -34,7 +34,7 @@
+ | Insight | Yearly goal ring with pace forecast, books per month, rating spread, top genres/authors, totals |
+ | Privacy | Locked library (PIN with attempt limits and recovery code, or device biometrics), auto-relock, screenshot blocking |
+ | Data portability | CSV and JSON export of the main library; whole-database export, optionally passphrase-encrypted |
+-| Backup | Scheduled, verified backups to the user's own Google Drive; optional AES-256 encryption; safe restore with automatic safety copy |
++| Backup | Scheduled, verified backups to a user-picked folder, a backup file, and an encrypted Android Auto Backup copy; optional AES-256 encryption; safe restore with automatic safety copy |
+ | Care | Trash with 30-day recovery, in-app updates with release notes, offline version history, diagnostics log |
+ | Look | Light/dark × two colour palettes, animated transitions |
+ 
+@@ -43,7 +43,7 @@
+ 
+ 
+ 
+-**Principles.** No accounts, no analytics, no ads, no paid services. The network is used for exactly three things: book lookup (Open Library), update checks (GitHub Releases), and — only if configured — Drive backup.
++**Principles.** No accounts, no analytics, no ads, no paid services. The network is used for exactly three things: book lookup (Open Library), update checks (GitHub Releases), and nothing else.
+ 
+ **Who it's for.** Readers who want a durable, private record; people leaving other tracking sites; anyone who wants their data in a plain file they can open elsewhere.
+ 
+@@ -66,7 +66,7 @@ Flutter (Dart) app; **Drift** over **SQLite** for storage; plain `StatefulWidget
+ - **Vault is a flag, not a second database**, enforced at every read path: library queries, Stats, Trash, duplicate check and CSV/JSON export all filter on `locked`. Full DB exports/backups include it by design and can be encrypted.
+ - **PIN:** PBKDF2-HMAC-SHA256, 150 000 iterations, random 16-byte salt, constant-time compare, persistent attempt counter with exponential lockout (30 s doubling, cap 1 h). One-time recovery code stored only as a PBKDF2 hash. v0.1.0 hashes upgrade on first successful unlock.
+ - **Vault lifecycle:** on background/leave the app pops locked routes, empties the locked-cover cache and deletes temporary exports; `FLAG_SECURE` is set while the vault is open and kept until resume so the recents thumbnail is blank.
+-- **Backups:** container `PGMKENC1 | salt | nonce | AES-256-GCM ciphertext | tag`, key from PBKDF2 (150 k). Drive upload is skipped when the plaintext digest is unchanged, size-verified before older copies (newest 5 kept) are pruned. The passphrase lives in secure storage so the background isolate can encrypt unattended.
++- **Backups:** container `PGMKENC1 | salt | nonce | AES-256-GCM ciphertext | tag`, key from PBKDF2 (150 k). Folder backup is skipped when the plaintext digest is unchanged, size-verified before older copies (newest 5 kept) are pruned. The passphrase lives in secure storage so the background isolate can encrypt unattended.
+ - **Restore:** open candidate read-only, `PRAGMA integrity_check`, require `books`/`reads`, reject newer schemas, snapshot current DB (newest 3 kept), close connection, delete `-wal/-shm`, rename staged copy into place; app restarts.
+ - **Android:** `allowBackup=false` plus data-extraction rules exclude everything; no analytics SDKs.
+ 
+diff --git a/docs/release-package/USER_MANUAL.md b/docs/release-package/USER_MANUAL.md
+index 091c81f..e39aebd 100644
+--- a/docs/release-package/USER_MANUAL.md
++++ b/docs/release-package/USER_MANUAL.md
+@@ -10,7 +10,7 @@
+ 
+ Pagemark is a reading log that lives only on your phone. You record what you read or listen to — print, e-book or audiobook, any genre — with your rating, dates, progress and private thoughts. Book details and cover art come from the free **Open Library**; everything you write stays on your device unless you choose to export or back it up.
+ 
+-There is no account, no server and no tracking. The only times Pagemark uses the internet are: looking up a book, checking for an app update, and — if you set it up — backing up to your own Google Drive.
++There is no account, no server and no tracking. The only times Pagemark uses the internet are: looking up a book, checking for an app update, and nothing else (backups use no network of their own).
+ 
+ ## 2. The four tabs
+ 
+@@ -165,17 +165,17 @@ Settings → Database (**includes locked books**):
+ - **Export database file** — a complete copy you can restore on another device. You'll be asked for a **passphrase**; leave it empty only if you understand the file will be readable by anyone who gets it.
+ - **Restore from database file** — see §12.
+ 
+-## 11. Google Drive backup
++## 11. Backup & restore
+ 
+-Settings → **Google Drive backup**. One-time setup (a free Google Cloud project) is described in `docs/DRIVE_SETUP.md`. After that:
++Settings → **Backup & restore**. No Google account or setup is needed. There are three layers; use any or all:
+ 
+-1. Paste your **Web client ID** and tap **Sign in**.
+-2. Turn on **Encrypt backups with a passphrase** (recommended — your locked books are inside every backup). **Remember the passphrase:** without it a backup can't be opened by anyone.
+-3. Turn on **Automatic backup**, choose **Daily** or **Weekly**, and **Wi-Fi only** if you like.
++1. **Passphrase** — turn on **Encrypt backups with a passphrase** first (your locked books are inside every backup). **Remember it:** without it a backup can't be opened by anyone.
++2. **Backup folder** — tap **Choose**, pick any folder (Downloads, a Drive/OneDrive/Dropbox-synced folder, an SD card), then turn on **Automatic backup** (Daily or Weekly). The **newest 5** are kept; an unchanged library isn't saved again and each copy is size-checked before old ones are removed. **Back up now** runs one immediately.
++3. **Phone backup** — with a passphrase set, Pagemark keeps one *encrypted* copy that Android saves to your Google account, so your library can return on a new phone. You'll be asked for the passphrase there.
+ 
+-Backups go to Pagemark's private app-data area on your Drive (they don't appear among your normal files). The **newest 5** are kept. An unchanged library isn't uploaded again, and each upload is verified before older copies are removed. **Back up now** uploads immediately. The Settings page shows the last backup time, or **FAILED** if something went wrong (details are on the backup page).
++**Save backup file** shares a one-off file anywhere; **Restore from file** loads one.
+ 
+-<div class="shots one"><figure><img src="../screenshots/backup.jpg" alt="Google Drive backup"><figcaption>Google Drive backup</figcaption></figure></div>
++<div class="shots one"><figure><img src="../screenshots/backup.jpg" alt="Backup and restore"><figcaption>Backup &amp; restore</figcaption></figure></div>
+ 
+ 
+ 
+@@ -183,7 +183,7 @@ Android decides exactly when scheduled work runs, so a "daily" backup may be a f
+ 
+ ## 12. Restoring
+ 
+-**From a file** (Settings → Restore from database file) or **from Drive** (Backup page → Restore from Drive…):
++**From a file** (Settings → Restore from database file) **from your backup folder** (Backup & restore → Restore…), or from the phone backup on a new phone (offered on first launch):
+ 
+ 1. Pick the backup. If it is encrypted you'll be asked for its passphrase.
+ 2. Pagemark checks it is a healthy Pagemark database from this or an older version, and tells you how many books and reads it holds.
+@@ -215,7 +215,7 @@ Settings → **Diagnostics** shows a small rolling event log (errors, background
+ ## 16. Your privacy, in plain terms
+ 
+ - Your library is stored only in a database file inside the app, and Android's own cloud backup is switched off for it.
+-- Pagemark sends **book searches** to Open Library, **update checks** to GitHub, and — only if you set it up — **backups** to your Google Drive.
++- Pagemark sends **book searches** to Open Library, **update checks** to GitHub, and and nothing for backups unless you share a file yourself.
+ - Nothing is sent to the developer. There are no accounts, ads or analytics.
+ - Cover images are downloaded from Open Library and cached on the phone; locked covers use a separate cache that is cleared whenever the vault closes.
+ 
+@@ -227,7 +227,7 @@ Settings → **Diagnostics** shows a small rolling event log (errors, background
+ | A scanned barcode does nothing | Only ISBN book barcodes (starting 978 or 979) are accepted. Try the torch, or type the ISBN. |
+ | Covers are blank offline | Covers are downloaded on demand and cached; they appear once they've loaded online. |
+ | Forgot the PIN and lost the recovery code | The locked library can't be opened — that is the point of the lock. Removing the lock also needs the PIN, and the PIN is not part of backups, so a restore won't help. Keep the recovery code safe. |
+-| Drive sign-in fails | Check the Web client ID, and that the Android OAuth client matches your app's signing key (see DRIVE_SETUP). After changing the client ID, close and reopen Pagemark. |
++| Backup folder error | Pagemark lost access to the folder — open Backup & restore and choose it again. |
+ | Backup shows FAILED | Open the backup page for the message; also see Settings → Diagnostics. |
+ | Update says no releases found | The project's releases page must be public. Check your connection. |
+ | "App not installed" during an update | Usually a different signing key (e.g. a debug build over a release build). Back up, uninstall, and install the release APK. |
+diff --git a/lib/backup.dart b/lib/backup.dart
+index f8c4d52..5a0e685 100644
+--- a/lib/backup.dart
++++ b/lib/backup.dart
+@@ -1,34 +1,46 @@
+ import 'dart:io';
+ import 'package:crypto/crypto.dart' as hash;
++import 'package:flutter/foundation.dart';
+ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+ import 'package:path_provider/path_provider.dart';
+-import 'crypto_backup.dart';
+-import 'log.dart';
+-import 'package:flutter/foundation.dart';
+-import 'package:google_sign_in/google_sign_in.dart';
+-import 'package:googleapis/drive/v3.dart' as drive;
+-import 'package:http/http.dart' as http;
+-import 'package:intl/intl.dart';
++import 'package:saf_stream/saf_stream.dart';
++import 'package:saf_util/saf_util.dart';
+ import 'package:shared_preferences/shared_preferences.dart';
+ import 'package:workmanager/workmanager.dart';
++import 'crypto_backup.dart';
+ import 'db.dart';
+ import 'export.dart';
++import 'log.dart';
+ 
+-const _scope = 'https://www.googleapis.com/auth/drive.appdata';
+-const _task = 'pagemark-drive-backup';
++const _task = 'pagemark-folder-backup';
+ const keepBackups = 5;
+ 
+-class _Auth extends http.BaseClient {
+-  final String token;
+-  final http.Client _c = http.Client();
+-  _Auth(this.token);
+-  @override
+-  Future<http.StreamedResponse> send(http.BaseRequest r) {
+-    r.headers['Authorization'] = 'Bearer $token';
+-    return _c.send(r);
+-  }
++// ---- pure helpers (unit-tested) -------------------------------------------------------------
++
++final _nameRe = RegExp(r'^pagemark-\d{8}-\d{4}\.(pgbak|sqlite)$');
++
++bool isBackupName(String n) => _nameRe.hasMatch(n);
++
++String backupFileName(DateTime t, {required bool encrypted}) {
++  String p(int v, [int w = 2]) => v.toString().padLeft(w, '0');
++  return 'pagemark-${p(t.year, 4)}${p(t.month)}${p(t.day)}-${p(t.hour)}${p(t.minute)}.${encrypted ? 'pgbak' : 'sqlite'}';
++}
++
++/// Names to delete so only the newest [keep] Pagemark backups remain. Other files are never touched.
++List<String> namesToPrune(Iterable<String> names, {int keep = keepBackups}) {
++  final mine = names.where(isBackupName).toList()..sort((a, b) => b.compareTo(a));
++  return mine.skip(keep).toList();
++}
++
++/// True when the last good backup is older than the schedule (2 h slack so a daily job isn't skipped by jitter).
++bool backupDue(DateTime? lastOk, String frequency, DateTime now) {
++  if (lastOk == null) return true;
++  final period = frequency == 'weekly' ? const Duration(days: 7) : const Duration(days: 1);
++  return now.difference(lastOk) >= period - const Duration(hours: 2);
+ }
+ 
++// ---- settings -------------------------------------------------------------------------------
++
+ /// Runs in a background isolate, so it opens its own database connection.
+ @pragma('vm:entry-point')
+ void backupDispatcher() {
+@@ -36,12 +48,12 @@ void backupDispatcher() {
+     Log.i('backup', 'scheduled backup started');
+     final db = AppDb();
+     try {
+-      final r = await DriveBackup.run(db, interactive: false);
++      final r = await Backup.runToFolder(db);
+       Log.i('backup', 'scheduled backup finished: $r');
+       return true;
+     } catch (e, st) {
+       Log.e('backup', e, st);
+-      return false; // retried with backoff; error is stored in prefs
++      return false; // retried with backoff; error is stored in prefs, and the app retries when opened
+     } finally {
+       await db.close();
+     }
+@@ -51,18 +63,18 @@ void backupDispatcher() {
+ class BackupSettings {
+   bool enabled = false;
+   String frequency = 'daily'; // daily | weekly
+-  bool wifiOnly = true;
+-  String serverClientId = '';
+-  String? account, lastOk, lastError;
++  bool wifiOnly = false; // only matters for the Android file provider (e.g. a cloud-backed folder)
++  String? folderUri, folderName, lastOk, lastError;
+ 
+   static Future<BackupSettings> load() async {
+     final p = await SharedPreferences.getInstance();
++    await p.reload(); // the background isolate writes status keys
+     return BackupSettings()
+       ..enabled = p.getBool('bk_on') ?? false
+       ..frequency = p.getString('bk_freq') ?? 'daily'
+-      ..wifiOnly = p.getBool('bk_wifi') ?? true
+-      ..serverClientId = p.getString('bk_cid') ?? ''
+-      ..account = p.getString('bk_acct')
++      ..wifiOnly = p.getBool('bk_wifi') ?? false
++      ..folderUri = p.getString('bk_dir')
++      ..folderName = p.getString('bk_dirname')
+       ..lastOk = p.getString('bk_ok')
+       ..lastError = p.getString('bk_err');
+   }
+@@ -72,150 +84,208 @@ class BackupSettings {
+     await p.setBool('bk_on', enabled);
+     await p.setString('bk_freq', frequency);
+     await p.setBool('bk_wifi', wifiOnly);
+-    await p.setString('bk_cid', serverClientId.trim());
+-  }
+-}
+-
+-class DriveBackup {
+-  static bool _init = false;
+-  static String? _initId;
+-
+-  static Future<void> _ensureInit() async {
+-    final p = await SharedPreferences.getInstance();
+-    final cid = p.getString('bk_cid') ?? '';
+-    if (cid.isEmpty) throw 'Enter your Google Web client ID first.';
+-    if (_init) {
+-      if (_initId != cid) throw 'The client ID changed. Close and reopen Pagemark to apply it.';
+-      return;
++    if (folderUri == null) {
++      await p.remove('bk_dir');
++      await p.remove('bk_dirname');
++    } else {
++      await p.setString('bk_dir', folderUri!);
++      await p.setString('bk_dirname', folderName ?? '');
+     }
+-    await GoogleSignIn.instance.initialize(serverClientId: cid);
+-    _init = true;
+-    _initId = cid;
+-  }
+-
+-  /// Interactive sign-in + one-time Drive permission grant.
+-  static Future<String> signIn() async {
+-    await _ensureInit();
+-    final acct = await GoogleSignIn.instance.authenticate();
+-    await acct.authorizationClient.authorizeScopes([_scope]);
+-    final p = await SharedPreferences.getInstance();
+-    await p.setString('bk_acct', acct.email);
+-    return acct.email;
+-  }
+-
+-  static Future<void> signOut() async {
+-    await _ensureInit();
+-    await GoogleSignIn.instance.signOut();
+-    final p = await SharedPreferences.getInstance();
+-    await p.remove('bk_acct');
+   }
++}
+ 
+-  static Future<drive.DriveApi> _api({required bool interactive}) async {
+-    await _ensureInit();
+-    // Lightweight (silent) auth works from the background isolate after the first grant.
+-    var acct = await GoogleSignIn.instance.attemptLightweightAuthentication();
+-    if (acct == null && interactive) acct = await GoogleSignIn.instance.authenticate();
+-    if (acct == null) throw 'Signed out of Google — open Pagemark > Backup and sign in again.';
+-    var auth = await acct.authorizationClient.authorizationForScopes([_scope]);
+-    if (auth == null && interactive) auth = await acct.authorizationClient.authorizeScopes([_scope]);
+-    if (auth == null) throw 'Drive permission missing — open Pagemark > Backup and sign in again.';
+-    return drive.DriveApi(_Auth(auth.accessToken));
+-  }
++// ---- backup engine --------------------------------------------------------------------------
+ 
++class Backup {
+   static const _store = FlutterSecureStorage();
++  static final _util = SafUtil();
++  static final _stream = SafStream();
+ 
+   static Future<String?> passphrase() => _store.read(key: 'bk_pass');
+   static Future<void> setPassphrase(String? p) =>
+       p == null || p.isEmpty ? _store.delete(key: 'bk_pass') : _store.write(key: 'bk_pass', value: p);
+ 
+-  /// Upload a fresh database snapshot (encrypted when a passphrase is set), skipping the upload
+-  /// when nothing changed. Old copies are pruned only after the new one is verified on Drive.
+-  /// Returns 'uploaded' or 'unchanged'.
+-  static Future<String> run(AppDb db, {required bool interactive, bool force = false}) async {
++  /// Let the user pick a folder (Downloads, a Drive/OneDrive-synced folder, an SD card, ...).
++  /// Returns false if they cancelled.
++  static Future<bool> chooseFolder(BackupSettings s) async {
++    final dir = await _util.pickDirectory(writePermission: true, persistablePermission: true);
++    if (dir == null) return false;
++    s.folderUri = dir.uri;
++    s.folderName = dir.name;
++    await s.save();
++    return true;
++  }
++
++  static Future<({File file, String name, bool encrypted})> _prepare(AppDb db, String? pass) async {
++    final snap = await Exporter.snapshotDb(db);
++    final enc = pass != null && pass.isNotEmpty;
++    final name = backupFileName(DateTime.now(), encrypted: enc);
++    if (!enc) return (file: snap, name: name, encrypted: false);
++    final tmp = await getTemporaryDirectory();
++    final out = await BackupCrypto.encrypt(snap, File('${tmp.path}/pagemark-upload.pgbak'), pass);
++    await snap.delete();
++    return (file: out, name: name, encrypted: true);
++  }
++
++  /// Write a fresh snapshot into the chosen folder (encrypted when a passphrase is set), skip it when the
++  /// library is unchanged, verify the copy, then prune old ones. Returns 'saved' or 'unchanged'.
++  static Future<String> runToFolder(AppDb db, {bool force = false}) async {
+     final p = await SharedPreferences.getInstance();
++    await p.reload();
+     try {
+-      final api = await _api(interactive: interactive);
+-      final snap = await Exporter.snapshotDb(db);
++      final dir = p.getString('bk_dir');
++      if (dir == null) throw 'Choose a backup folder first.';
++      if (!await _util.hasPersistedPermission(dir, checkRead: true, checkWrite: true)) {
++        throw 'Pagemark lost access to the backup folder - open Backup and choose it again.';
++      }
+       final pass = await passphrase();
+-      final digest = hash.sha256.convert(await snap.readAsBytes()).toString();
+-      final sig = '$digest|${pass == null || pass.isEmpty ? 'plain' : 'enc'}';
++      final snap = await Exporter.snapshotDb(db);
++      final sig = '${hash.sha256.convert(await snap.readAsBytes())}|${pass == null || pass.isEmpty ? 'plain' : 'enc'}|$dir';
+       if (!force && p.getString('bk_hash') == sig) {
+         await snap.delete();
+-        await p.setString('bk_ok', DateTime.now().toIso8601String());
+-        await p.remove('bk_err');
++        await _ok(p);
+         return 'unchanged';
+       }
+-      var upload = snap;
+-      var ext = 'sqlite';
+-      if (pass != null && pass.isNotEmpty) {
+-        final tmp = await getTemporaryDirectory();
+-        upload = await BackupCrypto.encrypt(snap, File('${tmp.path}/pagemark-upload.pgbak'), pass);
+-        ext = 'pgbak';
+-      }
+-      final name = 'pagemark-${DateFormat('yyyyMMdd-HHmm').format(DateTime.now())}.$ext';
+-      final size = await upload.length();
+-      final made = await api.files.create(
+-        drive.File(name: name, parents: ['appDataFolder']),
+-        uploadMedia: drive.Media(upload.openRead(), size),
+-        $fields: 'id,size',
+-      );
+-      if (int.tryParse(made.size ?? '') != size) {
+-        if (made.id != null) await api.files.delete(made.id!);
+-        throw 'Upload verification failed (Drive reports ${made.size} bytes, expected $size). Nothing was pruned.';
+-      }
+-      for (final f in (await list(api: api)).skip(keepBackups)) {
+-        await api.files.delete(f.id!);
+-      }
+-      for (final f in {snap, upload}) {
+-        if (await f.exists()) await f.delete();
++      await snap.delete();
++      final prep = await _prepare(db, pass);
++      try {
++        final size = await prep.file.length();
++        final existing = await _util.list(dir);
++        for (final f in existing.where((f) => f.name == prep.name)) {
++          await _util.delete(f.uri, false); // same-minute rerun: replace instead of "name (1)"
++        }
++        await _stream.pasteLocalFile(prep.file.path, dir, prep.name, prep.encrypted ? 'application/octet-stream' : 'application/vnd.sqlite3');
++        final after = await _util.list(dir);
++        final made = after.where((f) => f.name == prep.name).toList();
++        if (made.isEmpty || made.first.length != size) {
++          for (final f in made) {
++            await _util.delete(f.uri, false);
++          }
++          throw 'Backup verification failed (expected $size bytes). Nothing was pruned.';
++        }
++        for (final n in namesToPrune(after.map((f) => f.name))) {
++          for (final f in after.where((f) => f.name == n)) {
++            await _util.delete(f.uri, false);
++          }
++        }
++      } finally {
++        if (await prep.file.exists()) await prep.file.delete();
+       }
+       await p.setString('bk_hash', sig);
+-      await p.setString('bk_ok', DateTime.now().toIso8601String());
+-      await p.remove('bk_err');
+-      return 'uploaded';
++      await _ok(p);
++      return 'saved';
+     } catch (e) {
+       await p.setString('bk_err', '${DateTime.now().toIso8601String()}  $e');
+       rethrow;
+     }
+   }
+ 
+-  /// Newest first.
+-  static Future<List<drive.File>> list({drive.DriveApi? api}) async {
+-    api ??= await _api(interactive: true);
+-    final r = await api.files.list(
+-      spaces: 'appDataFolder', orderBy: 'createdTime desc',
+-      $fields: 'files(id,name,size,createdTime)', pageSize: 50,
+-    );
+-    return r.files ?? [];
++  static Future<void> _ok(SharedPreferences p) async {
++    await p.setString('bk_ok', DateTime.now().toIso8601String());
++    await p.remove('bk_err');
++  }
++
++  /// Backups in the chosen folder, newest first, as (name, uri, bytes).
++  static Future<List<({String name, String uri, int size})>> listFolder(String dir) async {
++    final all = await _util.list(dir);
++    final mine = all.where((f) => isBackupName(f.name)).toList()..sort((a, b) => b.name.compareTo(a.name));
++    return [for (final f in mine) (name: f.name, uri: f.uri, size: f.length)];
++  }
++
++  static Future<File> download(String uri, String name) async {
++    final bytes = await _stream.readFileBytes(uri);
++    final out = File('${(await getTemporaryDirectory()).path}/$name');
++    await out.writeAsBytes(bytes, flush: true);
++    return out;
+   }
+ 
+-  static Future<File> download(drive.File f, File dest) async {
+-    final api = await _api(interactive: true);
+-    final media = await api.files.get(f.id!, downloadOptions: drive.DownloadOptions.fullMedia) as drive.Media;
+-    final sink = dest.openWrite();
+-    await media.stream.pipe(sink);
+-    return dest;
++  /// Foreground fallback for when Android's background job didn't run or can't write to the folder.
++  static Future<void> runIfDue(AppDb db) async {
++    final s = await BackupSettings.load();
++    if (!s.enabled || s.folderUri == null) return;
++    if (!backupDue(s.lastOk == null ? null : DateTime.tryParse(s.lastOk!), s.frequency, DateTime.now())) return;
++    try {
++      await runToFolder(db);
++    } catch (e, st) {
++      Log.e('backup', e, st);
++    }
+   }
+ 
+   /// (Re)schedule or cancel the periodic job from the saved settings.
+   static Future<void> applySchedule(BackupSettings s) async {
+     if (defaultTargetPlatform != TargetPlatform.android) return;
+     await Workmanager().initialize(backupDispatcher);
+-    if (!s.enabled) {
++    final p = await SharedPreferences.getInstance();
++    if (!s.enabled || s.folderUri == null) {
+       await Workmanager().cancelByUniqueName(_task);
+-      (await SharedPreferences.getInstance()).remove('bk_sched');
++      await p.remove('bk_sched');
+       return;
+     }
+-    final p = await SharedPreferences.getInstance();
+     final sig = '${s.frequency}|${s.wifiOnly}';
+     if (p.getString('bk_sched') == sig) return; // unchanged: don't reset the running period
+     await p.setString('bk_sched', sig);
+     await Workmanager().registerPeriodicTask(
+       _task, _task,
+       frequency: s.frequency == 'weekly' ? const Duration(days: 7) : const Duration(days: 1),
+-      constraints: Constraints(networkType: s.wifiOnly ? NetworkType.unmetered : NetworkType.connected),
++      constraints: Constraints(networkType: s.wifiOnly ? NetworkType.unmetered : NetworkType.notRequired),
+       existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
+       backoffPolicy: BackoffPolicy.exponential,
+     );
++    await Workmanager().cancelByUniqueName('pagemark-drive-backup'); // job name from earlier Drive builds
++  }
++
++  // ---- phone backup (Android Auto Backup) ---------------------------------------------------
++  // Android copies files/auto-backup/ to the user's Google account and restores it on a new phone.
++  // Only an ENCRYPTED copy goes there (locked books must never leave the phone in clear), and only
++  // when a passphrase is set. Preferences and secure storage are not restored, so the passphrase
++  // must be typed again on the new phone.
++
++  static Future<Directory> _phoneDir() async {
++    final d = Directory('${(await getApplicationSupportDirectory()).path}/auto-backup');
++    if (!await d.exists()) await d.create(recursive: true);
++    return d;
++  }
++
++  static Future<File> _phoneFile() async => File('${(await _phoneDir()).path}/pagemark.pgbak');
++
++  /// A copy restored by Android onto this phone, if any.
++  static Future<File?> restoredPhoneCopy() async {
++    final f = await _phoneFile();
++    return await f.exists() ? f : null;
++  }
++
++  static Future<bool> firstRunDone() async => (await SharedPreferences.getInstance()).getBool('bk_first_done') ?? false;
++  static Future<void> markFirstRunDone() async => (await SharedPreferences.getInstance()).setBool('bk_first_done', true);
++
++  /// Refresh the encrypted copy Android will back up. No-op without a passphrase, and until the
++  /// first-run check has run (so a freshly restored copy is never overwritten by an empty library).
++  static Future<void> refreshPhoneCopy(AppDb db) async {
++    try {
++      if (!await firstRunDone()) return;
++      final pass = await passphrase();
++      if (pass == null || pass.isEmpty) return;
++      final p = await SharedPreferences.getInstance();
++      final snap = await Exporter.snapshotDb(db);
++      final digest = hash.sha256.convert(await snap.readAsBytes()).toString();
++      final target = await _phoneFile();
++      if (p.getString('bk_phone_hash') == digest && await target.exists()) {
++        await snap.delete();
++        return;
++      }
++      final stage = File('${target.path}.new');
++      await BackupCrypto.encrypt(snap, stage, pass);
++      await snap.delete();
++      await stage.rename(target.path);
++      await p.setString('bk_phone_hash', digest);
++    } catch (e, st) {
++      Log.e('backup', e, st);
++    }
++  }
++
++  /// Passphrase removed -> don't leave an old encrypted copy lying in the phone backup.
++  static Future<void> clearPhoneCopy() async {
++    final f = await _phoneFile();
++    if (await f.exists()) await f.delete();
++    (await SharedPreferences.getInstance()).remove('bk_phone_hash');
+   }
+ }
+diff --git a/lib/backup_page.dart b/lib/backup_page.dart
+index a43c7f5..ed13dee 100644
+--- a/lib/backup_page.dart
++++ b/lib/backup_page.dart
+@@ -1,6 +1,6 @@
+ import 'dart:io';
+ import 'package:flutter/material.dart';
+-import 'package:googleapis/drive/v3.dart' as drive;
++import 'package:file_picker/file_picker.dart';
+ import 'package:intl/intl.dart';
+ import 'package:path_provider/path_provider.dart';
+ import 'backup.dart';
+@@ -10,7 +10,7 @@ import 'main.dart';
+ import 'ui.dart';
+ 
+ /// Decrypt (asking for the passphrase if needed) and validate a backup file, then offer to restore it.
+-/// Shared by "Restore from file" and "Restore from Drive". Exits the app after a successful swap.
++/// Shared by every restore path (file, folder, phone copy). Exits the app after a successful swap.
+ Future<void> restoreFlow(BuildContext context, File picked) async {
+   var file = picked;
+   if (await BackupCrypto.isEncrypted(picked)) {
+@@ -62,6 +62,36 @@ Future<void> restoreFlow(BuildContext context, File picked) async {
+   );
+ }
+ 
++/// First launch on a phone: if Android restored an encrypted copy and the library is empty, offer to use it.
++/// Always marks the first run done afterwards so the phone copy can start refreshing.
++Future<void> maybeOfferPhoneRestore(BuildContext context) async {
++  if (await Backup.firstRunDone()) return;
++  final copy = await Backup.restoredPhoneCopy();
++  final empty = (await db.select(db.books).get()).isEmpty;
++  if (copy == null || !empty) {
++    await Backup.markFirstRunDone();
++    return;
++  }
++  if (!context.mounted) return;
++  final yes = await showDialog<bool>(
++    context: context,
++    builder: (c) => AlertDialog(
++      title: const Text('Restore your library?'),
++      content: const Text('Pagemark found an encrypted backup that came over from your previous phone. '
++          'You\'ll need the backup passphrase you set there.'),
++      actions: [
++        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Start empty')),
++        FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Restore')),
++      ],
++    ),
++  );
++  if (yes == true && context.mounted) {
++    await restoreFlow(context, copy); // exits the app on success; first run is marked on the next launch (library non-empty)
++    return;
++  }
++  await Backup.markFirstRunDone();
++}
++
+ class BackupPage extends StatefulWidget {
+   const BackupPage({super.key});
+   @override
+@@ -71,7 +101,6 @@ class BackupPage extends StatefulWidget {
+ class _BackupPageState extends State<BackupPage> {
+   BackupSettings? s;
+   bool encrypted = false;
+-  final cid = TextEditingController();
+   bool busy = false;
+ 
+   @override
+@@ -82,21 +111,14 @@ class _BackupPageState extends State<BackupPage> {
+ 
+   Future<void> _reload() async {
+     final v = await BackupSettings.load();
+-    final pass = await DriveBackup.passphrase();
++    final pass = await Backup.passphrase();
+     if (!mounted) return;
+     setState(() {
+       s = v;
+       encrypted = pass != null && pass.isNotEmpty;
+-      if (cid.text.isEmpty) cid.text = v.serverClientId;
+     });
+   }
+ 
+-  @override
+-  void dispose() {
+-    cid.dispose();
+-    super.dispose();
+-  }
+-
+   Future<void> guard(Future<void> Function() f) async {
+     setState(() => busy = true);
+     try {
+@@ -109,16 +131,16 @@ class _BackupPageState extends State<BackupPage> {
+   }
+ 
+   Future<void> persist() async {
+-    s!.serverClientId = cid.text;
+     await s!.save();
+-    await DriveBackup.applySchedule(s!);
++    await Backup.applySchedule(s!);
+   }
+ 
+   String fmt(String? iso) => iso == null ? 'never' : DateFormat.yMMMd().add_jm().format(DateTime.parse(iso));
+ 
+   Future<void> _toggleEncryption(bool on) async {
+     if (!on) {
+-      await DriveBackup.setPassphrase(null);
++      await Backup.setPassphrase(null);
++      await Backup.clearPhoneCopy();
+       return;
+     }
+     final a = await ask(context, 'Choose a backup passphrase', '', false, true);
+@@ -131,107 +153,148 @@ class _BackupPageState extends State<BackupPage> {
+       if (mounted) snack(context, 'Passphrases did not match');
+       return;
+     }
+-    await DriveBackup.setPassphrase(a);
++    await Backup.setPassphrase(a);
++    await Backup.refreshPhoneCopy(db);
+     if (mounted) {
+       await showDialog<void>(
+         context: context,
+         builder: (c) => AlertDialog(
+           title: const Text('Remember this passphrase'),
+-          content: const Text('Backups are now encrypted. If you lose both this phone and the passphrase, the backups cannot be opened — not even by Pagemark.'),
++          content: const Text('Backups are now encrypted. If you lose both this phone and the passphrase, the backups cannot be opened - not even by Pagemark.'),
+           actions: [FilledButton(onPressed: () => Navigator.pop(c), child: const Text('OK'))],
+         ),
+       );
+     }
+   }
+ 
++  Future<void> _restoreFromFolder(BackupSettings st) async {
++    final files = await Backup.listFolder(st.folderUri!);
++    if (!mounted) return;
++    if (files.isEmpty) {
++      snack(context, 'No Pagemark backups in that folder');
++      return;
++    }
++    final pick = await showDialog<({String name, String uri, int size})>(
++      context: context,
++      builder: (c) => SimpleDialog(title: const Text('Choose a backup'), children: [
++        for (final f in files)
++          SimpleDialogOption(onPressed: () => Navigator.pop(c, f), child: Text('${f.name}\n${(f.size / 1024).toStringAsFixed(0)} KB')),
++      ]),
++    );
++    if (pick == null || !mounted) return;
++    final file = await Backup.download(pick.uri, pick.name);
++    if (!mounted) return;
++    await restoreFlow(context, file);
++  }
++
+   @override
+   Widget build(BuildContext context) {
+     final st = s;
++    final head = Theme.of(context).textTheme.titleSmall;
+     return Scaffold(
+-      appBar: AppBar(title: const Text('Google Drive backup')),
++      appBar: AppBar(title: const Text('Backup & restore')),
+       body: st == null
+           ? const SizedBox()
+           : ListView(padding: const EdgeInsets.all(16), children: [
+               if (busy) const LinearProgressIndicator(),
+-              const Text('Backups are full database copies (including locked books) stored in Pagemark\'s private '
+-                  'app-data folder on your Drive — they don\'t show in your normal Drive files. The newest 5 are kept, '
+-                  'and an unchanged library isn\'t uploaded again.'),
+-              const SizedBox(height: 16),
+-              TextField(
+-                controller: cid,
+-                decoration: const InputDecoration(labelText: 'Google Web client ID', helperText: 'From your Google Cloud project (see setup guide)', border: OutlineInputBorder()),
+-                onChanged: (_) => st.serverClientId = cid.text,
+-              ),
+-              const SizedBox(height: 12),
+-              ListTile(
+-                contentPadding: EdgeInsets.zero,
+-                leading: const Icon(Icons.account_circle),
+-                title: Text(st.account ?? 'Not signed in'),
+-                trailing: st.account == null
+-                    ? FilledButton(onPressed: busy ? null : () => guard(() async { await persist(); await DriveBackup.signIn(); }), child: const Text('Sign in'))
+-                    : TextButton(onPressed: busy ? null : () => guard(() async { await DriveBackup.signOut(); st.enabled = false; await persist(); }), child: const Text('Sign out')),
+-              ),
++              const Text('Backups are full copies of your library, including locked books. Set a passphrase so every copy is encrypted - '
++                  'it is also what lets your library come back on a new phone.'),
+               SwitchListTile(
++                contentPadding: EdgeInsets.zero,
+                 title: const Text('Encrypt backups with a passphrase'),
+-                subtitle: const Text('Recommended — your locked books are in every backup.'),
++                subtitle: const Text('Recommended. Also turns on the automatic phone backup (Google account), which only ever holds an encrypted copy.'),
+                 value: encrypted,
+                 onChanged: busy ? null : (v) => guard(() => _toggleEncryption(v)),
+               ),
++              const Divider(),
++              Text('Backup folder', style: head),
++              const SizedBox(height: 4),
++              const Text('Pick any folder - Downloads, a Drive/OneDrive/Dropbox-synced folder, an SD card. Newest 5 are kept; an unchanged library isn\'t saved again.'),
++              ListTile(
++                contentPadding: EdgeInsets.zero,
++                leading: const Icon(Icons.folder),
++                title: Text(st.folderUri == null ? 'No folder chosen' : (st.folderName?.isNotEmpty ?? false) ? st.folderName! : 'Folder chosen'),
++                trailing: FilledButton(
++                  onPressed: busy ? null : () => guard(() async { if (await Backup.chooseFolder(st)) await persist(); }),
++                  child: Text(st.folderUri == null ? 'Choose' : 'Change'),
++                ),
++              ),
+               SwitchListTile(
++                contentPadding: EdgeInsets.zero,
+                 title: const Text('Automatic backup'),
+                 value: st.enabled,
+-                onChanged: st.account == null ? null : (v) => guard(() async { st.enabled = v; await persist(); }),
++                onChanged: busy || st.folderUri == null ? null : (v) => guard(() async { st.enabled = v; await persist(); }),
+               ),
+               ListTile(
++                contentPadding: EdgeInsets.zero,
+                 title: const Text('Frequency'),
+                 trailing: DropdownButton<String>(
+                   value: st.frequency,
+                   items: const [DropdownMenuItem(value: 'daily', child: Text('Daily')), DropdownMenuItem(value: 'weekly', child: Text('Weekly'))],
+-                  onChanged: (v) => guard(() async { st.frequency = v!; await persist(); }),
++                  onChanged: busy ? null : (v) => guard(() async { st.frequency = v!; await persist(); }),
+                 ),
+               ),
+-              SwitchListTile(
+-                title: const Text('Wi-Fi only'),
+-                value: st.wifiOnly,
+-                onChanged: (v) => guard(() async { st.wifiOnly = v; await persist(); }),
+-              ),
+-              const Divider(),
+-              ListTile(title: const Text('Last successful backup'), subtitle: Text(fmt(st.lastOk))),
+-              if (st.lastError != null) ListTile(title: const Text('Last error'), subtitle: Text(st.lastError!), textColor: Theme.of(context).colorScheme.error),
+-              const SizedBox(height: 8),
+-              FilledButton.icon(
+-                icon: const Icon(Icons.cloud_upload),
+-                label: const Text('Back up now'),
+-                onPressed: busy || st.account == null ? null : () => guard(() async {
+-                  await persist();
+-                  final r = await DriveBackup.run(db, interactive: true, force: true);
+-                  if (mounted) snack(context, r == 'uploaded' ? 'Backup uploaded and verified' : 'Nothing changed since the last backup');
++              ListTile(contentPadding: EdgeInsets.zero, title: const Text('Last successful backup'), subtitle: Text(fmt(st.lastOk))),
++              if (st.lastError != null)
++                ListTile(contentPadding: EdgeInsets.zero, title: const Text('Last error'), subtitle: Text(st.lastError!), textColor: Theme.of(context).colorScheme.error),
++              Row(children: [
++                Expanded(
++                  child: FilledButton.icon(
++                    icon: const Icon(Icons.save),
++                    label: const Text('Back up now'),
++                    onPressed: busy || st.folderUri == null ? null : () => guard(() async {
++                      final r = await Backup.runToFolder(db, force: true);
++                      if (mounted) snack(context, r == 'saved' ? 'Backup saved and verified' : 'Nothing changed since the last backup');
++                    }),
++                  ),
++                ),
++                const SizedBox(width: 8),
++                Expanded(
++                  child: OutlinedButton.icon(
++                    icon: const Icon(Icons.folder_open),
++                    label: const Text('Restore…'),
++                    onPressed: busy || st.folderUri == null ? null : () => guard(() => _restoreFromFolder(st)),
++                  ),
++                ),
++              ]),
++              const Divider(height: 32),
++              Text('Backup file', style: head),
++              const SizedBox(height: 4),
++              const Text('One-off: save a backup file anywhere (share sheet), or restore from one.'),
++              ListTile(
++                contentPadding: EdgeInsets.zero,
++                leading: const Icon(Icons.ios_share),
++                title: const Text('Save backup file'),
++                subtitle: Text(encrypted ? 'Encrypted with your backup passphrase' : 'Not encrypted - set a passphrase above first'),
++                enabled: !busy,
++                onTap: () => guard(() async {
++                  if (!encrypted) {
++                    final go = await showDialog<bool>(
++                      context: context,
++                      builder: (c) => AlertDialog(
++                        title: const Text('Share without encryption?'),
++                        content: const Text('This file contains your locked books and private notes in plain form.'),
++                        actions: [
++                          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
++                          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Share anyway')),
++                        ],
++                      ),
++                    );
++                    if (go != true) return;
++                  }
++                  await Exporter.shareDb(db, passphrase: await Backup.passphrase());
+                 }),
+               ),
+-              const SizedBox(height: 8),
+-              OutlinedButton.icon(
+-                icon: const Icon(Icons.cloud_download),
+-                label: const Text('Restore from Drive…'),
+-                onPressed: busy || st.account == null ? null : () => guard(() async {
+-                  final files = await DriveBackup.list();
+-                  if (!mounted) return;
+-                  if (files.isEmpty) { snack(context, 'No backups found'); return; }
+-                  final pick = await showDialog<drive.File>(
+-                    context: context,
+-                    builder: (c) => SimpleDialog(title: const Text('Choose a backup'), children: [
+-                      for (final f in files)
+-                        SimpleDialogOption(
+-                          onPressed: () => Navigator.pop(c, f),
+-                          child: Text('${f.name}\n${f.createdTime == null ? '' : DateFormat.yMMMd().add_jm().format(f.createdTime!.toLocal())} · '
+-                              '${((int.tryParse(f.size ?? '0') ?? 0) / 1024).toStringAsFixed(0)} KB'),
+-                        ),
+-                    ]),
+-                  );
+-                  if (pick == null || !mounted) return;
+-                  final tmp = File('${(await getTemporaryDirectory()).path}/pagemark-restore.download');
+-                  await DriveBackup.download(pick, tmp);
+-                  if (!mounted) return;
+-                  await restoreFlow(context, tmp);
++              ListTile(
++                contentPadding: EdgeInsets.zero,
++                leading: const Icon(Icons.restore),
++                title: const Text('Restore from file'),
++                enabled: !busy,
++                onTap: () => guard(() async {
++                  final r = await FilePicker.pickFile();
++                  final path = r?.path;
++                  if (path == null || !mounted) return;
++                  await restoreFlow(context, File(path));
+                 }),
+               ),
+             ]),
+diff --git a/lib/ui.dart b/lib/ui.dart
+index df3d201..16a953e 100644
+--- a/lib/ui.dart
++++ b/lib/ui.dart
+@@ -48,7 +48,12 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
+     cleanTempExports();
+     db.purgeExpiredTrash();
+     autoCheckUpdates();
+-    WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) announceNewVersion(context); });
++    WidgetsBinding.instance.addPostFrameCallback((_) async {
++      if (!mounted) return;
++      announceNewVersion(context);
++      await maybeOfferPhoneRestore(context);
++      Backup.runIfDue(db).then((_) => Backup.refreshPhoneCopy(db));
++    });
+   }
+ 
+   @override
+@@ -72,7 +77,10 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
+ 
+   @override
+   void didChangeAppLifecycleState(AppLifecycleState state) {
+-    if (state == AppLifecycleState.paused) _lock(); // leave FLAG_SECURE on so the recents card stays blank
++    if (state == AppLifecycleState.paused) {
++      _lock(); // leave FLAG_SECURE on so the recents card stays blank
++      Backup.refreshPhoneCopy(db);
++    }
+     if (state == AppLifecycleState.resumed && !unlocked) Secure.set(false);
+   }
+ 
+@@ -817,15 +825,15 @@ class SettingsPage extends StatelessWidget {
+             builder: (_, snap) {
+               final st = snap.data;
+               final sub = st == null
+-                  ? 'Scheduled automatic backups'
++                  ? 'Folder backup, backup file, phone backup'
+                   : st.lastError != null
+                       ? 'Last backup FAILED - tap for details'
+                       : st.lastOk != null
+                           ? 'Last backup ${_date.format(DateTime.parse(st.lastOk!))}${st.enabled ? ' - automatic ${st.frequency}' : ''}'
+-                          : st.account == null ? 'Not set up' : 'No backup yet';
++                          : st.folderUri == null ? 'Not set up' : 'No backup yet';
+               return ListTile(
+-                leading: Icon(Icons.cloud_sync, color: st?.lastError != null ? Theme.of(context).colorScheme.error : null),
+-                title: const Text('Google Drive backup'), subtitle: Text(sub),
++                leading: Icon(Icons.backup, color: st?.lastError != null ? Theme.of(context).colorScheme.error : null),
++                title: const Text('Backup & restore'), subtitle: Text(sub),
+                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BackupPage())),
+               );
+             },
+diff --git a/pubspec.yaml b/pubspec.yaml
+index a9c608c..01cedcd 100644
+--- a/pubspec.yaml
++++ b/pubspec.yaml
+@@ -51,8 +51,8 @@ dependencies:
+   intl: ^0.20.3
+   mobile_scanner: ^7.4.2
+   crypto: ^3.0.7
+-  google_sign_in: ^7.2.0
+-  googleapis: ^17.0.0
++  saf_util: ^3.1.1
++  saf_stream: ^4.0.2
+   workmanager: ^0.10.10
+   cryptography: ^2.9.0
+   cryptography_flutter: ^2.3.4
+diff --git a/test/backup_test.dart b/test/backup_test.dart
+new file mode 100644
+index 0000000..0172511
+--- /dev/null
++++ b/test/backup_test.dart
+@@ -0,0 +1,40 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:pagemark/backup.dart';
++
++void main() {
++  test('backup file names round-trip the pattern', () {
++    final t = DateTime(2026, 3, 7, 9, 5);
++    expect(backupFileName(t, encrypted: true), 'pagemark-20260307-0905.pgbak');
++    expect(backupFileName(t, encrypted: false), 'pagemark-20260307-0905.sqlite');
++    expect(isBackupName(backupFileName(t, encrypted: true)), isTrue);
++    expect(isBackupName(backupFileName(t, encrypted: false)), isTrue);
++  });
++
++  test('isBackupName rejects other files', () {
++    for (final n in ['notes.txt', 'pagemark-20260307-0905.pgbak (1)', 'pagemark-2026-0905.pgbak', 'x-pagemark-20260307-0905.pgbak', 'pagemark-20260307-0905.zip']) {
++      expect(isBackupName(n), isFalse, reason: n);
++    }
++  });
++
++  test('namesToPrune keeps the newest and never touches foreign files', () {
++    final names = [
++      for (var d = 1; d <= 8; d++) 'pagemark-202603${d.toString().padLeft(2, '0')}-0100.pgbak',
++      'holiday.jpg',
++      'pagemark-20260101-0100.sqlite',
++    ];
++    final doomed = namesToPrune(names);
++    expect(doomed.length, 4);
++    expect(doomed, containsAll(['pagemark-20260303-0100.pgbak', 'pagemark-20260302-0100.pgbak', 'pagemark-20260301-0100.pgbak', 'pagemark-20260101-0100.sqlite']));
++    expect(doomed.contains('holiday.jpg'), isFalse);
++    expect(namesToPrune(names.take(3)), isEmpty);
++  });
++
++  test('backupDue follows the schedule', () {
++    final now = DateTime(2026, 3, 10, 12);
++    expect(backupDue(null, 'daily', now), isTrue);
++    expect(backupDue(now.subtract(const Duration(hours: 3)), 'daily', now), isFalse);
++    expect(backupDue(now.subtract(const Duration(hours: 23)), 'daily', now), isTrue); // inside the 2 h slack
++    expect(backupDue(now.subtract(const Duration(days: 3)), 'weekly', now), isFalse);
++    expect(backupDue(now.subtract(const Duration(days: 7)), 'weekly', now), isTrue);
++  });
++}
+-- 
+2.53.0.windows.2
+

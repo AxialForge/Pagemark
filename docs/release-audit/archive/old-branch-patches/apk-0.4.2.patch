@@ -1,0 +1,390 @@
+From 15ba1231483579071384c9fb16a0ecbac469e4ea Mon Sep 17 00:00:00 2001
+From: AxialForge <josephkresevic@gmail.com>
+Date: Mon, 12 Oct 2026 08:34:35 -0400
+Subject: [PATCH] close the 0.4.2 gaps: vault trash, unused permissions, PIN
+ note after restore, search ranking, debug updater preview
+
+---
+ CHANGELOG.md                             |  8 +++++
+ android/app/src/main/AndroidManifest.xml | 11 ++++++-
+ docs/release-package/INSTALL_MANUAL.md   |  2 +-
+ lib/backup_page.dart                     |  3 +-
+ lib/db.dart                              |  5 +--
+ lib/export.dart                          | 12 +++++--
+ lib/lookup.dart                          | 21 +++++++++++++
+ lib/ui.dart                              | 40 +++++++++++++++++-------
+ lib/updater_ui.dart                      | 20 +++++++++++-
+ test/data_safety_test.dart               | 29 +++++++++++++++++
+ test/lookup_test.dart                    | 26 +++++++++++++++
+ 11 files changed, 157 insertions(+), 20 deletions(-)
+
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index cea1096..198d920 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -8,10 +8,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+ 
+ ### Added
+ 
++- The locked library has its own Trash (menu in the locked library): books you delete there can now be restored.
++- After restoring a backup that contains locked books, Pagemark reminds you that the PIN is not part of backups and to set a new one.
++
+ ### Changed
+ 
++- Book search ranks the real book first and moves study guides, summaries and workbooks behind "Show more results".
++- Pagemark no longer requests storage, media or notification permissions it never used.
++
+ ### Fixed
+ 
++- Deleted locked books were stuck invisible in Trash and silently purged after 30 days.
++
+ ## [0.4.1] - 2026-10-12
+ 
+ ### Fixed
+diff --git a/android/app/src/main/AndroidManifest.xml b/android/app/src/main/AndroidManifest.xml
+index 18f533c..eed91c0 100644
+--- a/android/app/src/main/AndroidManifest.xml
++++ b/android/app/src/main/AndroidManifest.xml
+@@ -1,9 +1,18 @@
+-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
++<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:tools="http://schemas.android.com/tools">
+     <uses-permission android:name="android.permission.INTERNET"/>
+     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+     <uses-permission android:name="android.permission.CAMERA"/>
+     <!-- In-app updates: lets Android offer to install the downloaded Pagemark APK. -->
+     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
++    <!-- Libraries merge in permissions Pagemark never uses (open_filex: storage/media, workmanager: notifications).
++         Pagemark reads no photos/media and posts no notifications, so strip them. Remove the POST_NOTIFICATIONS line
++         when backup-failure notifications (roadmap 0.7.0-C) are added. -->
++    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove"/>
++    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:node="remove"/>
++    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:node="remove"/>
++    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" tools:node="remove"/>
++    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" tools:node="remove"/>
+     <!-- allowBackup off: Android must not copy the library (incl. locked books) to the cloud or via adb. -->
+     <application
+         android:allowBackup="false"
+diff --git a/docs/release-package/INSTALL_MANUAL.md b/docs/release-package/INSTALL_MANUAL.md
+index 63aeb0c..f1f5f7b 100644
+--- a/docs/release-package/INSTALL_MANUAL.md
++++ b/docs/release-package/INSTALL_MANUAL.md
+@@ -49,7 +49,7 @@ Pagemark opens on an empty Library. Tap **Add book** to start. Allow the **camer
+ | Install packages | Lets Android offer to install a downloaded update |
+ | Background work / network state | Running the scheduled Drive backup |
+ 
+-The Android build also lists a few storage/notification permissions that come bundled with libraries it uses; Pagemark does not read your photos or other media. (A later release will strip them from the manifest.)
++Pagemark does not request access to your photos, media, storage or notifications.
+ 
+ ## 5. Updating
+ 
+diff --git a/lib/backup_page.dart b/lib/backup_page.dart
+index a43c7f5..f892e72 100644
+--- a/lib/backup_page.dart
++++ b/lib/backup_page.dart
+@@ -56,7 +56,8 @@ Future<void> restoreFlow(BuildContext context, File picked) async {
+     barrierDismissible: false,
+     builder: (c) => AlertDialog(
+       title: const Text('Restored'),
+-      content: const Text('Pagemark will now close. Open it again to see your restored library.'),
++      content: Text('Pagemark will now close. Open it again to see your restored library.'
++          '${check.lockedBooks > 0 ? "\n\nYour PIN isn't part of backups. Open the Locked tab and set a new PIN to reach the ${check.lockedBooks} locked ${check.lockedBooks == 1 ? "book" : "books"} in this backup." : ""}'),
+       actions: [FilledButton(onPressed: () => exit(0), child: const Text('Close app'))],
+     ),
+   );
+diff --git a/lib/db.dart b/lib/db.dart
+index 380e3a4..e3c4203 100644
+--- a/lib/db.dart
++++ b/lib/db.dart
+@@ -127,8 +127,9 @@ class AppDb extends _$AppDb {
+     return (delete(books)..where((b) => b.deletedAt.isSmallerThanValue(cutoff))).go();
+   }
+ 
+-  Stream<List<Book>> watchTrash() =>
+-      (select(books)..where((b) => b.deletedAt.isNotNull())..orderBy([(b) => OrderingTerm.desc(b.deletedAt)])).watch();
++  /// Trash for one library only: the main Trash never lists locked titles, the vault's Trash lists only locked ones.
++  Stream<List<Book>> watchTrash({bool locked = false}) =>
++      (select(books)..where((b) => b.deletedAt.isNotNull() & b.locked.equals(locked))..orderBy([(b) => OrderingTerm.desc(b.deletedAt)])).watch();
+ 
+   /// A duplicate is the same ISBN, or the same title+author (case-insensitive), among live books.
+   Future<Book?> findDuplicate({required String title, required bool locked, String author = '', String isbn = ''}) async {
+diff --git a/lib/export.dart b/lib/export.dart
+index 4e9769d..208afe8 100644
+--- a/lib/export.dart
++++ b/lib/export.dart
+@@ -11,8 +11,11 @@ class RestoreCheck {
+   final bool ok;
+   final String message;
+   final int books, reads;
+-  const RestoreCheck.fail(this.message) : ok = false, books = 0, reads = 0;
+-  const RestoreCheck.pass(this.books, this.reads) : ok = true, message = 'ok';
++
++  /// Locked books in the candidate (Trash included, it is restorable); the PIN is not part of a backup, so these need a new PIN.
++  final int lockedBooks;
++  const RestoreCheck.fail(this.message) : ok = false, books = 0, reads = 0, lockedBooks = 0;
++  const RestoreCheck.pass(this.books, this.reads, {this.lockedBooks = 0}) : ok = true, message = 'ok';
+ }
+ 
+ class Exporter {
+@@ -110,7 +113,10 @@ class Exporter {
+       }
+       final b = d.select('SELECT COUNT(*) c FROM books').first['c'] as int;
+       final r = d.select('SELECT COUNT(*) c FROM reads').first['c'] as int;
+-      return RestoreCheck.pass(b, r);
++      // Older schemas may predate the locked column; they cannot hold vault books.
++      final cols = d.select('PRAGMA table_info(books)').map((c) => c['name']).toSet();
++      final locked = cols.contains('locked') ? d.select('SELECT COUNT(*) c FROM books WHERE locked = 1').first['c'] as int : 0;
++      return RestoreCheck.pass(b, r, lockedBooks: locked);
+     } catch (e) {
+       return const RestoreCheck.fail('This file is not a readable Pagemark database.');
+     } finally {
+diff --git a/lib/lookup.dart b/lib/lookup.dart
+index 737a7f7..e390577 100644
+--- a/lib/lookup.dart
++++ b/lib/lookup.dart
+@@ -108,6 +108,27 @@ class Lookup {
+     return out;
+   }
+ 
++  /// Study guides, summaries and the like that Open Library returns alongside the real book.
++  static final _junkTitle = RegExp(r'^(summary|study guide|workbook|analysis|trivia|quiz)\b|summary of|study guide', caseSensitive: false);
++
++  /// Order search results so the real book comes first: +3 has a cover, +2 an author name appears in the query,
++  /// -5 looks like a summary/study guide/workbook. Stable: ties keep Open Library's own order.
++  static List<BookMeta> rank(List<BookMeta> results, String query) {
++    final words = query.toLowerCase().split(RegExp(r'[^a-z0-9]+')).where((w) => w.length > 2).toSet();
++    int score(BookMeta m) {
++      var s = 0;
++      if (m.coverUrl.isNotEmpty) s += 3;
++      final authorWords = m.author.toLowerCase().split(RegExp(r'[^a-z0-9]+')).where((w) => w.length > 2);
++      if (authorWords.any(words.contains)) s += 2;
++      if (_junkTitle.hasMatch(m.title.trim())) s -= 5;
++      return s;
++    }
++
++    final scored = [for (var i = 0; i < results.length; i++) (i, score(results[i]), results[i])];
++    scored.sort((a, b) => b.$2 != a.$2 ? b.$2.compareTo(a.$2) : a.$1.compareTo(b.$1));
++    return [for (final e in scored) e.$3];
++  }
++
+   /// ISBN lookup: the data API first, then a search by ISBN as a fallback.
+   static Future<BookMeta?> byIsbn(String raw) async {
+     final isbn = Isbn.to13(raw);
+diff --git a/lib/ui.dart b/lib/ui.dart
+index df3d201..fa6019e 100644
+--- a/lib/ui.dart
++++ b/lib/ui.dart
+@@ -173,10 +173,19 @@ class _LibraryState extends State<Library> {
+       appBar: AppBar(title: Text(widget.locked ? 'Locked library' : 'Library'), actions: [
+         PopupMenuButton<String>(
+           tooltip: 'More',
+-          onSelected: (v) => Navigator.push(context, MaterialPageRoute(builder: (_) => v == 'series' ? SeriesPage(locked: widget.locked) : const ShelvesPage())),
+-          itemBuilder: (_) => const [
+-            PopupMenuItem(value: 'series', child: ListTile(leading: Icon(Icons.layers_outlined), title: Text('Series'))),
+-            PopupMenuItem(value: 'shelves', child: ListTile(leading: Icon(Icons.collections_bookmark_outlined), title: Text('Manage shelves'))),
++          onSelected: (v) => Navigator.push(
++              context,
++              MaterialPageRoute(
++                  builder: (_) => v == 'series'
++                      ? SeriesPage(locked: widget.locked)
++                      : v == 'trash'
++                          ? const TrashPage(locked: true)
++                          : const ShelvesPage())),
++          itemBuilder: (_) => [
++            const PopupMenuItem(value: 'series', child: ListTile(leading: Icon(Icons.layers_outlined), title: Text('Series'))),
++            const PopupMenuItem(value: 'shelves', child: ListTile(leading: Icon(Icons.collections_bookmark_outlined), title: Text('Manage shelves'))),
++            // Deleted vault books only ever show up here, inside the unlocked vault (a route wipeLockedTraces() can pop).
++            if (widget.locked) const PopupMenuItem(value: 'trash', child: ListTile(leading: Icon(Icons.delete_sweep_outlined), title: Text('Trash'))),
+           ],
+         ),
+         PopupMenuButton<String>(
+@@ -354,7 +363,8 @@ class AddBook extends StatefulWidget {
+ class _AddBookState extends State<AddBook> {
+   final qc = TextEditingController();
+   List<BookMeta> results = [];
+-  bool busy = false;
++  bool busy = false, showAll = false;
++  static const _topResults = 12;
+ 
+   @override
+   void dispose() {
+@@ -363,7 +373,7 @@ class _AddBookState extends State<AddBook> {
+   }
+ 
+   Future<void> run(Future<List<BookMeta>> Function() f) async {
+-    setState(() => busy = true);
++    setState(() { busy = true; showAll = false; });
+     try {
+       results = await f();
+     } catch (e) {
+@@ -379,7 +389,7 @@ class _AddBookState extends State<AddBook> {
+           final m = await Lookup.byIsbn(q);
+           return [if (m != null) m];
+         }
+-        return Lookup.search(q);
++        return Lookup.rank(await Lookup.search(q), q);
+       });
+ 
+   Future<void> scan() async {
+@@ -456,12 +466,18 @@ class _AddBookState extends State<AddBook> {
+           if (busy) const LinearProgressIndicator(),
+           Expanded(
+             child: ListView(children: [
+-              for (final m in results)
++              for (final m in showAll ? results : results.take(_topResults))
+                 ListTile(
+                   leading: Cover(m.coverUrl, locked: widget.locked), title: Text(m.title),
+                   subtitle: Text('${m.author}${m.year != null ? ' · ${m.year}' : ''}'),
+                   onTap: () => save(m),
+                 ),
++              if (!showAll && results.length > _topResults)
++                ListTile(
++                  leading: const Icon(Icons.expand_more),
++                  title: Text('Show ${results.length - _topResults} more results'),
++                  onTap: () => setState(() => showAll = true),
++                ),
+               ListTile(
+                 leading: const Icon(Icons.edit_note), title: const Text('Add manually'),
+                 subtitle: const Text('Not found? Enter the details yourself.'),
+@@ -880,14 +896,16 @@ class SettingsPage extends StatelessWidget {
+ 
+ // ───────────────────────── Trash ─────────────────────────
+ class TrashPage extends StatelessWidget {
+-  const TrashPage({super.key});
++  /// `locked: true` is the vault's own Trash; the main Trash (default) never shows locked titles.
++  const TrashPage({super.key, this.locked = false});
++  final bool locked;
+   @override
+   Widget build(BuildContext context) => Scaffold(
+         appBar: AppBar(title: const Text('Trash')),
+         body: StreamBuilder<List<Book>>(
+-          stream: db.watchTrash(),
++          stream: db.watchTrash(locked: locked),
+           builder: (_, snap) {
+-            final list = (snap.data ?? []).where((b) => !b.locked).toList(); // locked titles never show outside the vault
++            final list = snap.data ?? [];
+             if (list.isEmpty) return const Center(child: Text('Trash is empty.'));
+             return ListView(children: [
+               for (final b in list)
+diff --git a/lib/updater_ui.dart b/lib/updater_ui.dart
+index 6038919..377c9b7 100644
+--- a/lib/updater_ui.dart
++++ b/lib/updater_ui.dart
+@@ -1,3 +1,4 @@
++import 'package:flutter/foundation.dart' show kDebugMode;
+ import 'package:flutter/material.dart';
+ import 'package:flutter/services.dart';
+ import 'package:intl/intl.dart';
+@@ -108,7 +109,24 @@ class _UpdatePageState extends State<UpdatePage> {
+     final i = info;
+     final cs = Theme.of(context).colorScheme;
+     return Scaffold(
+-      appBar: AppBar(title: const Text('Updates')),
++      appBar: AppBar(title: const Text('Updates'), actions: [
++        // Debug builds only (kDebugMode is false in release): lets docs/screenshots show the "available" state.
++        if (kDebugMode)
++          PopupMenuButton<String>(
++            onSelected: (_) => setState(() {
++              checking = false;
++              error = null;
++              info = UpdateInfo(
++                current: version ?? '0.0.0',
++                latest: '99.0.0',
++                notes: [
++                  ReleaseNote('99.0.0', 'Preview', 'Sample release note (debug preview).\n- Example change one\n- Example change two', DateTime.now()),
++                ],
++              );
++            }),
++            itemBuilder: (_) => const [PopupMenuItem(value: 'fake', child: Text('Pretend a newer version exists'))],
++          ),
++      ]),
+       body: ListView(padding: const EdgeInsets.all(16), children: [
+         Card(
+           child: ListTile(
+diff --git a/test/data_safety_test.dart b/test/data_safety_test.dart
+index 90cca7b..906a2d9 100644
+--- a/test/data_safety_test.dart
++++ b/test/data_safety_test.dart
+@@ -37,6 +37,20 @@ void main() {
+       expect((await db.watchLibrary(locked: false).first).single.book.id, id);
+     });
+ 
++    test('trash is per library: main Trash never lists a locked book, vault Trash lists only locked ones', () async {
++      final open = await addBook(db, 'Dune');
++      final vault = await addBook(db, 'Secret', locked: true);
++      await db.softDelete(open);
++      await db.softDelete(vault);
++      expect((await db.watchTrash().first).map((b) => b.id), [open]);
++      expect((await db.watchTrash(locked: true).first).map((b) => b.id), [vault]);
++      await db.restoreBook(vault); // restoring from the vault Trash puts it back in the vault, still locked
++      final back = (await db.watchLibrary(locked: true).first).single.book;
++      expect(back.id, vault);
++      expect(back.locked, isTrue);
++      expect(await db.watchLibrary(locked: false).first, isEmpty);
++    });
++
+     test('expired trash is purged, recent trash is kept', () async {
+       final old = await addBook(db, 'Old');
+       final fresh = await addBook(db, 'Fresh');
+@@ -120,6 +134,21 @@ void main() {
+       expect(Exporter.inspect(makeDb('ok.sqlite')).ok, isTrue);
+     });
+ 
++    test('reports locked books so the restore dialog can tell the user to set a new PIN', () {
++      final f = File('${dir.path}/vault.sqlite');
++      final d = sql.sqlite3.open(f.path);
++      d.execute('CREATE TABLE books (id INTEGER PRIMARY KEY, locked INTEGER NOT NULL DEFAULT 0)');
++      d.execute('CREATE TABLE reads (id INTEGER PRIMARY KEY)');
++      d.execute('INSERT INTO books (locked) VALUES (0), (1), (1)');
++      d.execute('PRAGMA user_version = ${AppDb.currentSchema}');
++      d.close();
++      final r = Exporter.inspect(f);
++      expect(r.ok, isTrue);
++      expect(r.books, 3);
++      expect(r.lockedBooks, 2);
++      expect(Exporter.inspect(makeDb('plain.sqlite')).lockedBooks, 0); // no locked column -> no vault
++    });
++
+     test('rejects garbage, foreign databases and newer schemas', () {
+       final junk = File('${dir.path}/junk.sqlite')..writeAsBytesSync(List.filled(4096, 7));
+       expect(Exporter.inspect(junk).ok, isFalse);
+diff --git a/test/lookup_test.dart b/test/lookup_test.dart
+index b566c31..60d6c9a 100644
+--- a/test/lookup_test.dart
++++ b/test/lookup_test.dart
+@@ -31,6 +31,32 @@ void main() {
+     });
+   });
+ 
++  group('rank', () {
++    BookMeta b(String title, String author, {bool cover = true}) =>
++        BookMeta(title: title, author: author, coverUrl: cover ? 'https://covers.openlibrary.org/b/id/1-L.jpg' : '');
++
++    test('puts the real book first and study guides last (query: circe madeline miller)', () {
++      final fromApi = [
++        b('Circe Summary and Study Guide', 'BookRags'),
++        b('Study Guide: Circe by Madeline Miller', 'SuperSummary'),
++        b('Circe', 'Madeline Miller'),
++        b('Workbook for Circe', 'Jane Doe', cover: false),
++        b('Circe (Large Print)', 'Madeline Miller', cover: false),
++        b('The Song of Achilles', 'Madeline Miller'),
++      ];
++      final r = Lookup.rank(fromApi, 'circe madeline miller').map((m) => m.title).toList();
++      expect(r.first, 'Circe');
++      expect(r.take(3), containsAll(['Circe', 'The Song of Achilles', 'Circe (Large Print)']));
++      expect(r.skip(3), containsAll(['Circe Summary and Study Guide', 'Study Guide: Circe by Madeline Miller', 'Workbook for Circe']));
++    });
++
++    test('is stable: equal scores keep the API order, and nothing is dropped', () {
++      final fromApi = [b('A', 'x'), b('B', 'y'), b('C', 'z')];
++      expect(Lookup.rank(fromApi, 'whatever').map((m) => m.title), ['A', 'B', 'C']);
++      expect(Lookup.rank([], 'q'), isEmpty);
++    });
++  });
++
+   group('search', () {
+     test('parses results, skips malformed records, dedupes works, filters noisy subjects, sends a User-Agent', () async {
+       String? ua;
+-- 
+2.53.0.windows.2
+
