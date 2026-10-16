@@ -213,9 +213,9 @@ def next_rev(out_dir, name):
 def main():
     a = argparse.ArgumentParser()
     a.add_argument("root"); a.add_argument("--title", required=True); a.add_argument("--version", default=""); a.add_argument("--commit", default="")
-    a.add_argument("--findings-from", default=""); a.add_argument("--out-name", default=""); a.add_argument("--out-dir", default="Documentation"); a.add_argument("--rev", default=""); a.add_argument("--only", nargs="+", default=[])
+    a.add_argument("--findings-from", default=""); a.add_argument("--out-name", default=""); a.add_argument("--out-dir", default="Documentation"); a.add_argument("--rev", default=""); a.add_argument("--only", nargs="+", default=[]); a.add_argument("--src-dir", default="docs/release-audit")
     a = a.parse_args()
-    root = pathlib.Path(a.root).resolve(); src = root / "docs" / "release-audit"
+    root = pathlib.Path(a.root).resolve(); src = root / a.src_dir
     sections = [("Readiness", read(src / "RELEASE_READINESS.md")),
                 ("Findings", from_heading(read(src / "FINDINGS.md"), a.findings_from)),
                 ("Status", read(src / "AUDIT_STATUS.md")),
