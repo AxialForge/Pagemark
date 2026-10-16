@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.13.3] - 2026-10-15
+
 ### Fixed
 - Genres that differ only by a hyphen ("Science fiction" and "Science-fiction") are treated as one.
 
