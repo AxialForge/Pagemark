@@ -43,6 +43,7 @@ void main() {
       );
       expect(Lookup.genres(['nyt:hardcover-fiction=2020-01-01', 'Reading Level-Grade 9', 'Accessible book']), '');
       expect(Lookup.genres(['Fantasy', 'fantasy', 'FANTASY']), 'Fantasy');
+      expect(Lookup.genres(['Science fiction', 'Science-fiction', 'American literature']), 'Science fiction, American literature', reason: 'a hyphen is not a new genre');
       expect(Lookup.genres([1, null, 'Crime / Thriller']), 'Crime, Thriller');
     });
 

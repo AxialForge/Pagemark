@@ -80,7 +80,7 @@ class Lookup {
     for (final subject in subjects.whereType<String>()) {
       for (final raw in subject.split(RegExp(r'[,/]'))) {
         final g = raw.trim();
-        if (g.isEmpty || g.length >= 40 || _noisy.hasMatch(g) || _labels.hasMatch(g) || !seen.add(g.toLowerCase())) continue;
+        if (g.isEmpty || g.length >= 40 || _noisy.hasMatch(g) || _labels.hasMatch(g) || !seen.add(g.toLowerCase().replaceAll('-', ' '))) continue;
         out.add(g[0].toUpperCase() + g.substring(1));
         if (out.length == 3) return out.join(', ');
       }

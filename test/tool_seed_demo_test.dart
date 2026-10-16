@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pagemark/db.dart';
+import 'package:pagemark/reading_life.dart';
 
 class B {
   final String title, author, isbn, genre, desc, series, tags;
@@ -70,6 +71,16 @@ void main() {
     for (final b in [hobbit, pride, emma]) { await db.setOnShelf(b, comfort, true); }
     for (final b in [circe, educated]) { await db.setOnShelf(b, club, true); }
     for (final b in [dune, martian, hail]) { await db.setOnShelf(b, scifi, true); }
+
+    // reading life (0.12.0): timer sittings for the calendar, a read-next order, a loan and a quote with stars
+    for (final d in [1, 2, 5, 6, 7, 8, 9, 12, 13, 14, 15]) {
+      await db.addSession(wind, 25 + d, pages: 12, when: DateTime(2026, 10, d));
+    }
+    await db.addSession(hail, 40, when: DateTime(2026, 10, 14));
+    await db.saveQueue([messiah, cosmos]);
+    await db.lend(hobbit, 'Sam', lentOn: DateTime(2026, 10, 3), remindOn: DateTime(2026, 10, 31));
+    await db.addQuote(dune, 'Fear is the mind-killer.', page: 12, note: 'The Litany Against Fear', rating: 5.0);
+    await db.addQuote(circe, 'But in a solitary life, there are rare moments when another soul dips near yours.', page: 188, rating: 4.5);
 
     await db.customStatement('PRAGMA wal_checkpoint(TRUNCATE)');
     await db.close();

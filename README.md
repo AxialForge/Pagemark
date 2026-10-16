@@ -17,28 +17,32 @@ A private, fully local book tracker for Android (iOS planned): log what you read
 
 ## Features
 
-- **Log any book**: print, e-book or audiobook, any genre; several reads per book, half-star ratings, private thoughts.
-- **Fast capture**: search Open Library, paste or scan an ISBN barcode, or add by hand. Free book data and covers, no key needed.
-- **Track progress**: current page, progress bars, pages per day, days left; yearly goal ring; stats dashboard.
-- **Five library looks**: classic list, cover wall, bookshelf, book spines or compact — switch any time.
-- **Quotes**, author pages, and **covers saved on your phone** (offline, included in backups).
-- **Import** from Goodreads, StoryGraph or a Pagemark export (preview, safety copy, Undo); **multi-select** and swipe actions.
-- **Organise**: shelves, series with numbers, tags, filters, sort, "Currently reading" strip.
+- **Log any book**: print, e-book or audiobook, any genre; several reads per book, half-star ratings (and optional detailed ratings for story, characters, writing, pace and feeling), private thoughts, quotes with stars.
+- **Fast capture**: search Open Library and Google Books together, paste or scan an ISBN barcode, scan a whole shelf in one go, or add by hand. Free book data and covers, no key needed. **Refresh details** and **Choose another edition** fix a book later without losing your own notes.
+- **Track progress**: current page, progress bars, pages per day, days left, a **reading timer**, and a **Days you read** calendar with a gentle streak.
+- **Plan**: a **Read next** order you drag into place, suggestions from your own list, and **lending** notes with an optional reminder.
+- **Your year**: yearly goal ring, stats dashboard, a shareable **Year in books** picture and a printable PDF report.
+- **Five library looks**: classic list, cover wall, bookshelf, book spines or compact. On tablets the Library and the open book sit side by side.
+- **Organise**: shelves, series with numbers, tags, filters, sort, "Currently reading" strip, multi-select with Undo.
 - **Locked library**: PIN (attempt limits + recovery code) or fingerprint; re-locks when you leave (or after 1/5/15 minutes); optional **whole-app lock**; blocks screenshots.
-- **Your data, your files**: CSV/JSON export; whole-database export with optional password encryption.
-- **Backups**: save a password-protected copy of your whole library as a file, or a spreadsheet; or pick a folder (including one in Google Drive, OneDrive or Dropbox) and Pagemark saves backups there by itself; a reminder every week, two weeks or month; safe restore with restore points.
+- **Your data, your files**: CSV/JSON export; import from Goodreads and StoryGraph with a preview and Undo; whole-database export with optional password encryption.
+- **Backups**: a password-protected copy as a file or spreadsheet, or pick a folder (including one in Google Drive, OneDrive or Dropbox) and Pagemark saves backups there by itself; reminders every week, two weeks or month; safe restore with restore points.
+- **Made for everyone**: plain words, a searchable in-app guide, sample books to try, a home-screen widget, icon shortcuts and Share to Pagemark; large text and display size tested.
 - **Six themes**: Harbor, Midnight Ink, Rosewater, Plum Velvet, Sage and Lamplight, with smooth transitions.
-- **Updates**: in-app updater with release notes and an offline version history.
+- **Updates**: in-app updater with release notes and an offline version history (GitHub version).
 
 ## Documentation
 
+Finished PDF and Word documents live in the [`Documentation`](Documentation/) folder (named `<document> Rev <n.n>`); the Markdown sources are in `docs/release-package/`.
+
 | | |
 |---|---|
-| [User Manual](docs/release-package/USER_MANUAL.md) | Every feature, step by step ([PDF](docs/release-package/Pagemark-User-Manual.pdf)) |
-| [Install Manual](docs/release-package/INSTALL_MANUAL.md) | Download, install, update, build from source ([PDF](docs/release-package/Pagemark-Install-Manual.pdf)) |
-| [Release Notes](docs/release-package/RELEASE_NOTES.md) | What changed in each version ([PDF](docs/release-package/Pagemark-Release-Notes.pdf)) |
-| [Package Overview](docs/release-package/PACKAGE_OVERVIEW.md) | Simple / medium / advanced description ([PDF](docs/release-package/Pagemark-Package-Overview.pdf)) |
-| [Complete documentation (one PDF)](docs/release-package/Pagemark-Documentation.pdf) | The four documents above in one file, with a cover and contents |
+| [User Manual](docs/release-package/USER_MANUAL.md) | Every feature, step by step, with a quick start |
+| [Install Manual](docs/release-package/INSTALL_MANUAL.md) | Download, install, update, build from source |
+| [Release Notes](docs/release-package/RELEASE_NOTES.md) | What changed in each version |
+| [Package Overview](docs/release-package/PACKAGE_OVERVIEW.md) | Simple / medium / advanced description |
+| [Privacy and our promise](docs/PRIVACY.md) | What Pagemark never does, and the few places it uses the internet |
+| [Audit reports](docs/release-audit/) | The pre-release audits and the device test, with findings and fixes |
 
 ## Install
 
@@ -50,17 +54,17 @@ Download the **arm64** APK from the [Releases page](https://github.com/AxialForg
 flutter pub get
 dart run build_runner build --delete-conflicting-outputs
 flutter analyze && flutter test
-flutter build apk --release --split-per-abi
+flutter build apk --release --split-per-abi --flavor sideload
 ```
 
 Flutter 3.47+, Android SDK, JDK 17+. On Windows with JDK 25 see the loopback note in [CLAUDE.md](CLAUDE.md) (Gotchas).
 
 ## Privacy
 
-No accounts, analytics or ads. The network is used for book lookup (Open Library) and the update check (GitHub Releases). Details in the User Manual, §16.
+No accounts, analytics, ads or AI inside the app, and nothing is sent to the developer. The network is used for book lookup (Open Library and, unless you turn it off, Google Books), cover pictures, and the update check in the GitHub version. A page in the app (Settings → Our promise to you) says so in plain words, and tests fail if the code stops keeping the promise. Details in [docs/PRIVACY.md](docs/PRIVACY.md) and the User Manual, §16.
 
 ## Development
 
 Architecture, conventions and every hard-won gotcha are in [CLAUDE.md](CLAUDE.md). Planned releases are in [docs/ROADMAP.md](docs/ROADMAP.md); the full 430-item backlog is in [docs/ROUNDING_OUT_REPORT.md](docs/ROUNDING_OUT_REPORT.md).
 
-Book data and covers: [Open Library](https://openlibrary.org).
+Book data and covers: [Open Library](https://openlibrary.org) and Google Books.

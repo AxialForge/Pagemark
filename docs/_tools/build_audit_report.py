@@ -94,10 +94,22 @@ def table_to_docx(doc, rows):
     doc.add_paragraph()
 
 
-def md_to_docx(doc, text):
+def md_to_docx(doc, text, base=None):
+    """base: folder that relative image paths in <img src="..."> lines are resolved against (None = ignore pictures)."""
     lines = text.splitlines(); i = 0
     while i < len(lines):
         ln = lines[i]
+        if ln.lstrip().startswith("<"):  # raw HTML: pictures in a "shots" row become real pictures, anything else is skipped
+            imgs = re.findall(r'<img src="([^"]+)" alt="([^"]*)"', ln)
+            if imgs and base is not None:
+                par = doc.add_paragraph(); caps = []
+                for src, alt in imgs:
+                    path = (pathlib.Path(base) / src).resolve()
+                    if path.exists():
+                        par.add_run().add_picture(str(path), width=Cm(5.2 if len(imgs) > 1 else 6.5)); par.add_run("  "); caps.append(alt)
+                if caps:
+                    cp = doc.add_paragraph(" · ".join(caps)); cp.runs[0].italic = True; cp.runs[0].font.size = Pt(8)
+            i += 1; continue
         if ln.startswith("|") and i + 1 < len(lines) and re.match(r"^\|[\s:|-]+\|?\s*$", lines[i + 1]):
             rows = [split_row(ln)]; i += 2
             while i < len(lines) and lines[i].startswith("|"):
@@ -119,7 +131,7 @@ def md_to_docx(doc, text):
         i += 1
 
 
-def build_docx(out, title, meta, sections):
+def build_docx(out, title, meta, sections, base=None):
     doc = Document()
     sec = doc.sections[0]; sec.orientation = WD_ORIENT.PORTRAIT; sec.page_width, sec.page_height = Cm(21), Cm(29.7)
     for s in doc.sections:
@@ -132,7 +144,7 @@ def build_docx(out, title, meta, sections):
         q = doc.add_paragraph(); rr = q.add_run(line); rr.font.size = Pt(12)
     doc.add_page_break()
     for name, text in sections:
-        md_to_docx(doc, text); doc.add_page_break()
+        md_to_docx(doc, text, base); doc.add_page_break()
     doc.save(out)
 
 
@@ -169,7 +181,7 @@ def build_pdf(out, title, meta, sections):
     body = "".join(markdown.markdown(trim_findings(re.sub(r"\[ \]", "☐", re.sub(r"\[x\]", "☑", t))), extensions=["tables"]) + '<div class="pb"></div>' for _, t in sections)
     page = f"<!doctype html><meta charset=utf-8><title>{html.escape(title)}</title><style>{CSS}</style>{cover}{body}"
     # scratch folder beside the output: the 8.3 short Windows temp path makes the browser print nothing
-    with tempfile.TemporaryDirectory(dir=str(pathlib.Path(out).parent)) as d:
+    with tempfile.TemporaryDirectory(dir=str(pathlib.Path(out).parent), ignore_cleanup_errors=True) as d:
         h = pathlib.Path(d) / "r.html"; h.write_text(page, encoding="utf-8")
         subprocess.run([browser(), "--headless", "--disable-gpu", "--no-pdf-header-footer", f"--user-data-dir={d}/profile", f"--print-to-pdf={out}", h.as_uri()],
                        check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=120)

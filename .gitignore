@@ -56,3 +56,4 @@ key.properties
 # raw emulator captures for documentation (processed JPEGs live in docs/screenshots)
 docs/_tools/screenshots/out/
 Documentation/~$*
+docs/release-package/tmp*

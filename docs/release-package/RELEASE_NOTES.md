@@ -1,8 +1,193 @@
 # Pagemark — Release Notes
 
-Every release from the first (0.1.0) to the current one (0.7.0), newest first. Releases are published at https://github.com/AxialForge/Pagemark/releases and the same text is inside the app under Settings → Updates → Version history.
+Every release from the first (0.1.0) to the current one (0.13.2), newest first. Releases are published at https://github.com/AxialForge/Pagemark/releases and the same text is inside the app under Settings → Updates → Version history.
 
 ---
+
+## [0.13.2] - 2026-10-15
+
+Fixes from the Galaxy S25 Ultra device test of 0.13.1 (PGM-330 to PGM-340).
+
+### Fixed
+- **Reminders now arrive.** The daily reading reminder, the backup reminder and the lent-book reminder never appeared on a real phone: the app's manifest was missing the two receivers the notification plugin needs to show a scheduled notification, so the alarm fired and nothing answered. They are declared now, and a test guards them. Reminders set before this update start working after you open Pagemark once.
+- In landscape the Library can scroll again: on a short screen the "Currently reading" strip is left out so the list has room.
+- The back gesture on Stats, Locked or Settings now returns to the Library first; Back on the Library leaves the app.
+- Edit book no longer accepts 0 or 99999 pages, or a year outside 1000 to 2100.
+- Adding books to a shelf has an Undo, like the other bulk actions, and takes off only the books it added.
+- Refresh details finds the book's edition list more often, so "Choose another edition" shows up.
+- A scanned book that fails to look up now says why (busy, no internet), not always "No internet".
+- A search that could not reach the internet no longer also says "Nothing found".
+
+### Added
+- Lend this book offers Tomorrow and In a week as reminder times, as well as 2 weeks, 1 month and 2 months.
+
+## [0.13.1] - 2026-10-14
+
+Fixes from the 1.0.0 gate audit (PGM-300 to PGM-322).
+
+### Fixed
+- A reading timer left running for a book you had finished or deleted blocked the timer on every other book. Those books now show "Stop it", which saves the time to that book or throws it away.
+- Stats no longer stretches on tablets and wide screens: the page keeps a reading width and the calendar's days are a fixed height, so a month fits on one screen.
+- Genres from a lookup are cleaned: split on commas, repeats and labels such as "General" dropped, places and characters (for example "Dune (Imaginary place)") dropped, so Stats, the year card and suggestions show real genres. Use Refresh details on a book you already added to tidy it.
+- A page count that is negative or absurd (or a year outside 1000 to 2100) from a lookup is no longer saved.
+- The guide and Add a book keep a reading width on tablets.
+- Moving the open book to the locked library on a tablet now closes it in the side pane, so it does not stay on show beside the main list.
+- The empty library's "See how Pagemark works" button shows a help icon instead of a plus.
+
+## [0.13.0] - 2026-10-14
+
+### Added
+- Google Books as a second source, merged with Open Library: more books found, and missing covers, pages, publishers and descriptions filled in. One source being down is fine. Turn it off in Settings, Your library, Also search Google Books.
+- Refresh details from the internet (book menu): see what a lookup found and tick what to take. Details you typed yourself are only changed if you tick them; an ISBN you have and a cover you saved on the phone are never replaced.
+- Choose another edition: pick the cover, publisher, year, pages and ISBN of a different printing (Open Library editions).
+- Scan many books: keep the camera open and scan a whole shelf. One click per book, each added on its own; duplicates are skipped and books not found are listed.
+- What next? In Read next order, a few suggestions from your own want-to-read list: next in a series you started, more from an author you rated 4 or more, a genre you rate highly. Worked out on the phone; the locked library is never used.
+
+### Changed
+- The Our promise page, About and the privacy notes now name Google Books as a place a search goes (unless turned off).
+
+## [0.12.0] - 2026-10-14
+
+### Added
+- Reading timer on a book you are reading: Start, Stop, then say which page you are on. Time goes into the read and onto the calendar.
+- "Days you read" calendar in Stats, month by month, with a gentle streak line (shown from two days in a row, never a guilt message).
+- "Year in books" card in Stats (books, pages, hours, favourite genre, most-read author, average rating, top rated) to share as a picture, and a printable PDF report of the year's finished books.
+- Read next order: drag the books you want to read into the order you will read them (Library menu).
+- Lending: note who has a book, with an optional reminder to ask for it back. The notification names neither book nor person.
+
+### Notes
+- New database tables (schema 6). Older saved copies still restore. The spreadsheet export does not include sessions or loans; the full saved copy does.
+- The PDF report uses the built-in fonts, so letters outside Western European ones print as ?.
+- Locked books are never counted in the card, calendar or report.
+
+## [0.11.0] - 2026-10-14
+
+### Added
+- Tablet and landscape layouts: from 600 dp wide the bottom bar becomes a side bar; from 840 dp the Library and the open book sit side by side. Settings pages stay a comfortable reading width.
+- Screen-reader and touch-target fixes: star ratings read "3 of 5 stars" and can be swiped in half-star steps, covers and icon buttons have spoken names, welcome screens scroll at large text sizes.
+
+### Changed
+- `lib/ui.dart` split into part files under `lib/ui/`.
+
+
+## [0.10.1] - 2026-10-14
+
+### Added
+- **Our promise to you** (Settings, and on the welcome screens): a plain-words page saying Pagemark never collects your data, has no ads, accounts or AI, and keeps your books on your phone. It lists the only places the app uses the internet and explains the barcode reader. A test now fails if a tracking, advertising or AI package is added, or if the app starts contacting a new internet address. The details (where the app uses the internet, and a note about Google's on-device barcode reader) are under "The small print".
+
+## [0.10.0] - 2026-10-14
+
+First start, safer backups, fewer dead ends.
+
+### Added
+- **Welcome screens** on the very first start (three swipes, **Skip** any time), ending with a choice: add your first book, try it with **5 sample books**, restore a saved library, or just look around. Anyone who already has books never sees them.
+- **Sample books** (five public-domain classics with a mix of finished, reading, want and did-not-finish) with a card on the Library and a **Remove** button; they can also be removed from Settings > Your library. They never count towards the backup card.
+- **"Protect your books" card** on the Library for anyone with 5 or more books and no recent backup: **Set up** opens the backup page, **Not now** hides it for a month.
+- **When a book search finds nothing**, Pagemark now explains and suggests shorter searches (without a subtitle, brackets, punctuation or a leading "The", or just the first words). A barcode number you typed is kept when you add the book by hand.
+- **How dates look** and **New reads start as** (Settings > Your library).
+
+## [0.9.1] - 2026-10-14
+
+### Added
+- **Automatic backups to a folder you choose** (Settings > Backup and restore): pick a folder once with Android's own file picker, and Pagemark saves a fresh backup there by itself (every day, week, 2 weeks or month), keeping the newest 5. Choose a folder in Google Drive, OneDrive or Dropbox and Android copies it to the cloud for you, with no sign-in inside Pagemark. Optional password protection; **Back up now** and **Turn off** are on the same page.
+- The widget picker now shows a real preview of the widget.
+
+### Fixed
+- The Backup page's "last backup" card updates the moment a backup is saved.
+- A test now guards every source file against a byte-order mark or garbled dashes, and it already found and removed a leftover mark in one test file.
+
+## [0.9.0] - 2026-10-13
+
+Rate in more detail, simpler backups, a Notifications page.
+
+### Added
+- **Rate books in more detail** (Settings > Your library): optional stars for Story, Characters, Writing, Pace and How it made me feel, plus Narrator on audiobook reads. They show on the book page and in your saved lists, and Stats shows your average for each.
+- **Star ratings on quotes** ("How much you love it") and an **average rating on the Series page** (counting the books you rated).
+- **Notifications page** in Settings: all reminders in one place (daily reading reminder, backup reminder), with a clear warning and a **Turn on** button when Android has notifications switched off for Pagemark. The widget and icon shortcuts now have their own page, **Widget and shortcuts**.
+- **Backup reminder** (Settings > Backup and restore > Remind me to back up): a notification every week, two weeks or month, counted from the last time you saved a copy. The Backup page now shows when you last saved a copy, in plain words, with a warning if it is overdue.
+
+### Removed
+- **Google Drive backup.** It needed a Google Cloud project and a "client ID", which was too hard for most people. Saving a password-protected copy as a file (and a spreadsheet) stays, and you can keep that file anywhere, including your own Google Drive. If you had Drive backup turned on, its old files stay in your Drive; Pagemark just stops using them.
+- The background-work, Google sign-in and Drive libraries are gone from the app, so it is smaller and asks for fewer permissions.
+
+### Changed
+- The library file format moves to schema 5 (new columns for the detailed ratings and quote stars). Restores of older backups still work; a backup made by 0.9.0 cannot be restored by an older Pagemark.
+
+## [0.8.1] - 2026-10-13
+
+Plain words, simpler Settings.
+
+### Added
+- **How to use Pagemark**: a built-in guide with short, plain steps for everything the app does, and a search box. Open it from Settings, from the three-dot menu on the Library, or from the empty Library screen. It works without internet.
+
+### Changed
+- **Settings is now a short list of seven plain-language pages** (Appearance, Reminders and widget, Privacy and lock, Backup and restore, Import and export, Your library, Help and about) instead of one long scroll. Wording is simpler throughout: "Save a copy as a file" with a password, "Go back to an earlier copy", "Deleted books", "Problem report", "Turn off the lock".
+
+### Fixed
+- Plainer words everywhere: "password" instead of "passphrase", friendlier error messages for backups, the book search and updates, "Add by hand", "What's new", "Deleted books" and "Problem report".
+- The dashes in the PIN screens ("4–12 digits") showed as garbled characters in 0.7.1 to 0.8.0.
+- Version history now shows bold text and code properly instead of asterisks and backticks.
+
+## [0.8.0] - 2026-10-13
+
+Always at hand.
+
+### Added
+- **Reading reminder** (Settings > Reminders and widget): an optional daily notification at the time you pick. Off by default, never names a book, scheduled on the phone only. Android may deliver it a few minutes late.
+- **Home-screen widget**: shows what you are reading (up to three titles) and your yearly goal. It reads only the main library, so locked books never appear. A switch hides the titles; with the whole-app lock on, the widget shows counts only.
+- **Share to Pagemark**: share an ISBN, a title, or a Goodreads or Open Library link from any app and Pagemark opens Add book with the search filled in and run. Nothing is saved until you pick a result.
+- **Launcher shortcuts** (long-press the app icon): "Add book" and "Reading now" (the Library with only the books you are reading).
+
+### Changed
+- Pagemark now includes the `home_widget` and `timezone` libraries. No new permissions.
+
+## [0.7.2] - 2026-10-12
+
+The rest of the audit fixes.
+
+### Fixed
+- **Undo import** now takes back everything the import added: reads and quotes added to books you already had, and shelves it created (new books still go to Trash).
+- A shelf that only holds locked books no longer shows its name in the main library (and the other way round). Covers of locked books are no longer counted or saved by the main Covers page.
+- Selecting tens of thousands of books at once no longer fails; undoing "mark finished" keeps a read you edited afterwards.
+- A cover saved a moment ago can no longer be removed by the clean-up before it is attached to its book; cover file names that are just dots are refused.
+- "At this pace" on Stats is correct around daylight-saving changes and in leap years; series numbers like NaN or 1e20 are refused.
+- Open Library answers that are not valid JSON show a normal message instead of a generic error; a lockout can never last longer than an hour even if the phone clock was moved.
+- CSV cells that begin with a tab or carriage return survive an export/import round trip.
+
+### Changed
+- The NAS backup script reads its folder from the `PAGEMARK_NAS` environment variable, so the address is no longer in the public repository.
+- Documentation (CLAUDE.md, manuals) brought in line with the two build flavors and the new restore points.
+
+## [0.7.1] - 2026-10-12
+
+Audit fixes and a Google Play build.
+
+### Security
+- A lost lock no longer opens the library. If Android clears Pagemark's saved PIN, the locked library and the whole-app lock stay closed until the phone's own screen lock confirms you, then you set a new PIN (previously the screen offered "Set a PIN" and opened).
+- PIN lockout can no longer overflow: after hundreds of wrong tries it stays at 1 hour instead of switching off.
+- Wrong PINs tapped quickly are all counted.
+- If the backup passphrase goes missing from the phone, scheduled backups stop and tell you instead of uploading an unencrypted copy. Changing the passphrase now triggers a new upload.
+- Remove lock also turns off the whole-app lock. The recovery code is cleared from the clipboard after a minute.
+- Screen capture protection stays on while the locked library closes in the background.
+- The diagnostics log drops database details (they could contain titles); the share-sheet and file-picker caches are wiped; failed backups clean up their temporary copy.
+- The updater only downloads from GitHub over https and refuses a download it cannot check.
+
+### Added
+- **Restore points** (Settings): go back to the copy Pagemark kept before any restore or import.
+- A `play` build flavor for Google Play, without the permission to install updates. `tool/build.ps1` builds the GitHub APKs and the Play bundle.
+
+### Fixed
+- Two restores in the same minute no longer overwrite each other's restore point; a restore no longer reports failure after the library was already replaced; stricter checks reject database files that only look like Pagemark ones; oversized backup files are refused.
+- Imports: impossible dates (Feb 30) are rejected, NaN/Infinity cells and unusual JSON shapes no longer crash, series numbers and descriptions survive an export/import round trip.
+- Version comparison handles very large parts and release candidates.
+- The Covers page no longer counts or saves covers of locked books.
+- Removed an unused library; documentation brought in line with the app.
+
+### Added
+
+### Changed
+
+### Fixed
 
 ## [0.7.0] - 2026-10-12
 

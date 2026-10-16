@@ -6,6 +6,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Genres that differ only by a hyphen ("Science fiction" and "Science-fiction") are treated as one.
+
+### Documentation
+- User Manual, Install Manual, Release Notes, Package Overview and README rewritten for the current app, with new screenshots (calendar, year card, lending, Read next, refresh details, tablet layout, notifications, promise) and a Quick start. PDF and Word versions are delivered to `Documentation/` as revisions.
+
 ## [0.13.2] - 2026-10-15
 
 Fixes from the Galaxy S25 Ultra device test of 0.13.1 (PGM-330 to PGM-340).

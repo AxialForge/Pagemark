@@ -1,6 +1,6 @@
 # Pagemark — Install Manual
 
-**Version 0.7.1** · Android
+**Version {{VERSION}}** · Android
 
 ---
 
@@ -8,7 +8,7 @@
 
 - An Android phone or tablet running **Android 7.0 (API 24) or newer**.
 - About **100 MB** free storage (the app is ~30 MB; the library and cached covers are small).
-- Optional, for specific features: a camera (barcode scanning), a screen lock or fingerprint (locked library), an internet connection (book lookup, updates).
+- Optional, for specific features: a camera (barcode scanning), a screen lock or fingerprint (locked library), notifications (reminders), an internet connection (book lookup, updates). Tablets and foldables work too: the layout adapts to the screen.
 
 ## 2. Download
 
@@ -33,7 +33,7 @@ Pagemark is signed with the author's key, so future updates install over it and 
 
 ## 4. First run
 
-Pagemark opens on an empty Library. Tap **Add book** to start. Allow the **camera** only if you want to scan barcodes. Android 13 and newer asks once for **notifications** when you turn on automatic Google Drive backup, so Pagemark can tell you if a backup keeps failing; everything else needs no permissions. In **Settings** you can pick a theme and read **About**.
+Pagemark opens with three short welcome screens (**Skip** any time), then an empty Library. Tap **Add book** to start, or **Try it with 5 sample books** to look around (remove them again with **Remove** on the card in the Library). Allow the **camera** only if you want to scan barcodes. Android 13 and newer asks once for **notifications** the first time you switch on a reminder (reading, backup or a lent book); everything else needs no permissions. The guide is always at **Settings → How to use Pagemark**, and **Settings → Our promise to you** says what Pagemark will never do.
 
 <div class="shots one"><figure><img src="../screenshots/library.jpg" alt="Pagemark with a few books added"><figcaption>Pagemark with a few books added</figcaption></figure></div>
 
@@ -43,12 +43,15 @@ Pagemark opens on an empty Library. Tap **Add book** to start. Allow the **camer
 
 | Permission | Why |
 |---|---|
-| Internet | Book lookup (Open Library), update check (GitHub) |
+| Internet | Book lookup (Open Library and Google Books), cover pictures, update check (GitHub version only) |
 | Camera | Scanning ISBN barcodes (asked only when you open the scanner) |
 | Biometric | Fingerprint/device unlock for the locked library |
-| Install packages | Lets Android offer to install a downloaded update |
+| Notifications | Reading, backup and lent-book reminders (asked when you switch one on) |
+| Run at start-up | Sets reminders again after the phone restarts |
+| Vibrate | A small buzz when a barcode is scanned |
+| Install packages | Lets Android offer to install a downloaded update (GitHub version only) |
 
-Pagemark does not ask for storage or photo/media permissions. It asks for the camera (barcode scanner) and, on Android 13+, for notifications (backup problems). The version on GitHub also holds the permission to install updates; the Google Play version does not.
+Pagemark does not ask for storage, photo, contacts, location, microphone or Bluetooth permissions. Some phones list **Nearby devices** under a general "network" label for any app that uses the internet; Pagemark does not request it. Backups are saved with Android's own file and folder pickers, so no storage permission is needed.
 
 ## 5. Updating
 
@@ -56,20 +59,20 @@ Pagemark does not ask for storage or photo/media permissions. It asks for the ca
 
 **By hand:** download the newer APK from Releases and open it — it installs over the old version.
 
-Your library, shelves, settings and PIN are all kept. **Make a backup first** if the library matters to you (Settings → Export database file, or Drive backup).
+Your library, shelves, settings and PIN are all kept. **Make a backup first** if the library matters to you (Settings → Backup and restore → **Save a copy as a file**). After an update, open Pagemark once so your reminders are set again.
 
 ## 6. Uninstalling — read this first
 
 Uninstalling Pagemark **deletes your library** from the phone (Android's own backup is disabled on purpose). Before you uninstall or switch phones:
 
-1. Settings → Backup and restore → **Save a copy as a file** (set a password) and keep the file safely, **or** make sure a Google Drive backup is current.
+1. Settings → Backup and restore → **Save a copy as a file** (set a password) and keep the file safely, **or** make sure the backups Pagemark saves to your chosen folder (for example one inside Google Drive) are recent.
 2. On the new phone, install Pagemark and use **Restore** — a backup from an older Pagemark version restores fine; one from a newer version does not.
 
 The PIN is not stored in backups. After restoring, set a new PIN for the locked library.
 
 ## 7. Keeping your library safe
 
-Settings → Backup and restore → **Save a copy as a file** (protect it with a password) and keep the file somewhere other than this phone. Pagemark can remind you every week, two weeks or month.
+Settings → Backup and restore → **Save a copy as a file** (protect it with a password) and keep the file somewhere other than this phone, or choose a folder (on the phone, a USB drive, or inside Google Drive, OneDrive or Dropbox) and Pagemark saves a fresh backup there by itself, keeping the newest five. Pagemark can also remind you every week, two weeks or month.
 
 For the official release APK, the signing-key SHA-1 is:
 
@@ -91,7 +94,7 @@ Requirements: Flutter 3.47+ (stable), Android SDK, JDK 17+.
 **Windows with a very new JDK (25):** Gradle can fail with *"Unable to establish loopback connection"*. Create a short folder such as `C:\tmpj` and run the build with
 `JAVA_TOOL_OPTIONS=-Djdk.net.unixdomain.tmpdir=C:/tmpj`.
 
-**Signing:** create a keystore, put its path and passwords in `android/key.properties` (this file is git-ignored — never commit it). Without it, release builds fall back to the debug key, which can't upgrade a release install.
+**Signing:** create a keystore, put its path and passwords in `android/key.properties` (this file is git-ignored; never commit it). Without it, release builds fall back to the debug key, which can't upgrade a release install. Release APKs are signed with APK Signature Scheme v2 and v3. `tool/build.ps1` builds both APKs and the Google Play bundle for the current version.
 
 ## 9. Troubleshooting
 
@@ -103,3 +106,4 @@ Requirements: Flutter 3.47+ (stable), Android SDK, JDK 17+.
 | Update says "No public releases found" | Check connection; the project's releases must be public. |
 | Fingerprint option missing | Set a screen lock/fingerprint in Android settings first. |
 | Scanner is black | Allow the camera permission in Android → Apps → Pagemark. |
+| Reminders never appear | Settings → Notifications in Pagemark should say notifications are on; also check Android → Apps → Pagemark → Notifications and Battery (choose *Unrestricted* if offered). Versions before 0.13.2 never showed scheduled reminders; update, then open Pagemark once. |

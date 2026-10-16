@@ -15,6 +15,7 @@ import markdown
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 PKG = ROOT / "docs" / "release-package"
+DOCUMENTATION = ROOT / "Documentation"  # every generated PDF/Word file also lands here (house rule)
 SHOTS = (ROOT / "docs" / "screenshots").as_uri()
 LOGO = (ROOT / "assets" / "branding" / "logo.png").as_uri()
 EDGES = [r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe", r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"]
@@ -53,17 +54,29 @@ def edge():
 
 
 def to_html(md_text: str, title: str) -> str:
-    md_text = md_text.replace("../screenshots/", SHOTS + "/")
+    md_text = md_text.replace("{{VERSION}}", version()).replace("../screenshots/", SHOTS + "/")
     body = markdown.markdown(md_text, extensions=["tables", "sane_lists", "fenced_code"])
     return f"<!doctype html><meta charset=utf-8><title>{title}</title><style>{CSS}</style>{body}"
 
 
 def print_pdf(html: str, out: pathlib.Path):
-    with tempfile.TemporaryDirectory() as d:
+    """Edge can exit before it has finished writing, so the scratch folder (beside the output, never under the 8.3 short temp path)
+    stays until the PDF exists and has stopped growing."""
+    import time
+    with tempfile.TemporaryDirectory(dir=str(out.parent), ignore_cleanup_errors=True) as d:
         h = pathlib.Path(d) / "doc.html"
         h.write_text(html, encoding="utf-8")
-        subprocess.run([edge(), "--headless", "--disable-gpu", "--no-pdf-header-footer", f"--print-to-pdf={out}", h.as_uri()],
+        subprocess.run([edge(), "--headless", "--disable-gpu", "--no-pdf-header-footer", f"--user-data-dir={d}/profile", f"--print-to-pdf={out}", h.as_uri()],
                        check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        last = -1
+        for _ in range(120):
+            size = out.stat().st_size if out.exists() else -1
+            if size > 0 and size == last:
+                break
+            last = size
+            time.sleep(0.5)
+        else:
+            raise SystemExit(f"Edge did not write {out}")
     print("wrote", out.name, out.stat().st_size // 1024, "KB")
 
 
@@ -116,5 +129,29 @@ def main():
     print_pdf(to_html(brk.join([cover] + parts), "Pagemark documentation"), PKG / "Pagemark-Documentation.pdf")
 
 
+def publish_copies():
+    """Copies the built PDFs into <project>/Documentation and writes a Word file of each document (with its pictures) beside them.
+    The set shares one revision, '<name> Rev <major.minor>': the first build is 1.0, each rebuild the next minor; older files stay."""
+    import shutil
+    import importlib.util
+    DOCUMENTATION.mkdir(exist_ok=True)
+    spec = importlib.util.spec_from_file_location("bar", pathlib.Path(__file__).with_name("build_audit_report.py"))
+    bar = importlib.util.module_from_spec(spec)
+    src = pathlib.Path(__file__).with_name("build_audit_report.py").read_text(encoding="utf-8").rsplit("\nmain()", 1)[0]
+    exec(compile(src, "build_audit_report.py", "exec"), bar.__dict__)
+    first = DOCS[0][1]
+    rev = bar.next_rev(DOCUMENTATION, first)
+    titles = {"Pagemark-Package-Overview": "Package Overview", "Pagemark-Install-Manual": "Install Manual", "Pagemark-User-Manual": "User Manual",
+              "Pagemark-Release-Notes": "Release Notes"}
+    for src_name, out in DOCS:
+        text = (PKG / f"{src_name}.md").read_text(encoding="utf-8").replace("{{VERSION}}", version())
+        shutil.copyfile(PKG / f"{out}.pdf", DOCUMENTATION / f"{out} Rev {rev}.pdf")
+        meta = [f"Version {version()}", f"Revision {rev}"]
+        bar.build_docx(DOCUMENTATION / f"{out} Rev {rev}.docx", f"Pagemark {titles[out]}", meta, [(out, text)], base=PKG)
+    shutil.copyfile(PKG / "Pagemark-Documentation.pdf", DOCUMENTATION / f"Pagemark-Documentation Rev {rev}.pdf")
+    print("published revision", rev, "to", DOCUMENTATION)
+
+
 if __name__ == "__main__":
     main()
+    publish_copies()

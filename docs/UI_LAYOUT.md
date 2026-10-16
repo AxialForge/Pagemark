@@ -2,6 +2,8 @@
 
 **Version 0.9.1** - every screen, what is on it and how you get there.
 
+> **Note:** this guide describes the 0.9.1 screens. Later versions added the reading timer, Days you read, Year in books, Read next order, lending, Scan many books, Refresh details, tablet layouts and the Our promise page. The **User Manual** is the current description of every screen.
+
 
 ## 1. The whole app at a glance
 

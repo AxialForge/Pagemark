@@ -1,16 +1,24 @@
 # Pagemark — User Manual
 
-**Version 0.8.0** · A private, fully local book tracker for Android
+**Version {{VERSION}}** · A private, fully local book tracker for Android
 
-*Screenshots show sample books and were captured from the Android app (0.7.0).*
+*Screenshots show sample books and were captured from the Android app ({{VERSION}}).*
 
 ---
+
+## Quick start
+
+1. **Open Pagemark.** Three short welcome screens appear (**Skip** any time). At the end choose **Try it with 5 sample books** to look around, or add your first real book.
+2. **Add a book.** Tap **Add book**, type a title (or tap the barcode icon and scan the back cover), then tap the right result. Its page opens.
+3. **Say what you are doing with it.** On the book page tap **Log a read**, choose *Want to read*, *Reading* or *Finished*, and tap stars if you like.
+4. **Keep it safe.** Open **Settings → Backup and restore** and choose **Save a copy as a file** (set a password). Pagemark will remind you to do it again.
+5. **Need help?** **Settings → How to use Pagemark** has short steps for everything, with a search box. It works without internet.
 
 ## 1. What Pagemark is
 
 Pagemark is a reading log that lives only on your phone. You record what you read or listen to — print, e-book or audiobook, any genre — with your rating, dates, progress and private thoughts. Book details and cover art come from the free **Open Library**; everything you write stays on your device unless you choose to export or back it up.
 
-There is no account, no server and no tracking. The only times Pagemark uses the internet are: looking up a book, checking for an app update, and nothing else.
+There is no account, no server and no tracking. Pagemark has no ads, no analytics and no AI inside the app (see **Our promise to you** in §8d). The only times it uses the internet are: looking up a book (on Open Library and, unless you turn it off, Google Books), checking for an app update on the GitHub version, and the cloud app you may choose for a backup folder.
 
 ## 2. The four tabs
 
@@ -22,6 +30,14 @@ There is no account, no server and no tracking. The only times Pagemark uses the
 | **Settings** | Themes, updates, export, backup, privacy, trash, diagnostics. |
 
 A small dot on **Settings** means an app update is waiting.
+
+**Tablets and phones turned sideways.** On a screen about 600 dp wide or more (a tablet, a folded foldable, a phone in landscape) the tabs move to a bar on the left. On a larger screen (about 840 dp, a tablet) your Library and the book you tap sit **side by side**; the book fills the right-hand pane and **Choose a book to see it here** shows until you pick one. Lists and forms stay a comfortable reading width instead of stretching across the screen. In landscape on a short screen the *Currently reading* strip is left out so the list has room.
+
+<div class="shots one"><figure><img src="../screenshots/tablet-two-pane.jpg" alt="A tablet: the Library and the open book side by side"><figcaption>A tablet: the Library and the open book side by side</figcaption></figure></div>
+
+
+**Back.** On Stats, Locked or Settings the Back gesture takes you to the Library first; Back on the Library leaves the app.
+
 
 <div class="shots "><figure><img src="../screenshots/library.jpg" alt="Library"><figcaption>Library</figcaption></figure><figure><img src="../screenshots/settings.jpg" alt="Settings"><figcaption>Settings</figcaption></figure><figure><img src="../screenshots/about.jpg" alt="About"><figcaption>About</figcaption></figure></div>
 
@@ -42,6 +58,12 @@ Results are ranked so real editions come first. Summaries, study guides and work
 
 Descriptions are fetched a moment after the book is saved when Open Library has one.
 
+### Two sources, merged
+Searches ask **Open Library** and **Google Books** together and merge the answers: more books are found, and gaps (a missing cover, page count, publisher or description) are filled from the other source without ever overwriting what one already knows. If one source is down the other still works. To use Open Library only, turn off **Settings → Your library → Also search Google Books**.
+
+### Scanning a whole shelf
+On **Add a book** tap the icon with a tick (**Scan many books**). The camera stays open: point it at one barcode after another. Each new book gives one click and a buzz and is looked up and added on its own. Books you already have are skipped, a barcode seen twice is ignored, and any book that could not be found (or could not be looked up because the search was busy or you were offline) is listed with the reason so you can add it by hand or scan it again. In the Locked library the one-time internet warning shows first.
+
 <div class="shots one"><figure><img src="../screenshots/add-book.jpg" alt="Add a book: search results"><figcaption>Add a book: search results</figcaption></figure></div>
 
 
@@ -51,14 +73,30 @@ Descriptions are fetched a moment after the book is saved when Open Library has 
 Tap a book to open it. You'll see the cover, details, tags and shelves, your notes, and the **Reading log**.
 
 - **Edit** (pencil) — title, author, series and series number, genre, tags, publisher, ISBN, cover URL, year, pages, description and private notes.
-- **⋮ menu** — move the book to or from the Locked library, or **Move to Trash**.
+- **⋮ menu** — **Refresh details from the internet**, move the book to or from the Locked library, save, choose or remove its cover picture, or **Move to Trash**.
 - **Log a read** — records a new read-through (see §5). A book can have many reads: a re-read, or a print copy and an audiobook of the same title.
 
 ### Shelves
 Tap **+ Shelf** on a book to put it on any number of shelves ("Comfort reads", "Book club", "Lent out"). Create new shelves from there. Remove a book from a shelf by tapping the × on its chip.
 
+
+
 <div class="shots one"><figure><img src="../screenshots/book-finished.jpg" alt="A finished book, with shelf and log"><figcaption>A finished book, with shelf and log</figcaption></figure></div>
 
+
+
+### Refreshing a book's details
+Open the book's **⋮ menu** and choose **Refresh details from the internet**. Pagemark looks the book up again (by ISBN when it has one, else by title and author) and lists what it found. Details the book is **missing** are ticked for you; details you already have that differ are listed **unticked**, so your own edits are only changed if you tick them. An ISBN you have, and a cover you saved on the phone, are never replaced. Tap **Update** to apply the ticked ones. **Choose another edition** lists the editions Open Library knows (publisher, year, pages, ISBN, cover) and takes only those details from the one you pick.
+
+In **Edit**, pages must be a whole number from 1 to 20,000 and the year between 1000 and 2100 (or left empty); anything else is refused with a message.
+
+<div class="shots one"><figure><img src="../screenshots/refresh-details.jpg" alt="Refresh details: tick what you want to take"><figcaption>Refresh details: tick what you want to take</figcaption></figure></div>
+
+
+### Lending a book
+The **Lending** section on the book page records who has it. Tap **Lend this book**, type the name, and choose a reminder: *Tomorrow*, *In a week*, *In 2 weeks*, *In a month*, *In 2 months* or *No reminder*. The reminder is a notification at 10:00 that **names neither the book nor the person** (it can be read on a lock screen). Tap **Got it back** when it returns; that cancels the reminder. Returned loans stay in the list until you remove them with the bin.
+
+<div class="shots two"><figure><img src="../screenshots/lending.jpg" alt="A book lent to Sam"><figcaption>A book lent to Sam</figcaption></figure><figure><img src="../screenshots/lend-reminder.jpg" alt="Choosing a reminder"><figcaption>Choosing a reminder</figcaption></figure></div>
 
 
 ### Series
@@ -87,6 +125,9 @@ Delete a read with the bin icon (you'll be asked to confirm).
 ### Reading progress
 While a book has an active read, its page shows a **progress card**. Tap **Update progress** and enter the page you're on. If the book has a page count you get a progress bar, pages per day, and an estimate of days left at your pace. Reaching the last page offers to mark the read finished. Progress bars also appear on the Library list and in the **Currently reading** strip.
 
+### Reading timer
+Under the progress card on a book you are reading, tap **Start** and read. Tap **Stop** when you put the book down: Pagemark shows how long you read and asks which page you are on (you can leave it empty). The minutes are added to the read's time and the day lights up in the **Days you read** calendar in Stats. The timer keeps counting if you close the app or lock the phone. Anything under half a minute is ignored. Only one timer runs at a time; if a timer is left running for a book you have since finished or deleted, every other book shows **Stop it**, where you choose to **Save the time** to that book or **Throw it away**.
+
 <div class="shots two"><figure><img src="../screenshots/book-reading.jpg" alt="Progress card"><figcaption>Progress card</figcaption></figure><figure><img src="../screenshots/log-read.jpg" alt="Logging a read"><figcaption>Logging a read</figcaption></figure></div>
 
 
@@ -103,7 +144,14 @@ Settings → Your library → **Rate books in more detail** adds optional stars 
 - **Currently reading** — a strip of covers at the top when nothing is filtered.
 - **Remembered** — your sort and filters are remembered separately for the main and locked libraries.
 - **Ratings** show as stars (4.5 = ★★★★½) and average only your **finished** reads.
-- **⋮ menu** — **Series** and **Manage shelves** (rename or delete shelves; deleting a shelf never deletes books).
+- **⋮ menu** — **Series**, **Read next order**, **Manage shelves** (rename or delete shelves; deleting a shelf never deletes books) and **How to use Pagemark**.
+
+### Read next order
+**⋮ → Read next order** lists the books you want to read. Press and hold one, then drag it where you want it; the order is remembered. (With TalkBack each book also offers *Move up* and *Move down*.) Above the list **You might like next** suggests up to three books from your own list: the next book in a series you have started, more from an author whose book you rated 4 stars or more, or a genre you rate highly. Tap **Read first** to put one at the top. The suggestions are worked out on your phone from your own books only, and the Locked library is never used.
+
+<div class="shots one"><figure><img src="../screenshots/read-next.jpg" alt="Read next, with suggestions"><figcaption>Read next, with suggestions</figcaption></figure></div>
+
+
 
 <div class="shots one"><figure><img src="../screenshots/shelf-filter.jpg" alt="Filtering by a shelf"><figcaption>Filtering by a shelf</figcaption></figure></div>
 
@@ -153,7 +201,7 @@ Tap an author's name on a book to open their page: every book by them in this li
 
 ### Covers on your phone
 
-By default covers load from the internet. From a book's ⋮ menu you can **Save cover on this phone** (so it works offline and travels in backups), **Choose cover from gallery**, or **Remove saved cover** (the web cover returns). **Settings → Covers** shows how many are saved and can save them all in one go, with a Stop button, and tidy unused files. Covers of locked books are saved too; they stay on the phone and are in backups, so protect backups with a password.
+By default covers load from the internet. From a book's ⋮ menu you can **Save cover on this phone** (so it works offline and travels in backups), **Choose cover from gallery**, or **Remove saved cover** (the web cover returns). **Settings → Your library → Cover pictures** shows how many are saved and can save them all in one go, with a Stop button, and tidy unused files. Covers of locked books are saved too; they stay on the phone and are in backups, so protect backups with a password.
 
 ### Series totals
 
@@ -175,7 +223,7 @@ Settings → Your library → **Heat level and content notes** adds two private 
 | Padlock | move them to the locked library (or, inside the vault, back to the main library) |
 | Bin | move them to Trash |
 
-Everything except "add to shelf" shows an **Undo** message afterwards. Press Back or the × to leave selection mode.
+Every one of these shows an **Undo** message afterwards (Undo for *add to shelf* takes off only the books it added). Press Back or the × to leave selection mode.
 
 <div class="shots one"><figure><img src="../screenshots/multi-select.jpg" alt="A book selected, with the bulk-action bar"><figcaption>A book selected, with the bulk-action bar</figcaption></figure></div>
 
@@ -187,6 +235,11 @@ The Stats tab counts your **main library only** — locked books never appear in
 
 - **Reading goal** — set how many books you want to finish this year. An animated ring shows progress, and Pagemark estimates how many you'll finish by 31 December at your current pace.
 - **Finished per month** and **Your ratings** (how your ratings are spread, and your average).
+- **Year in books** — a picture card for the year so far: books finished, pages, hours, favourite genre, most-read author, average rating and your top-rated book. **Share picture** sends it as an image; **Report (PDF)** makes a printable list of every book you finished this year with dates, pages and stars (letters outside Western European ones print as ?). Only your main library is used, never the Locked one.
+- **Days you read** — a calendar, month by month (use the arrows). A filled circle is a day you read: a day with a timer session, or a day you started or finished a book. When you have read two or more days in a row a friendly line says so; there is never a "you missed a day" message.
+
+<div class="shots two"><figure><img src="../screenshots/stats-calendar.jpg" alt="Days you read, and the Year in books card"><figcaption>Days you read, and the Year in books card</figcaption></figure><figure><img src="../screenshots/tablet-stats.jpg" alt="Stats on a tablet"><figcaption>Stats on a tablet</figcaption></figure></div>
+
 - **Totals** — books tracked, finished, pages, logged time, average days to finish, and finished books by format.
 - **Top genres** and **Top authors**.
 
@@ -235,7 +288,10 @@ On the lock screen tap **Forgot PIN?**, enter the recovery code and a new PIN. Y
 
 ## 8b. Reminders, widget, sharing and shortcuts
 
-**Reading reminder.** Settings → *Notifications* → **Daily reading reminder**. Android asks once for permission to send notifications. Pick the time; Pagemark schedules the next three weeks and tops them up every time you open it. The text never names a book. Android may deliver it a few minutes late when battery saver is on.
+**Notifications.** Settings → **Notifications** holds all of Pagemark's reminders; Android asks once for permission to send notifications, and a red box with **Turn on** appears if they are switched off for Pagemark. **Daily reading reminder:** pick a time; Pagemark schedules the next three weeks and tops them up every time you open it. The text never names a book. **Remind me to back up** and **Lend this book** reminders work the same way. Reminders are set with Android's alarm service and set again every time you open Pagemark. Android, and Samsung's battery settings in particular, may deliver a reminder a few minutes late or hold it while the phone is in deep sleep; if one never arrives, check Settings → Apps → Pagemark → Notifications and Battery (set it to *Unrestricted* if your phone offers that).
+
+<div class="shots one"><figure><img src="../screenshots/notifications.jpg" alt="Notifications settings"><figcaption>Notifications settings</figcaption></figure></div>
+
 
 **Home-screen widget.** Long-press the home screen, choose *Widgets*, then *Pagemark*. It shows up to three books you are reading and your yearly goal, and opens Pagemark when tapped. It is fed from the main library only, so the locked library never appears. Turn off **Show book titles on the home-screen widget** to show counts instead; with the whole-app lock on it always shows counts, because a widget can be seen without unlocking.
 
@@ -246,6 +302,17 @@ On the lock screen tap **Forgot PIN?**, enter the recovery code and a new PIN. Y
 ## 8c. First start, samples and defaults
 
 The first time you open Pagemark you see three welcome screens (**Skip** any time). At the end you can add your first book, **Try it with 5 sample books**, restore a saved library, or **Just look around**. Sample books are removed with the **Remove** button on the card at the top of the Library, or Settings → Your library → **Remove the sample books**. With a few books and no backup, the Library offers a **Set up** card for backups. When a search finds nothing, Pagemark suggests shorter searches. Settings → Your library also has **How dates look** and **New reads start as**.
+
+## 8d. Our promise to you, and accessibility
+
+**Settings → Our promise to you** says in plain words what Pagemark will never do, and tests in the project fail if the app ever stops being true to it: no data collection, no account, no ads or in-app purchases, no tracking or analytics, no AI inside the app, and the internet used only where listed on that page (book searches, the update check on the GitHub version, and the barcode reader's note). Under **The small print** it names the places the internet is used and explains that the barcode reader uses Google's on-device ML Kit, which finds the barcode on your phone and never sends the picture anywhere.
+
+<div class="shots one"><figure><img src="../screenshots/promise.jpg" alt="Our promise to you"><figcaption>Our promise to you</figcaption></figure></div>
+
+
+**Large text and display size.** Pagemark was tested with Android's font size and display size at their largest, and with bold text; nothing is cut off and the buttons stay tappable. Welcome screens scroll when the text is large.
+
+**TalkBack.** Star ratings are one control that says "3 of 5 stars" and can be swiped up or down in half stars. Cover pictures and icon buttons have names. Calendar days are spoken with their date and whether you read. Reordering the Read next list offers *Move up / Move down*. (TalkBack has had less testing than the rest: tell us what you find.)
 
 ## 9. Themes
 
@@ -275,8 +342,8 @@ Settings → Import and export (main library only — locked books are never inc
 
 Settings → Backup and restore (**includes locked books**):
 
-- **Export database file** — a complete copy you can restore on another device. You'll be asked for a **password**; leave it empty only if you understand the file will be readable by anyone who gets it.
-- **Restore from database file** — see §12.
+- **Save a copy as a file** — a complete copy you can restore on another device. You'll be asked for a **password**; leave it empty only if you understand the file will be readable by anyone who gets it.
+- **Restore from a file** — see §12.
 
 ## 10b. Importing your reading history
 
@@ -303,7 +370,7 @@ Settings → Backup and restore. The top of the page shows when you last saved a
 
 ## 12. Restoring
 
-**From a file** (Settings → Backup and restore → Restore from a file) or **from Drive** (Backup page → Restore from Drive…):
+**From a file** (Settings → Backup and restore → **Restore from a file**), or from the **folder** Pagemark saves backups to:
 
 1. Pick the backup. If it is encrypted you'll be asked for its password.
 2. Pagemark checks it is a healthy Pagemark database from this or an older version, and tells you how many books and reads it holds.
@@ -339,9 +406,9 @@ Settings → Help and about → **Problem report** shows a small rolling event l
 ## 16. Your privacy, in plain terms
 
 - Your library is stored only in a database file inside the app, and Android's own cloud backup is switched off for it.
-- Pagemark sends **book searches** to Open Library and **update checks** to GitHub. Backups are saved only where you choose.
+- Pagemark sends **book searches** to Open Library and, unless you turn it off, Google Books, and **update checks** to GitHub (the GitHub version only). If you choose a backup folder inside a cloud app such as Google Drive, that app uploads the files under its own rules; Pagemark never signs in to anything. Backups are saved only where you choose.
 - Nothing is sent to the developer. There are no accounts, ads or analytics.
-- Cover images are downloaded from Open Library and cached on the phone; locked covers use a separate cache that is cleared whenever the vault closes.
+- Cover images are downloaded from Open Library or Google Books and cached on the phone; locked covers use a separate cache that is cleared whenever the vault closes.
 
 ## 17. Troubleshooting
 
@@ -352,6 +419,9 @@ Settings → Help and about → **Problem report** shows a small rolling event l
 | Covers are blank offline | Covers are downloaded on demand and cached; they appear once they've loaded online. |
 | Forgot the PIN and lost the recovery code | The locked library can't be opened — that is the point of the lock. Removing the lock also needs the PIN, and the PIN is not part of backups, so a restore won't help. Keep the recovery code safe. |
 | Backup shows FAILED | Open the backup page for the message; also see Settings → Help and about → Problem report. |
+| A reminder never appears | Settings → Notifications must say notifications are on. On Samsung and other phones, open Settings → Apps → Pagemark → Battery and choose *Unrestricted*, and make sure "Sleeping apps" does not list Pagemark. Open Pagemark once after updating so reminders are scheduled again. |
+| A book search says it is busy or offline | The message names the reason. Wait a moment and try again; you can always **Add by hand**. |
+| Every other book says a timer is running | Tap **Stop it** and choose to save or throw away the time. |
 | Update says no releases found | The project's releases page must be public. Check your connection. |
 | "App not installed" during an update | Usually a different signing key (e.g. a debug build over a release build). Back up, uninstall, and install the release APK. |
 
@@ -362,3 +432,6 @@ Settings → Help and about → **Problem report** shows a small rolling event l
 - **Locked library** — the PIN-protected second library.
 - **Recovery code** — one-time code that resets a forgotten PIN.
 - **ISBN** — the number on a book's barcode that identifies an edition.
+- **Session** — one stretch of reading recorded by the reading timer.
+- **Loan** — a note that a book is lent to someone, with an optional reminder.
+- **Revision** — the version of a document (for example *Rev 1.2*); newer revisions never replace older files.

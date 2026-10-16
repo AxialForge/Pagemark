@@ -375,7 +375,7 @@ def build():
         im = im.resize((w, round(im.height * w / im.width)), Image.LANCZOS)
         im.save(OUT_IMG / f"{name}.jpg", quality=80, optimize=True)
 
-    md = [f"# Pagemark - UI layout and screen guide\n\n**Version {VERSION}** - every screen, what is on it and how you get there.\n"]
+    md = [f"# Pagemark - UI layout and screen guide\n\n**Version {VERSION}** - every screen, what is on it and how you get there.\n\n> **Note:** this guide describes the 0.9.1 screens. Later versions added the reading timer, Days you read, Year in books, Read next order, lending, Scan many books, Refresh details, tablet layouts and the Our promise page. The **User Manual** is the current description of every screen.\n"]
     for level, title, paras, shots, bullets, per_row in SECTIONS:
         md.append(f"\n{'#' * level} {title}\n")
         for p in paras:
@@ -420,7 +420,10 @@ figcaption{font-size:8pt;color:#555;margin-top:2px}
     out = DOCS.parent / "Documentation"
     out.mkdir(exist_ok=True)
     ver = re.search(r"^version:\s*([0-9.]+)", (DOCS.parent / "pubspec.yaml").read_text(encoding="utf-8"), re.M).group(1)
-    shutil.copyfile(pdf, out / f"Pagemark-UI-Layout Rev {ver}.pdf")
+    import re as _re
+    revs = [tuple(int(x) for x in m.groups()) for f in out.glob("Pagemark-UI-Layout Rev *.pdf") if (m := _re.search(r" Rev ([0-9]+)[.]([0-9]+)[.]pdf", f.name))]
+    rev = "1.0" if not revs else f"{max(revs)[0]}.{max(revs)[1] + 1}"
+    shutil.copyfile(pdf, out / f"Pagemark-UI-Layout Rev {rev}.pdf")
     print(len(SHOTS), "images;", pdf.stat().st_size // 1024, "KB pdf")
 
 
