@@ -76,9 +76,24 @@ Exit criteria: everything above shipped or consciously dropped; no open data-los
 - **Google Play release:** developer account, a 14-day closed test with about 12 testers, Data safety form (answers prepared), listing and graphics. See `docs/PLAY_STORE.md`.
 - **Major-release documentation set (house rule):** regenerate the User Manual, Install Manual, Release Notes and README; write the **Package Overview in three tiers** (simple, medium, advanced); refresh the GitHub repo details (description, topics, screenshots). `python docs/_tools/build_docs.py`, `docs/_tools/build_ui_layout.py`.
 
+### 1.1.0 "Series and volumes" (manga, comics, light novels)
+Designed in `docs/design/SERIES_AND_VOLUMES.md` (PDF and Word in `Documentation/`). Same app, after 1.0.0. Decisions taken on 2026-10-16: kinds are manga, comic and light novel only; an **owned** flag with dashed "wanted" volumes; **no new internet source** in 1.1.0; **Group by series** switches on by itself for series with several volumes; **no chapter tracking**.
+- Schema 7: `books.kind`, `books.owned`, table `series_info` (per-library series name, total, ongoing or complete), guarded migration from every schema, export and import columns.
+- **Volume parser** that suggests series and number from a title and always asks first.
+- **Series page** with a volume grid (read, owned, wanted, missing), Add next volume, a shareable Missing list, and the series total and status in one place.
+- **Group by series** in the Library; a volume chip with previous and next buttons on the book page; Scan many books detects volumes.
+- Series stats (volumes read, series completed, Books / Manga / Comics split); two-pane series page on tablets; labelled, 48 dp grid cells that survive 200% text.
+- Exit criteria: the migration audit script passes for schemas 1 to 7, locked isolation tests for every new view, a 5,000-book performance check, and a device pass with a real 50-volume series.
+
+### 1.2.0 (optional) series lookup
+One extra source for series totals and ongoing or complete status (AniList suggested), behind a switch **Also look up series online**. Needs the new-host checklist: a line on the promise page and in `promiseHosts`, PRIVACY and Play Data safety text, the About credit, and the one-time warning for the Locked library.
+
+### Ideas from the device test (unscheduled)
+Running-timer notification that shows on the lock screen; timer without logging a read first; photo of a cover with a crop tool when adding by hand; library search that falls back to an online search; long-press to copy a book's title; a short quick-start offered after install; borders around search results; a setting to choose fingerprint after a PIN exists (PGM-338).
+
 ### After 1.0
 - **iOS (FB-83):** needs a Mac (Face ID text, Keychain, share extension, TestFlight).
-- Chapter notes with spoiler hiding (FB-07), merge-restore (FB-41), edition-level dedupe (FB-23), price tracking (FB-66).
+- Chapter-level tracking for manga, chapter notes with spoiler hiding (FB-07), merge-restore (FB-41), edition-level dedupe (FB-23), price tracking (FB-66).
 
 ---
 
