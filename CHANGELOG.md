@@ -6,6 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.13.4] - 2026-10-16
+
+### Added
+- **How you unlock** (Settings → Privacy and lock): switch between a PIN and the fingerprint or device lock only after the lock is set up, instead of only when it is first created. You confirm it is you first.
+- **Tidy genres** (Settings → Your library): shows which books have repeated or catalogue-label genres from older lookups, such as "Science fiction, Science-fiction, General", and tidies them on a tap, with Undo. Your own wording and capitals are kept, and locked books are never listed.
+
+### Changed
+- On the Library screen the "press and hold Library" entrance to a hidden Locked tab has a wider target than the word itself.
+
 ### Fixed
 - Restoring from the oldest of the three kept restore points failed after the library had been closed: making the new restore point pruned the very file being restored. The incoming library is now copied aside first, and two restore points made in the same second no longer overwrite each other. Your live data was never lost, but the restore did not complete. (PGM-100, PGM-105)
 - Undo after "Mark finished" no longer deletes a read you have since edited (minutes, narrator, page, format or dates), only an untouched one. (PGM-127)

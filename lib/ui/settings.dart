@@ -243,6 +243,7 @@ class _PrivacyPage extends StatelessWidget {
             },
           ),
         ),
+        const _UnlockMethodTile(),
         ListTile(leading: const Icon(Icons.pin_outlined), title: const Text('Change my PIN'), onTap: () async {
           if (!await confirmCurrent(context) || !context.mounted) return;
           if (await setupPin(context) && context.mounted) snack(context, 'PIN updated');
@@ -488,6 +489,13 @@ class _LibraryExtrasPage extends StatelessWidget {
         ListTile(leading: const Icon(Icons.photo_library_outlined), title: const Text('Cover pictures'), subtitle: const Text('Keep covers on this phone so they work without internet and are included in backups'), trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CoversPage()))),
         const _DefaultsTiles(),
+        ListTile(
+          leading: const Icon(Icons.auto_fix_high_outlined),
+          title: const Text('Tidy genres'),
+          subtitle: const Text('Remove repeats and catalogue labels from the genres of books you added earlier. You see the changes first.'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => tidyGenresFlow(context),
+        ),
         const Divider(),
         _GoogleSwitch(),
         ValueListenableBuilder<bool>(
@@ -511,6 +519,100 @@ class _LibraryExtrasPage extends StatelessWidget {
           ),
         ),
       ]);
+}
+
+/// Settings > Privacy and lock: how the locked library opens (a PIN, or the fingerprint / device lock only) and a way to switch.
+class _UnlockMethodTile extends StatefulWidget {
+  const _UnlockMethodTile();
+  @override
+  State<_UnlockMethodTile> createState() => _UnlockMethodTileState();
+}
+
+class _UnlockMethodTileState extends State<_UnlockMethodTile> {
+  String? mode;
+  bool loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final m = await LockService.mode();
+    if (mounted) setState(() { mode = m; loaded = true; });
+  }
+
+  static String label(String? m) => switch (m) {
+        'pin' => 'A PIN (the fingerprint button works as a shortcut)',
+        'device' => 'Fingerprint or device lock only',
+        'lost' || 'unavailable' => 'Needs confirming (open the Locked tab)',
+        _ => 'Not set up yet (open the Locked tab)',
+      };
+
+  Future<void> _choose() async {
+    final pick = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (c) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const ListTile(title: Text('How do you want to unlock?', style: TextStyle(fontWeight: FontWeight.bold))),
+          ListTile(
+            leading: const Icon(Icons.pin_outlined),
+            title: const Text('A PIN'),
+            subtitle: const Text('You can still use your fingerprint as a shortcut. You get a recovery code.'),
+            trailing: mode == 'pin' ? const Icon(Icons.check) : null,
+            onTap: () => Navigator.pop(c, 'pin'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.fingerprint),
+            title: const Text('Fingerprint or device lock only'),
+            subtitle: const Text('Uses the screen lock of your phone. No PIN to remember.'),
+            trailing: mode == 'device' ? const Icon(Icons.check) : null,
+            onTap: () => Navigator.pop(c, 'device'),
+          ),
+        ]),
+      ),
+    );
+    if (pick == null || pick == mode || !mounted) return;
+    if (mode != 'pin' && mode != 'device') {
+      snack(context, 'Open the Locked tab once to set up the lock first.');
+      return;
+    }
+    if (!await confirmCurrent(context) || !mounted) return;
+    if (pick == 'pin') {
+      if (await setupPin(context) && mounted) snack(context, 'Now unlocking with a PIN');
+    } else {
+      if (appLockEnabled.value) {
+        final ok = await showDialog<bool>(
+          context: context,
+          builder: (c) => AlertDialog(
+            title: const Text('Switch to the device lock?'),
+            content: const Text('Asking for a PIN to open the whole app needs a PIN, so that setting will be switched off.'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+              FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Switch')),
+            ],
+          ),
+        );
+        if (ok != true || !mounted) return;
+      }
+      if (await chooseDeviceLock(context)) {
+        appLockEnabled.value = false;
+        if (mounted) snack(context, 'Now unlocking with your fingerprint or device lock');
+      }
+    }
+    await _load();
+  }
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+        leading: const Icon(Icons.fingerprint),
+        title: const Text('How you unlock'),
+        subtitle: Text(loaded ? label(mode) : ''),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: loaded ? _choose : null,
+      );
 }
 
 /// Settings > Your library: whether book searches also ask Google Books.

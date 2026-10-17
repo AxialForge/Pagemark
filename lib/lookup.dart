@@ -88,6 +88,18 @@ class Lookup {
     return out.join(', ');
   }
 
+  /// The same tidying as [genres] for text that is already saved, but gentler: no limit of three, no change of capitals, and the
+  /// result is never empty (a genre made only of labels is left as the owner typed it).
+  static String tidyGenre(String saved) {
+    final seen = <String>{}, out = <String>[];
+    for (final raw in saved.split(RegExp(r'[,/]'))) {
+      final g = raw.trim();
+      if (g.isEmpty || _noisy.hasMatch(g) || _labels.hasMatch(g) || !seen.add(g.toLowerCase().replaceAll('-', ' '))) continue;
+      out.add(g);
+    }
+    return out.isEmpty ? saved.trim() : out.join(', ');
+  }
+
   /// A believable page count (1 to 20,000) or null; a negative or absurd number from a catalogue is not stored.
   static int? _pages(Object? v) {
     final n = _int(v);

@@ -86,6 +86,8 @@ Tap **+ Shelf** on a book to put it on any number of shelves ("Comfort reads", "
 
 
 ### Refreshing a book's details
+Books added in earlier versions may have untidy genres (the same genre twice, or catalogue labels such as "General"). **Settings → Your library → Tidy genres** lists what would change, tidies them on a tap and offers Undo; your own wording is kept and locked books are never listed.
+
 Open the book's **⋮ menu** and choose **Refresh details from the internet**. Pagemark looks the book up again (by ISBN when it has one, else by title and author) and lists what it found. Details the book is **missing** are ticked for you; details you already have that differ are listed **unticked**, so your own edits are only changed if you tick them. An ISBN you have, and a cover you saved on the phone, are never replaced. Tap **Update** to apply the ticked ones. **Choose another edition** lists the editions Open Library knows (publisher, year, pages, ISBN, cover) and takes only those details from the one you pick.
 
 In **Edit**, pages must be a whole number from 1 to 20,000 and the year between 1000 and 2100 (or left empty); anything else is refused with a message.
@@ -284,7 +286,7 @@ Settings → Privacy and lock has two more options:
 On the lock screen tap **Forgot PIN?**, enter the recovery code and a new PIN. You'll receive a **new** recovery code; the old one stops working.
 
 ### Settings → Privacy and lock
-**Lock now**, **Set or change PIN**, and **Remove lock** (which asks for the current PIN first; locked books stay in the locked library, and the whole-app lock switches off because it needs a PIN). If Android ever clears Pagemark's saved lock, the library stays closed until you confirm with your phone's screen lock and set a new PIN.
+**How you unlock** switches between a PIN and the fingerprint or device lock only after the lock exists (you confirm it is you first; choosing the device lock switches off **Ask for my PIN to open Pagemark**, which needs a PIN). **Lock now**, **Set or change PIN**, and **Remove lock** (which asks for the current PIN first; locked books stay in the locked library, and the whole-app lock switches off because it needs a PIN). If Android ever clears Pagemark's saved lock, the library stays closed until you confirm with your phone's screen lock and set a new PIN.
 
 ## 8b. Reminders, widget, sharing and shortcuts
 

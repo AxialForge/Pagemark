@@ -188,6 +188,73 @@ class _RefreshDialogState extends State<_RefreshDialog> {
       );
 }
 
+// ───────────────────────── Tidy genres
+class GenreFix {
+  final int id;
+  final String title, before, after;
+  const GenreFix(this.id, this.title, this.before, this.after);
+}
+
+/// Books of the main library whose saved genre would change if tidied (repeats and catalogue labels removed). Locked books are left
+/// out, so their titles never appear in a list on the main screens.
+Future<List<GenreFix>> genreFixes(AppDb d) async {
+  final rows = await (d.select(d.books)..where((b) => b.locked.equals(false))).get();
+  return [
+    for (final b in rows)
+      if (b.deletedAt == null && b.genre.trim().isNotEmpty && Lookup.tidyGenre(b.genre) != b.genre.trim()) GenreFix(b.id, b.title, b.genre, Lookup.tidyGenre(b.genre)),
+  ];
+}
+
+Future<void> applyGenreFixes(AppDb d, Iterable<GenreFix> fixes, {bool undo = false}) => d.transaction(() async {
+      for (final f in fixes) {
+        await (d.update(d.books)..where((b) => b.id.equals(f.id))).write(BooksCompanion(genre: Value(undo ? f.before : f.after)));
+      }
+    });
+
+/// Settings > Your library > Tidy genres: shows what would change, applies it on a tap, and offers Undo.
+Future<void> tidyGenresFlow(BuildContext context) async {
+  final fixes = await genreFixes(db);
+  if (!context.mounted) return;
+  if (fixes.isEmpty) {
+    snack(context, 'Your genres are already tidy.');
+    return;
+  }
+  final go = await showDialog<bool>(
+    context: context,
+    builder: (c) => AlertDialog(
+      title: Text('Tidy ${fixes.length} ${fixes.length == 1 ? 'book' : 'books'}?'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: ListView(shrinkWrap: true, children: [
+          for (final f in fixes.take(8))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text.rich(TextSpan(children: [
+                TextSpan(text: '${f.title}\n', style: const TextStyle(fontWeight: FontWeight.w600)),
+                TextSpan(text: 'Now: ${f.before}\nTidy: ${f.after}'),
+              ])),
+            ),
+          if (fixes.length > 8) Text('and ${fixes.length - 8} more'),
+        ]),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+        FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Tidy')),
+      ],
+    ),
+  );
+  if (go != true || !context.mounted) return;
+  await applyGenreFixes(db, fixes);
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context)
+    ..clearSnackBars()
+    ..showSnackBar(SnackBar(
+      content: Text('Tidied ${fixes.length} ${fixes.length == 1 ? 'book' : 'books'}'),
+      duration: const Duration(seconds: 8),
+      action: SnackBarAction(label: 'Undo', onPressed: () => applyGenreFixes(db, fixes, undo: true)),
+    ));
+}
+
 // ───────────────────────── Edition picker ─────────────────────────
 /// The editions Open Library lists for a book. Picking one returns the book's details with that edition's cover, publisher, year,
 /// pages and ISBN.

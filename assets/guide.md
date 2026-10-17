@@ -22,6 +22,8 @@ On the **Add a book** screen, tap the icon with a tick (Scan many books). Point 
 ## Fix a book's details
 Open the book, tap the three dots and choose **Refresh details from the internet**. Pagemark looks the book up again and shows what it found. Missing details are ticked for you. Details you typed yourself are only changed if you tick them. Tap **Choose another edition** to pick the cover, publisher and page count of a different printing.
 
+Books you added in an earlier version may have untidy genres, such as the same genre twice. Go to Settings → Your library and tap **Tidy genres** to see what would change, then tap **Tidy**. There is an Undo.
+
 More books are found because Pagemark asks Google Books as well as Open Library. To use Open Library only, go to Settings → Your library and turn off **Also search Google Books**.
 
 ## Say what you are reading
@@ -70,6 +72,8 @@ The Locked tab holds books you want to keep private. They do not show in your ma
 Pagemark locks again when you leave the app. You can choose how long it waits in Settings → Privacy and lock.
 
 If you forget your PIN, tap **Forgot PIN?** on the lock screen and type the recovery code.
+
+To change between a PIN and the fingerprint or device lock only, go to Settings → Privacy and lock and tap **How you unlock**. You confirm it is you first. Choosing the device lock switches off the PIN for the whole app, because that setting needs a PIN.
 
 To hide the Locked tab completely, go to Settings → Privacy and lock and turn on **Hide the Locked tab**. To open it afterwards, press and hold the word "Library" at the top of the Library screen.
 

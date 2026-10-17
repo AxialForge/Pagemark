@@ -175,7 +175,11 @@ class _LibraryState extends State<Library> {
         title: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onLongPress: !widget.locked && hideLockedTab.value ? () => openVault(context) : null, // stealth entrance when the tab is hidden
-          child: Text(widget.locked ? 'Locked library' : 'Library'),
+          child: Container(
+            constraints: const BoxConstraints(minWidth: 220, minHeight: kToolbarHeight),
+            alignment: Alignment.centerLeft,
+            child: Text(widget.locked ? 'Locked library' : 'Library'),
+          ),
         ),
         actions: [
         IconButton(

@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:drift/drift.dart' show Value;
 import 'package:pagemark/db.dart';
 import 'package:pagemark/export.dart';
+import 'package:pagemark/finding.dart';
+import 'package:pagemark/lookup.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pagemark/importer.dart';
 import 'package:pagemark/privacy.dart';
@@ -111,6 +113,37 @@ void main() {
       expect(Importer.parseDate('2023-05-14T23:30:00-08:00'), DateTime(2023, 5, 14), reason: 'UTC conversion must not move it to the 15th');
       expect(Importer.parseDate('2023-05-14T00:30:00+09:00'), DateTime(2023, 5, 14), reason: 'nor to the 13th');
       expect(Importer.parseDate('2023-05-14 10:00:00'), DateTime(2023, 5, 14));
+    });
+  });
+
+  group('Tidy genres (0.13.4)', () {
+    test('repeats, catalogue labels and places or characters go; the rest, the order and the capitals stay', () {
+      expect(Lookup.tidyGenre('Fantasy, fantasy, Fiction, general, Dune (Imaginary place)'), 'Fantasy');
+      expect(Lookup.tidyGenre('Science fiction, Science-fiction, American literature'), 'Science fiction, American literature');
+      expect(Lookup.tidyGenre('cozy mystery, Humour, Thriller, Crime'), 'cozy mystery, Humour, Thriller, Crime', reason: 'no limit of three, no change of capitals');
+      expect(Lookup.tidyGenre('General'), 'General', reason: 'never blanks out what the owner typed');
+      expect(Lookup.tidyGenre('Romance'), 'Romance');
+    });
+
+    test('only unlocked, live books with something to tidy are offered; applying and undoing restore every genre exactly', () async {
+      final db = AppDb.memory();
+      Future<int> add(String t, String g, {bool locked = false}) =>
+          db.into(db.books).insert(BooksCompanion.insert(title: t, genre: Value(g), locked: Value(locked)));
+      final a = await add('A', 'Fantasy, fantasy, General');
+      await add('B', 'Crime');
+      await add('C', '');
+      await add('Secret', 'Romance, romance', locked: true);
+      final gone = await add('Trashed', 'SF, sf');
+      await db.softDelete(gone);
+      final fixes = await genreFixes(db);
+      expect(fixes.map((f) => f.id), [a]);
+      expect(fixes.single.after, 'Fantasy');
+      await applyGenreFixes(db, fixes);
+      expect((await (db.select(db.books)..where((b) => b.id.equals(a))).getSingle()).genre, 'Fantasy');
+      await applyGenreFixes(db, fixes, undo: true);
+      expect((await (db.select(db.books)..where((b) => b.id.equals(a))).getSingle()).genre, 'Fantasy, fantasy, General');
+      expect(await genreFixes(db), hasLength(1));
+      await db.close();
     });
   });
 }

@@ -28,6 +28,30 @@ Future<String?> _pinDialog(BuildContext c, String title, {String hint = 'PIN'}) 
 }
 
 /// Make the user prove they own the lock before changing it (current PIN, or device auth).
+/// Makes the fingerprint or device lock the only way in: warns when the phone has no strong biometric, then asks the phone to confirm.
+/// Returns whether the lock is now device-only.
+Future<bool> chooseDeviceLock(BuildContext context) async {
+  if (!await LockService.strongBiometricAvailable()) {
+    if (!context.mounted) return false;
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('No fingerprint on this phone'),
+        content: const Text('Without a strong biometric, "device lock" means your screen-lock PIN or pattern, or a weaker face unlock. '
+            'A Pagemark PIN is stronger. Use the device lock anyway?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Use a PIN instead')),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Use device lock')),
+        ],
+      ),
+    );
+    if (go != true || !context.mounted) return false;
+  }
+  if (!await LockService.deviceAuth('Confirm to use your device lock')) return false;
+  await LockService.setDeviceOnly();
+  return true;
+}
+
 Future<bool> confirmCurrent(BuildContext c, {String title = 'Enter your current PIN'}) async {
   final mode = await LockService.mode();
   if (mode == null) return true;
@@ -228,26 +252,7 @@ class _LockGateState extends State<LockGate> {
                       onPressed: !deviceOk
                           ? null
                           : () async {
-                              if (!await LockService.strongBiometricAvailable()) {
-                                if (!context.mounted) return;
-                                final go = await showDialog<bool>(
-                                  context: context,
-                                  builder: (c) => AlertDialog(
-                                    title: const Text('No fingerprint on this phone'),
-                                    content: const Text('Without a strong biometric, "device lock" means your screen-lock PIN or pattern, or a weaker face unlock. '
-                                        'A Pagemark PIN is stronger. Use the device lock anyway?'),
-                                    actions: [
-                                      TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Use a PIN instead')),
-                                      FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Use device lock')),
-                                    ],
-                                  ),
-                                );
-                                if (go != true || !mounted) return;
-                              }
-                              if (await LockService.deviceAuth('Confirm to use your device lock') && mounted) {
-                                await LockService.setDeviceOnly();
-                                widget.onUnlock();
-                              }
+                              if (await chooseDeviceLock(context) && mounted) widget.onUnlock();
                             },
                       icon: const Icon(Icons.fingerprint),
                       label: Text(deviceOk ? 'Use fingerprint / device lock only' : 'Device lock unavailable (set a screen lock first)'),
