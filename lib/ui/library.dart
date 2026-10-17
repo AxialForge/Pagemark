@@ -9,6 +9,25 @@ class Library extends StatefulWidget {
 }
 
 class _LibraryState extends State<Library> {
+  /// On a short screen (a phone turned sideways) the search box, chips and banners slide away while you scroll down and come back when
+  /// you scroll up or reach the top, so the list gets the room.
+  bool _headerHidden = false;
+  bool get _short => MediaQuery.sizeOf(context).height < 500;
+
+  bool _onScroll(ScrollNotification n) {
+    if (n.depth != 0 || !_short) return false;
+    bool? hide;
+    if (n is UserScrollNotification && n.direction == ScrollDirection.reverse) {
+      hide = true; // the finger is dragging the list up
+    } else if (n is UserScrollNotification && n.direction == ScrollDirection.forward) {
+      hide = false;
+    } else if (n.metrics.pixels <= n.metrics.minScrollExtent + 1) {
+      hide = false; // back at the top
+    }
+    if (hide != null && hide != _headerHidden) setState(() => _headerHidden = hide!);
+    return false;
+  }
+
   String q = '', status = 'all', format = 'all', sort = 'added';
   int? shelf;
   LibrarySkin skin = LibrarySkin.classic;
@@ -208,6 +227,10 @@ class _LibraryState extends State<Library> {
         onQuickFinish: (r) => _bulkFinish({r.book.id}),
         onQuickTrash: (r) => _bulkTrash({r.book.id}),
         child: Column(children: [
+        AnimatedSize(
+          duration: const Duration(milliseconds: 180),
+          alignment: Alignment.topCenter,
+          child: _headerHidden && _short ? const SizedBox(width: double.infinity) : Column(children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
           child: TextField(
@@ -242,8 +265,12 @@ class _LibraryState extends State<Library> {
           ]),
         ),
         if (!widget.locked) const LibraryBanners(),
+          ]),
+        ),
         Expanded(
-          child: StreamBuilder<List<BookRow>>(
+          child: NotificationListener<ScrollNotification>(
+            onNotification: _onScroll,
+            child: StreamBuilder<List<BookRow>>(
             stream: _rowsStream,
             builder: (_, snap) {
               var rows = (snap.data ?? []).where((r) {
@@ -309,6 +336,7 @@ class _LibraryState extends State<Library> {
                 Expanded(child: list),
               ]));
             },
+          ),
           ),
         ),
       ]),

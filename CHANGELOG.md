@@ -6,6 +6,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- Landscape: on a short screen the search box, filter chips and banners now slide away while you scroll down the Library and come back when you scroll up or reach the top, so the list has the room. (0.13.2 had only removed the Currently reading strip, which still left the list cramped.)
+
 ## [0.13.3] - 2026-10-15
 
 ### Fixed
