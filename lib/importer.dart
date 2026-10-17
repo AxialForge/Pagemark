@@ -86,6 +86,9 @@ class Importer {
       final d = _valid(int.parse(plain[1]!), int.parse(plain[2]!), int.parse(plain[3]!));
       return d != null && d.month == int.parse(plain[2]!) ? d : null;
     }
+    // a timestamp keeps the day written in the text: converting 2023-05-14T23:30:00-08:00 to UTC would make it the 15th
+    final stamp = RegExp(r'^(\d{4})-(\d{2})-(\d{2})[T ]').firstMatch(s);
+    if (stamp != null && DateTime.tryParse(s) != null) return _valid(int.parse(stamp[1]!), int.parse(stamp[2]!), int.parse(stamp[3]!));
     final iso = DateTime.tryParse(s);
     if (iso != null) return _valid(iso.year, iso.month, iso.day);
     final ymd = RegExp(r'^(\d{4})[/.-](\d{1,2})[/.-](\d{1,2})').firstMatch(s);
@@ -97,7 +100,8 @@ class Importer {
 
   static DateTime? _valid(int y, int m, int d) {
     if (y < 1900 || y > DateTime.now().year + 1 || m < 1 || m > 12 || d < 1 || d > 31) return null;
-    return DateTime(y, m, d);
+    final dt = DateTime(y, m, d);
+    return dt.month == m && dt.day == d ? dt : null; // 02/30 would roll into March; a date that does not exist is refused
   }
 
   /// Nearest half star between 0.5 and 5, or null for "no rating".

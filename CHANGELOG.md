@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- Files left in the phone's cache by the share sheet and file picker (which can hold exports that include locked books) are now really deleted when the locked library closes. The clean-up looked for the folders by a name that could never match. (PGM-203)
+- Importing a date that does not exist ("02/29/2023", "2023/02/30") is refused instead of rolling into the next month, and a timestamp with a time zone keeps the day written in it. (PGM-113)
 - Landscape: on a short screen the search box, filter chips and banners now slide away while you scroll down the Library and come back when you scroll up or reach the top, so the list has the room. (0.13.2 had only removed the Currently reading strip, which still left the list cramped.)
 
 ## [0.13.3] - 2026-10-15

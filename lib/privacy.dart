@@ -33,11 +33,12 @@ class Secure {
 }
 
 /// Delete shared export/snapshot files (they can hold locked books) left in the cache dir.
-Future<void> cleanTempExports() async {
+Future<void> cleanTempExports({Directory? dir}) async {
   try {
-    final dir = await getTemporaryDirectory();
+    dir ??= await getTemporaryDirectory();
     for (final f in dir.listSync()) {
-      final n = f.uri.pathSegments.last;
+      // the last non-empty part of the path: a Directory's uri ends in a slash, so uri.pathSegments.last is empty for a folder
+      final n = f.path.split(Platform.pathSeparator).where((p) => p.isNotEmpty).last;
       if (f is File && (n.startsWith('pagemark-') || n == 'restore.sqlite')) await f.delete();
       // plugin caches: the share sheet and the file picker keep copies of what was exported / picked (can include locked books)
       if (f is Directory && (n == 'share_plus' || n == 'file_picker')) await f.delete(recursive: true);
