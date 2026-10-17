@@ -1,8 +1,43 @@
 # Pagemark — Release Notes
 
-Every release from the first (0.1.0) to the current one (0.13.2), newest first. Releases are published at https://github.com/AxialForge/Pagemark/releases and the same text is inside the app under Settings → Updates → Version history.
+Every release from the first (0.1.0) to the current one (1.0.0), newest first. Releases are published at https://github.com/AxialForge/Pagemark/releases and the same text is inside the app under Settings → Updates → Version history.
 
 ---
+
+## [1.0.0] - 2026-10-16
+
+First stable release. No new features: this is the 0.13.4 app, audited, device-tested on a Galaxy S25 Ultra, and documented.
+
+### Added
+- Google Play listing assets (icon, feature graphic, phone screenshots) under `docs/play/`, built by `docs/_tools/build_play_assets.py`.
+- Complete documentation set: User Manual, Install Manual, Release Notes, Package Overview (simple, medium, advanced) and a 1.0.0 readiness report.
+
+### Changed
+- Version 1.0.0 (build 26).
+
+## [0.13.4] - 2026-10-16
+
+### Added
+- **How you unlock** (Settings → Privacy and lock): switch between a PIN and the fingerprint or device lock only after the lock is set up, instead of only when it is first created. You confirm it is you first.
+- **Tidy genres** (Settings → Your library): shows which books have repeated or catalogue-label genres from older lookups, such as "Science fiction, Science-fiction, General", and tidies them on a tap, with Undo. Your own wording and capitals are kept, and locked books are never listed.
+
+### Changed
+- On the Library screen the "press and hold Library" entrance to a hidden Locked tab has a wider target than the word itself.
+
+### Fixed
+- Restoring from the oldest of the three kept restore points failed after the library had been closed: making the new restore point pruned the very file being restored. The incoming library is now copied aside first, and two restore points made in the same second no longer overwrite each other. Your live data was never lost, but the restore did not complete. (PGM-100, PGM-105)
+- Undo after "Mark finished" no longer deletes a read you have since edited (minutes, narrator, page, format or dates), only an untouched one. (PGM-127)
+- Files left in the phone's cache by the share sheet and file picker (which can hold exports that include locked books) are now really deleted when the locked library closes. The clean-up looked for the folders by a name that could never match. (PGM-203)
+- Importing a date that does not exist ("02/29/2023", "2023/02/30") is refused instead of rolling into the next month, and a timestamp with a time zone keeps the day written in it. (PGM-113)
+- Landscape: on a short screen the search box, filter chips and banners now slide away while you scroll down the Library and come back when you scroll up or reach the top, so the list has the room. (0.13.2 had only removed the Currently reading strip, which still left the list cramped.)
+
+## [0.13.3] - 2026-10-15
+
+### Fixed
+- Genres that differ only by a hyphen ("Science fiction" and "Science-fiction") are treated as one.
+
+### Documentation
+- User Manual, Install Manual, Release Notes, Package Overview and README rewritten for the current app, with new screenshots (calendar, year card, lending, Read next, refresh details, tablet layout, notifications, promise) and a Quick start. PDF and Word versions are delivered to `Documentation/` as revisions.
 
 ## [0.13.2] - 2026-10-15
 
