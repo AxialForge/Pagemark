@@ -6,6 +6,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-16
+
+First stable release. No new features: this is the 0.13.4 app, audited, device-tested on a Galaxy S25 Ultra, and documented.
+
+### Added
+- Google Play listing assets (icon, feature graphic, phone screenshots) under `docs/play/`, built by `docs/_tools/build_play_assets.py`.
+- Complete documentation set: User Manual, Install Manual, Release Notes, Package Overview (simple, medium, advanced) and a 1.0.0 readiness report.
+
+### Changed
+- Version 1.0.0 (build 26).
+
 ## [0.13.4] - 2026-10-16
 
 ### Added

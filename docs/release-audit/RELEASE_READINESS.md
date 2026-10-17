@@ -1,3 +1,16 @@
+# Release readiness - Pagemark 1.0.0 (update of 2026-10-16, commit after v0.13.4)
+
+**Verdict: READY WITH CONDITIONS (conditions now owner-only).** No open finding above INFO. Fixes from the gate (0.13.1), the S25 Ultra device test (0.13.2 to 0.13.3) and the verification pass (0.13.4) are in. 310 tests pass, analyzer clean, schema 6 migration script passes.
+
+Remaining before tagging v1.0.0, all owner checks:
+1. Re-test 0.13.4 on the phone: landscape header collapse, How you unlock (device lock switch), restore from the oldest restore point, Tidy genres.
+2. Scheduled backups with the Samsung battery manager (plan 9.5); confirm "Nearby devices" is Allowed (PGM-339); device checks PGM-111, 204, 207, 208.
+3. Google Play: developer account, 14-day closed test with about 12 testers, Data safety form, listing. Listing graphics are ready in `docs/play/`.
+
+Documentation set for 1.0.0 (User Manual, Install Manual, Release Notes, Package Overview, README) is regenerated in `Documentation/`.
+
+---
+
 # Release readiness - Pagemark 1.0.0 gate (audited 0.13.0, commit b1bbf51)
 
 **Verdict: READY WITH CONDITIONS.** No blocker, critical or high finding. The code is in good shape for 1.0.0; the conditions are a few small fixes, the documentation set, and a real-phone pass nobody has done yet.
