@@ -48,7 +48,7 @@ lib/
   export.dart       CSV/JSON of main library, VACUUM INTO db snapshot, restore
   backup_reminder.dart  the "time to back up" notification (counts from the last saved copy)
   restore_ui.dart   restore flow and the Restore points page
-android/            MainActivity is FlutterFragmentActivity (needed by local_auth); manifest has INTERNET/USE_BIOMETRIC/CAMERA
+android/            MainActivity is FlutterFragmentActivity (needed by local_auth); manifest declares INTERNET, USE_BIOMETRIC, CAMERA, POST_NOTIFICATIONS and RECEIVE_BOOT_COMPLETED (the merged APK adds a few library ones such as VIBRATE; check with `aapt2 dump permissions`) and the notification receivers
 ```
 
 ## The extension point
