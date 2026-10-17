@@ -62,3 +62,16 @@ TalkBack (10.1 to 10.5), fingerprint unlock cancel and wrong finger (6.6 by plan
 ## Audit evidence
 
 Scanned results: `Documents\PageMark_.13.1_Galaxy_S25_Ultra_Test_Plan.pdf` (9 pages). A recovery code is written on page 4 of the scan; it belongs to the test phone's locked library and is not copied here.
+
+## Follow-up results (2026-10-16, Pagemark 0.13.2 and later on the same phone)
+
+| Item | Result |
+|---|---|
+| 8.2 Daily reading reminder (PGM-332) | **Passed on the phone.** The notification arrives after the manifest fix. |
+| 6.8 Hide the Locked tab | Closed: the owner pressed beside the word "Library". Not a bug. (The press target is only the word itself; enlarging it is optional polish.) |
+| 8.3 Turn on box | Owner does not remember what was meant. Left as not re-verified; the code path is covered by the 0.9.0 notification tests and works on the emulator. |
+| 11.3 Offline barcode scan | Closed: the message shown was the expected "Could not reach the book search. Check your internet connection." My plan's wording was stricter than the app. |
+| 10.1 to 10.5 TalkBack | **Passed** (owner walked the Library, add by hand, rating, Stats calendar, Read next and Lend this book). |
+| 13.5 Reinstall then restore | **Passed:** after uninstalling and reinstalling on the same phone, the backup restored the library. (Restore on a second phone, 7.8, was not run.) |
+| 9.5 Scheduled backups with Samsung battery manager | Pending: owner testing over the next days. |
+
