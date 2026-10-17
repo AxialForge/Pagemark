@@ -44,6 +44,18 @@ class Exporter {
     return '${n.year}${p(n.month)}${p(n.day)}-${p(n.hour)}${p(n.minute)}${seconds ? p(n.second) : ''}';
   }
 
+  /// A restore-point name stamp (to the second) that no existing file uses yet: two copies made in the same second must not overwrite
+  /// each other, and a restore must never overwrite the restore point it is being made from.
+  static String _freeStamp(Directory dir, String prefix) {
+    var n = DateTime.now();
+    String p(int v) => v.toString().padLeft(2, '0');
+    while (true) {
+      final s = '${n.year}${p(n.month)}${p(n.day)}-${p(n.hour)}${p(n.minute)}${p(n.second)}';
+      if (!File('${dir.path}/$prefix$s.sqlite').existsSync()) return s;
+      n = n.add(const Duration(seconds: 1));
+    }
+  }
+
   /// Spreadsheet apps execute cells that start with = + - @ ; neutralise them.
   static Object? safeCell(Object? v) {
     if (v is String && v.isNotEmpty && '=+-@\t\r'.contains(v[0])) return "'$v";
@@ -260,7 +272,7 @@ class Exporter {
   static Future<File> safetyCopy(AppDb db, String tag) async {
     final dir = (await AppDb.file()).parent;
     final snap = await snapshotDb(db, name: 'pagemark-$tag.sqlite');
-    final kept = File('${dir.path}/$tag-${_stamp(seconds: true)}.sqlite');
+    final kept = File('${dir.path}/$tag-${_freeStamp(dir, '$tag-')}.sqlite');
     await snap.copy(kept.path);
     await snap.delete();
     final old = dir.listSync().whereType<File>().where((f) => f.uri.pathSegments.last.startsWith('$tag-')).toList()..sort((a, b) => b.path.compareTo(a.path));
@@ -294,28 +306,36 @@ class Exporter {
     final dest = await AppDb.file();
     final dir = dest.parent;
     final safety = await snapshotDb(db, name: 'pagemark-prerestore.sqlite');
-    final kept = File('${dir.path}/pre-restore-${_stamp(seconds: true)}.sqlite');
+    final kept = File('${dir.path}/pre-restore-${_freeStamp(dir, 'pre-restore-')}.sqlite');
     await safety.copy(kept.path);
     await safety.delete();
-    final old = dir.listSync().whereType<File>().where((f) => f.uri.pathSegments.last.startsWith('pre-restore-')).toList()
-      ..sort((a, b) => b.path.compareTo(a.path));
-    for (final f in old.skip(3)) {
-      await f.delete();
-    }
-    if (unpacked.covers != null && CoverStore.ready) {
-      try {
-        await CoverStore.importFrom(unpacked.covers!); // before the swap: a failure here can no longer leave a half-restored library
-      } catch (_) {/* covers can be re-downloaded; never block the restore on them */}
-    }
-    await db.close();
+    // Stage the incoming library BEFORE old restore points are pruned: when the file being restored is itself the oldest restore point,
+    // pruning first would delete it and the restore would fail after the connection was closed.
     final staged = File('${dest.path}.incoming');
-    await src.copy(staged.path);
-    for (final ext in ['-wal', '-shm']) {
-      final side = File('${dest.path}$ext');
-      if (await side.exists()) await side.delete();
+    try {
+      await src.copy(staged.path);
+      final old = dir.listSync().whereType<File>().where((f) => f.uri.pathSegments.last.startsWith('pre-restore-')).toList()
+        ..sort((a, b) => b.path.compareTo(a.path));
+      for (final f in old.skip(3)) {
+        await f.delete();
+      }
+      if (unpacked.covers != null && CoverStore.ready) {
+        try {
+          await CoverStore.importFrom(unpacked.covers!); // before the swap: a failure here can no longer leave a half-restored library
+        } catch (_) {/* covers can be re-downloaded; never block the restore on them */}
+      }
+      await db.close();
+      for (final ext in ['-wal', '-shm']) {
+        final side = File('${dest.path}$ext');
+        if (await side.exists()) await side.delete();
+      }
+      await staged.rename(dest.path);
+    } catch (_) {
+      if (await staged.exists()) await staged.delete();
+      rethrow;
+    } finally {
+      await unpacked.cleanup();
     }
-    await staged.rename(dest.path);
-    await unpacked.cleanup();
     return kept;
   }
 }

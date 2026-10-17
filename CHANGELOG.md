@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- Restoring from the oldest of the three kept restore points failed after the library had been closed: making the new restore point pruned the very file being restored. The incoming library is now copied aside first, and two restore points made in the same second no longer overwrite each other. Your live data was never lost, but the restore did not complete. (PGM-100, PGM-105)
+- Undo after "Mark finished" no longer deletes a read you have since edited (minutes, narrator, page, format or dates), only an untouched one. (PGM-127)
 - Files left in the phone's cache by the share sheet and file picker (which can hold exports that include locked books) are now really deleted when the locked library closes. The clean-up looked for the folders by a name that could never match. (PGM-203)
 - Importing a date that does not exist ("02/29/2023", "2023/02/30") is refused instead of rolling into the next month, and a timestamp with a time zone keeps the day written in it. (PGM-113)
 - Landscape: on a short screen the search box, filter chips and banners now slide away while you scroll down the Library and come back when you scroll up or reach the top, so the list has the room. (0.13.2 had only removed the Currently reading strip, which still left the list cramped.)

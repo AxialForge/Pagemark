@@ -1,9 +1,86 @@
 import 'dart:io';
+import 'package:drift/drift.dart' show Value;
+import 'package:pagemark/db.dart';
+import 'package:pagemark/export.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pagemark/importer.dart';
 import 'package:pagemark/privacy.dart';
 
 void main() {
+  group('PGM-100 and PGM-105: restore points', () {
+    late Directory tmp;
+    setUp(() async {
+      tmp = await Directory.systemTemp.createTemp('pgm100');
+      AppDb.debugDir = Directory('${tmp.path}/app')..createSync();
+      Exporter.debugTmp = Directory('${tmp.path}/tmp')..createSync();
+    });
+    tearDown(() async {
+      AppDb.debugDir = null;
+      Exporter.debugTmp = null;
+      await tmp.delete(recursive: true);
+    });
+
+    Future<File> makeDb(Directory d, String name, String title) async {
+      final f = File('${d.path}/$name');
+      final db = AppDb.forFile(f);
+      await db.into(db.books).insert(BooksCompanion.insert(title: title));
+      await db.customStatement('PRAGMA wal_checkpoint(TRUNCATE)');
+      await db.close();
+      return f;
+    }
+
+    Future<String> liveTitle() async {
+      final db = AppDb.forFile(await AppDb.file());
+      final t = (await db.select(db.books).get()).single.title;
+      await db.close();
+      return t;
+    }
+
+    test('restoring from the OLDEST of three restore points works and does not delete its own source', () async {
+      await makeDb(AppDb.debugDir!, 'pagemark.sqlite', 'Live');
+      for (final t in ['A', 'B', 'C', 'D']) {
+        final backup = await makeDb(tmp, '$t.sqlite', t);
+        final db = AppDb.forFile(await AppDb.file());
+        await Exporter.restoreDb(db, backup); // no waiting between restores: names never collide
+      }
+      var points = await Exporter.restorePoints();
+      expect(points.length, 3, reason: 'newest three kept');
+      final oldest = points.last; // holds the library as it was before the third restore
+      final db = AppDb.forFile(await AppDb.file());
+      await Exporter.restoreDb(db, oldest); // making a 4th point would have pruned `oldest` before it was copied
+      expect(await liveTitle(), isNotEmpty);
+      points = await Exporter.restorePoints();
+      expect(points.length, 3);
+      expect(await File('${AppDb.debugDir!.path}/pagemark.sqlite.incoming').exists(), isFalse);
+    });
+
+    test('two copies made in the same second get different names', () async {
+      await makeDb(AppDb.debugDir!, 'pagemark.sqlite', 'Live');
+      final db = AppDb.forFile(await AppDb.file());
+      final a = await Exporter.safetyCopy(db, 'pre-import');
+      final b = await Exporter.safetyCopy(db, 'pre-import');
+      await db.close();
+      expect(a.path == b.path, isFalse);
+      expect(await a.exists() && await b.exists(), isTrue);
+    });
+  });
+
+  group('PGM-127: Undo of Mark finished', () {
+    test('a read that was created is removed by Undo, but kept once the user has edited anything on it', () async {
+      final db = AppDb.memory();
+      final a = await db.into(db.books).insert(BooksCompanion.insert(title: 'A'));
+      final b = await db.into(db.books).insert(BooksCompanion.insert(title: 'B'));
+      final u = await db.markFinishedToday([a, b]);
+      expect(u.created.length, 2);
+      final rb = await (db.select(db.reads)..where((r) => r.bookId.equals(b))).getSingle();
+      await (db.update(db.reads)..where((r) => r.id.equals(rb.id))).write(const ReadsCompanion(minutes: Value(45)));
+      await db.undoMarkFinished(u);
+      final left = await db.select(db.reads).get();
+      expect(left.map((r) => r.bookId).toList(), [b], reason: 'the edited read stays, the untouched one goes');
+      await db.close();
+    });
+  });
+
   group('PGM-203: leftover exports in the cache are really deleted', () {
     test('the share sheet and file picker folders, export files and the restore copy go; other files stay', () async {
       final dir = Directory.systemTemp.createTempSync('pgm203');

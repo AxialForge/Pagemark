@@ -255,8 +255,20 @@ class AppDb extends _$AppDb {
         for (final r in u.changed) {
           await (update(reads)..where((x) => x.id.equals(r.id))).write(ReadsCompanion(status: Value(r.status), finished: Value(r.finished)));
         }
-        // a read that was created by "mark finished" is removed only if the user has not added a rating or thoughts to it since
-        await (delete(reads)..where((x) => x.id.isIn(u.created) & x.thoughts.equals('') & x.rating.isNull())).go();
+        // a read that was created by "mark finished" is removed only while it is still exactly as it was created: any edit since (thoughts,
+        // rating, minutes, narrator, page, format, either date) means it is the user's now
+        await (delete(reads)
+              ..where((x) =>
+                  x.id.isIn(u.created) &
+                  x.thoughts.equals('') &
+                  x.rating.isNull() &
+                  x.minutes.isNull() &
+                  x.narrator.equals('') &
+                  x.currentPage.isNull() &
+                  x.format.equals('print') &
+                  x.status.equals('finished') &
+                  x.started.equalsExp(x.finished)))
+            .go();
       });
 
   /// Puts the books on a shelf and returns the ones that were not already there, so Undo takes off only those.
