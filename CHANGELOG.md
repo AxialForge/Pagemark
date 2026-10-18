@@ -6,6 +6,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-18
+
+### Added
+- **Series and volumes** for manga, comics and light novels. Open a series (Library ⋮ menu → Series, then tap it) to see one square for every volume: read (filled), owned (outlined), wanted (dashed) or missing (grey). Tap a square to open it, or tap a grey one to add it as owned or wanted. **Add volume** adds the next volume with the series, author and kind filled in, and **Share missing list** shares a note like "Berserk: missing 3-5, 7".
+- Say whether a series is **Ongoing** or **Complete**, how many volumes it has, and whether it is **Manga**, **Comic** or **Light novel**. Pagemark never guesses these, and there is no new internet source.
+- **Group volumes by series** in the Library (style button): one row per series with a small stack of covers. It turns on by itself when a series has three or more volumes, and searching still shows every volume. The grouped Library is a list in every style.
+- On a book's page: "Series: Berserk, volume 4 of 12" that opens the series, **Previous volume** and **Next volume**, and in Edit **Kind** and **I own this** (a book you do not own stays on your list as wanted).
+- When you add a book whose title ends in a volume number ("One Piece, Vol. 12"), Pagemark asks whether it is volume 12 of One Piece. In Scan many books a button beside each book offers the same. Nothing changes unless you tap it.
+- Stats: a **Series and volumes** card (volumes read, series completed, finished books by kind).
+- Export and import carry `kind`, `owned` and `series_status`; older files without them import as before.
+- Database schema 7 (`kind`, `owned`, a series table). Every earlier schema upgrades and keeps its rows; each series' total from older versions is carried over.
+
+### Changed
+- The Series screen is now a list of series that open a page of their own. The number of volumes is kept once per series (in the Series page) instead of on every book; the old per-book "Books in the series" still works as a fallback.
+
 ## [1.0.0] - 2026-10-16
 
 First stable release. No new features: this is the 0.13.4 app, audited, device-tested on a Galaxy S25 Ultra, and documented.

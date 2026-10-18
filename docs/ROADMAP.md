@@ -76,7 +76,7 @@ Exit criteria: everything above shipped or consciously dropped; no open data-los
 - **Google Play release:** developer account, a 14-day closed test with about 12 testers, Data safety form (answers prepared), listing and graphics. See `docs/PLAY_STORE.md`.
 - **Major-release documentation set (house rule):** regenerate the User Manual, Install Manual, Release Notes and README; write the **Package Overview in three tiers** (simple, medium, advanced); refresh the GitHub repo details (description, topics, screenshots). `python docs/_tools/build_docs.py`, `docs/_tools/build_ui_layout.py`.
 
-### 1.1.0 "Series and volumes" (manga, comics, light novels)
+### 1.1.0 "Series and volumes" (manga, comics, light novels) - shipped 2026-10-18 (see CHANGELOG; the grouped Library is a list in every style, and the Year card does not yet say "volumes")
 Designed in `docs/design/SERIES_AND_VOLUMES.md` (PDF and Word in `Documentation/`). Same app, after 1.0.0. Decisions taken on 2026-10-16: kinds are manga, comic and light novel only; an **owned** flag with dashed "wanted" volumes; **no new internet source** in 1.1.0; **Group by series** switches on by itself for series with several volumes; **no chapter tracking**.
 - Schema 7: `books.kind`, `books.owned`, table `series_info` (per-library series name, total, ongoing or complete), guarded migration from every schema, export and import columns.
 - **Volume parser** that suggests series and number from a title and always asks first.

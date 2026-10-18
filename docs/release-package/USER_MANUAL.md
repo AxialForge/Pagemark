@@ -102,7 +102,16 @@ The **Lending** section on the book page records who has it. Tap **Lend this boo
 
 
 ### Series
-In **Edit**, type the series name and the number in the series (decimals work: `2.5`). Rows show the badge, and the **Series** screen (Library ⋮ menu) groups your books, shows how many you've read, and names what's next. It knows only the books you've added, not how long the series really is.
+In **Edit**, type the series name and the number in the series (decimals work: `2.5`). Rows show the badge, and the **Series** screen (Library ⋮ menu) groups your books, shows how many you've read, and names what's next. Tap a series to see its volumes (next section).
+
+#### Manga, comics and light novels: volumes
+Open a series and you see one square for every volume. **Read** is filled, **Owned** is outlined, **Wanted** is dashed and **Missing** is grey; every square is a button with a spoken label such as "Volume 7, owned". Tap a square to open that volume, or tap a grey one to choose **I own it** or **Add to my wanted list**. The round button, **Add volume**, adds the next volume with the series, author and kind filled in.
+
+Tap **Ongoing** or **Complete**, and the number of volumes, to say how long the series is (Pagemark never guesses this; there is no internet lookup). Tap **Manga**, **Comic** or **Light novel** to mark the whole series. **Share missing list** shares a note such as "Berserk: missing 3-5, 7".
+
+When you add a book whose title ends in a volume number ("One Piece, Vol. 12"), Pagemark asks whether it is volume 12 of One Piece; nothing changes unless you tap **Yes**. In Scan many books, a button beside each book offers the same. In the Library, the style button has **Group volumes by series**, which turns on by itself when a series has three or more volumes (searching always shows every volume). A book's page has **Previous volume** and **Next volume**, and in **Edit** you can set **Kind** and **I own this**. Stats gain a **Series and volumes** card.
+
+<div class="shots one"><figure><img src="../screenshots/series-volumes.jpg" alt="A manga series as a grid of volumes"><figcaption>A manga series as a grid of volumes</figcaption></figure></div>
 
 <div class="shots two"><figure><img src="../screenshots/series.jpg" alt="Series screen"><figcaption>Series screen</figcaption></figure><figure><img src="../screenshots/shelves.jpg" alt="Manage shelves"><figcaption>Manage shelves</figcaption></figure></div>
 
@@ -207,7 +216,7 @@ By default covers load from the internet. From a book's ⋮ menu you can **Save 
 
 ### Series totals
 
-In **Edit**, **Books in the series** records how long the series is. The Series screen then says things like "2 of 7 read · 5 not in your library".
+In **Edit**, **Books in the series** records how long the series is. The Series screen then says things like "2 of 7 owned · 2 read". The **Series** page (tap a series) is the better place to set it: it keeps one number per series.
 
 ### Heat and content notes (optional)
 

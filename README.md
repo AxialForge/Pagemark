@@ -23,7 +23,7 @@ A private, fully local book tracker for Android (iOS planned): log what you read
 - **Plan**: a **Read next** order you drag into place, suggestions from your own list, and **lending** notes with an optional reminder.
 - **Your year**: yearly goal ring, stats dashboard, a shareable **Year in books** picture and a printable PDF report.
 - **Five library looks**: classic list, cover wall, bookshelf, book spines or compact. On tablets the Library and the open book sit side by side.
-- **Organise**: shelves, series with numbers, tags, filters, sort, "Currently reading" strip, multi-select with Undo.
+- **Organise**: shelves, series with a volume grid for manga, comics and light novels (owned, read, wanted, missing), tags, filters, sort, "Currently reading" strip, multi-select with Undo.
 - **Locked library**: PIN (attempt limits + recovery code) or fingerprint; re-locks when you leave (or after 1/5/15 minutes); optional **whole-app lock**; blocks screenshots.
 - **Your data, your files**: CSV/JSON export; import from Goodreads and StoryGraph with a preview and Undo; whole-database export with optional password encryption.
 - **Backups**: a password-protected copy as a file or spreadsheet, or pick a folder (including one in Google Drive, OneDrive or Dropbox) and Pagemark saves backups there by itself; reminders every week, two weeks or month; safe restore with restore points.

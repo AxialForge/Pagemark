@@ -31,7 +31,7 @@
 | Capture | Search Open Library and Google Books together (switchable), look up by ISBN, scan barcodes one by one or a whole shelf, add by hand; duplicate warning; refresh a book's details and pick another edition |
 | Logging | Multiple *reads* per book (print / e-book / audio); status, dates, half-star rating, optional detailed ratings (story, characters, writing, pace, feeling, narrator), private thoughts, time |
 | Progress | Current page, progress bars, pages per day, estimated days left, and a reading timer with a saved history |
-| Organise | Shelves (many per book), series with numbers and totals, tags, filters, sort, "Currently reading" strip, a "read next" order with suggestions from your own list, lending notes with a reminder |
+| Organise | Shelves (many per book), series with a volume grid (read, owned, wanted, missing) for manga, comics and light novels, series totals and ongoing or complete status, tags, filters, sort, "Currently reading" strip, a "read next" order with suggestions from your own list, lending notes with a reminder |
 | Library looks | Classic list, cover wall, bookshelf, book spines, compact — switchable, remembered per library; side-by-side Library and book on tablets |
 | Insight | Yearly goal ring with pace forecast, "Days you read" calendar, a shareable "Year in books" picture and a printable PDF report, books per month, rating spread, top genres and authors, totals |
 | Privacy | Locked library (PIN with attempt limits and recovery code, or device biometrics), auto-relock with a configurable delay, an optional whole-app lock, screenshot blocking |
@@ -58,7 +58,7 @@
 Flutter 3.47 (Dart) app, about 16,000 lines, with a little Kotlin for the home-screen widget, the share and shortcut intents, and the Android folder picker. **Drift** over **SQLite** for storage; plain `StatefulWidget`s with database streams (no state-management package); `flutter_secure_storage` for secrets; `cryptography` for PBKDF2 and AES-GCM; `flutter_local_notifications` with `timezone` for reminders; `home_widget` for the widget; `http` for Open Library, Google Books and GitHub; `mobile_scanner` for barcodes; `local_auth` for biometrics; `pdf` to build the yearly report on the phone; `share_plus`, `file_picker`, `archive` for sharing, restore and zip backups. `lib/ui.dart` is one library split into part files; wide-screen layout helpers live in `lib/adaptive.dart`.
 
 ## Data model (schema 6)
-- `books` — catalog entry: title, author, ISBN-13, cover URL, genre, series, `seriesNumber`, `seriesTotal`, publisher, year, pages, description, tags, notes, `locked`, `added`, `deletedAt` (soft delete), `queuePos` (read-next order).
+- `books` — catalog entry: title, author, ISBN-13, cover URL, genre, series, `seriesNumber`, `seriesTotal`, `kind`, `owned`, publisher, year, pages, description, tags, notes, `locked`, `added`, `deletedAt` (soft delete), `queuePos` (read-next order).
 - `reads` — one read-through: format, status, started/finished, rating (0.5–5), optional aspect ratings, thoughts, narrator, minutes, `currentPage`, optional heat and content notes; FK to `books` with cascade.
 - `quotes` (with a star rating), `shelves`, `book_shelves` (many-to-many).
 - `reading_sessions` — one timer sitting: book, day, minutes, pages.
