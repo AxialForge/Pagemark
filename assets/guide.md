@@ -57,6 +57,21 @@ To rename or delete shelves, tap the three dots at the top of the Library and ch
 
 To see your series (like a trilogy), which book is next and the average rating of the books you rated, tap the three dots and choose **Series**. To put a book in a series, tap its pencil icon and fill in **Series** and **Number in series**.
 
+## Manga, comics and other series
+For a long series, such as a manga with 40 volumes, tap the three dots in the Library and choose **Series**, then tap the series. You see one square for every volume:
+- **Read**: a filled square.
+- **Owned**: an outlined square (you have it but have not read it).
+- **Wanted**: a dashed square (on your list but not yours yet).
+- **Missing**: a grey square.
+
+Tap a square to open that volume. Tap a grey one to choose **I own it** or **Add to my wanted list**. The round button, **Add volume**, adds the next volume with the series, author and kind already filled in.
+
+Tap **Ongoing** or **Complete** to say whether the series is still coming out, and the number of volumes to say how long it is. Tap **Share missing list** to send yourself a note such as "Berserk: missing 3-5, 7" for the bookshop. Pick **Manga**, **Comic** or **Light novel** to mark the whole series.
+
+When you add a book whose title ends in a volume number, such as "One Piece, Vol. 12", Pagemark asks whether it is volume 12 of One Piece. Nothing changes unless you tap **Yes**. When you scan many books, a button beside each one says the same; tap it to accept.
+
+To see one row per series in the Library, tap the style button at the top and turn on **Group volumes by series**. It turns on by itself when a series has three or more volumes, and searching always shows every volume. On a book's page, **Previous volume** and **Next volume** step along the series. In Edit, **Kind** and **I own this** sit just under the series fields.
+
 ## Save quotes
 Open a book and tap **Add quote**. Type the passage, add the page if you know it, give it stars for how much you love it (optional) and tap **Save**. Quotes show up on the book's page and in the Library search.
 

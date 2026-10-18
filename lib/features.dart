@@ -714,6 +714,7 @@ class Stats extends StatefulWidget {
 class _StatsState extends State<Stats> {
   late final Stream<List<BookRow>> _stream = db.watchLibrary(locked: false).distinct();
   late final Stream<List<ReadingSession>> _sessions = db.watchSessions(locked: false);
+  late final Stream<List<SeriesInfoRow>> _infos = db.watchSeriesInfo(locked: false);
 
   static const _months = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 
@@ -814,6 +815,19 @@ class _StatsState extends State<Stats> {
               if (avgDays != null) _kv(context, 'Average days to finish', avgDays.toStringAsFixed(1)),
               for (final e in byFmt.entries) _kv(context, 'Finished · ${formats[e.key]}', '${e.value}'),
             ])),
+            StreamBuilder<List<SeriesInfoRow>>(
+              stream: _infos,
+              builder: (_, inf) {
+                final st = seriesStats(rows, inf.data ?? const []);
+                if (st.volumesRead == 0 && st.seriesCompleted == 0) return const SizedBox.shrink();
+                return section('Series and volumes', Column(children: [
+                  _kv(context, 'Volumes read', '${st.volumesRead}'),
+                  _kv(context, 'Series completed', '${st.seriesCompleted}'),
+                  for (final e in kinds.entries)
+                    if ((st.readByKind[e.key] ?? 0) > 0) _kv(context, 'Finished · ${e.key.isEmpty ? 'Books' : e.value}', '${st.readByKind[e.key]}'),
+                ]));
+              },
+            ),
             detailedRatingsCard(context, rows.expand((r) => r.reads)),
             if (adultFieldsOn()) heatStatsCard(context, done),
             section('Top genres', RankBars(top(genres))),

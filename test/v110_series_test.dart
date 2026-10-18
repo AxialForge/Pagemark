@@ -170,6 +170,30 @@ void main() {
     await db.close();
   });
 
+  test('5,000 books in 300 series group and lay out quickly', () async {
+    final db = AppDb.memory();
+    await db.batch((b) {
+      for (var i = 0; i < 5000; i++) {
+        b.insert(db.books, BooksCompanion.insert(title: 'Vol $i', series: Value('Series ${i % 300}'), seriesNumber: Value((i ~/ 300 + 1).toDouble()), kind: const Value('manga')));
+      }
+    });
+    final rows = await db.watchLibrary(locked: false).first;
+    final sw = Stopwatch()..start();
+    final g = groupSeries(rows, const []);
+    var cells = 0;
+    for (final x in g) {
+      cells += x.cells.length;
+      x.missingText;
+    }
+    seriesStats(rows, const []);
+    shouldAutoGroup(rows);
+    sw.stop();
+    expect(g, hasLength(300));
+    expect(cells, greaterThan(4999));
+    expect(sw.elapsedMilliseconds, lessThan(1500));
+    await db.close();
+  });
+
   group('applying a volume suggestion', () {
     test('sets the series and number, reuses the spelling and kind the library already has', () async {
       final db = AppDb.memory();
