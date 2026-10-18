@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pagemark/features.dart';
 import 'package:pagemark/db.dart';
 import 'package:pagemark/series.dart';
+import 'package:pagemark/volume.dart';
+import 'package:pagemark/volume_ui.dart';
 
 Future<int> vol(AppDb db, String series, num? n, {bool owned = true, bool read = false, String kind = 'manga', bool locked = false, int? total, String title = ''}) async {
   final id = await db.into(db.books).insert(BooksCompanion.insert(
@@ -166,6 +168,37 @@ void main() {
     final g = (await groups(db)).single;
     expect(g.cells.length, lessThanOrEqualTo(5000));
     await db.close();
+  });
+
+  group('applying a volume suggestion', () {
+    test('sets the series and number, reuses the spelling and kind the library already has', () async {
+      final db = AppDb.memory();
+      await vol(db, 'One Piece', 1, kind: 'manga');
+      final id = await db.into(db.books).insert(BooksCompanion.insert(title: 'one piece, Vol. 2'));
+      await applyVolume(id, parseVolume('one piece, Vol. 2')!, database: db);
+      final b = await (db.select(db.books)..where((x) => x.id.equals(id))).getSingle();
+      expect([b.series, b.seriesNumber, b.kind], ['One Piece', 2, 'manga']);
+      await db.close();
+    });
+
+    test('a first volume starts as a plain book and keeps its own kind', () async {
+      final db = AppDb.memory();
+      final id = await db.into(db.books).insert(BooksCompanion.insert(title: 'Berserk, Vol. 1', kind: const Value('comic')));
+      await applyVolume(id, parseVolume('Berserk, Vol. 1')!, database: db);
+      final b = await (db.select(db.books)..where((x) => x.id.equals(id))).getSingle();
+      expect([b.series, b.seriesNumber, b.kind], ['Berserk', 1, 'comic']);
+      await db.close();
+    });
+
+    test('a locked book never borrows the spelling or kind of a main-library series', () async {
+      final db = AppDb.memory();
+      await vol(db, 'Secret Name', 1, kind: 'manga');
+      final id = await db.into(db.books).insert(BooksCompanion.insert(title: 'secret name, Vol. 2', locked: const Value(true)));
+      await applyVolume(id, parseVolume('secret name, Vol. 2')!, database: db);
+      final b = await (db.select(db.books)..where((x) => x.id.equals(id))).getSingle();
+      expect([b.series, b.kind], ['secret name', '']);
+      await db.close();
+    });
   });
 
   group('volume grid widgets', () {

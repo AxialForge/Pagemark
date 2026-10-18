@@ -72,7 +72,8 @@ class BookPage extends StatelessWidget {
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(b.title, style: Theme.of(context).textTheme.titleLarge),
                 if (b.author.isNotEmpty) AuthorLinks(b),
-                if (b.series.isNotEmpty) Text('Series: ${b.series}${b.seriesNumber == null ? '' : ' #${SeriesPage.fmtNum(b.seriesNumber)}'}${b.seriesTotal == null ? '' : ' of ${b.seriesTotal}'}'),
+                if (b.series.isNotEmpty) VolumeNav(book: b),
+                if (b.kind.isNotEmpty) Text(kindLabel(b.kind)),
                 if (b.genre.isNotEmpty) Text(b.genre),
                 Text([if (b.year != null) '${b.year}', if (b.pages != null) '${b.pages} pages', if (b.publisher.isNotEmpty) b.publisher].join(' · ')),
                 if (b.isbn.isNotEmpty) Text('ISBN ${b.isbn}'),
@@ -81,6 +82,19 @@ class BookPage extends StatelessWidget {
                 ShelfChips(bookId: b.id, locked: b.locked),
               ])),
             ]),
+            if (!b.owned)
+              Card(
+                margin: const EdgeInsets.only(top: 12),
+                child: ListTile(
+                  leading: const Icon(Icons.bookmark_border),
+                  title: const Text('On your wanted list'),
+                  subtitle: const Text('You do not own this one yet.'),
+                  trailing: TextButton(
+                    onPressed: () => (db.update(db.books)..where((x) => x.id.equals(b.id))).write(const BooksCompanion(owned: Value(true))),
+                    child: const Text('I own it now'),
+                  ),
+                ),
+              ),
             if (b.description.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 12), child: ExpandableText(b.description)),
             if (b.notes.isNotEmpty) Card(margin: const EdgeInsets.only(top: 12), child: Padding(padding: const EdgeInsets.all(12), child: Text(b.notes))),
             const Divider(height: 32),
@@ -143,8 +157,10 @@ class _EditBookState extends State<EditBook> {
   };
 
   late final Map<String, String> _initial = {for (final e in c.entries) e.key: e.value.text};
+  late String kind = widget.book.kind;
+  late bool owned = widget.book.owned;
   bool _saved = false;
-  bool get _dirty => !_saved && c.entries.any((e) => e.value.text != _initial[e.key]);
+  bool get _dirty => !_saved && (kind != widget.book.kind || owned != widget.book.owned || c.entries.any((e) => e.value.text != _initial[e.key]));
 
   @override
   void initState() {
@@ -200,18 +216,80 @@ class _EditBookState extends State<EditBook> {
               title: Value(c['title']!.text), author: Value(c['author']!.text), series: Value(c['series']!.text), seriesNumber: Value(SeriesPage.parseNum(c['seriesNumber']!.text)), seriesTotal: Value(int.tryParse(c['seriesTotal']!.text.trim())), genre: Value(c['genre']!.text),
               tags: Value(normalizeTags(c['tags']!.text)), publisher: Value(c['publisher']!.text), isbn: Value(c['isbn']!.text), coverUrl: Value(c['coverUrl']!.text),
               year: Value(int.tryParse(c['year']!.text)), pages: Value(int.tryParse(c['pages']!.text)),
-              description: Value(c['description']!.text), notes: Value(c['notes']!.text),
+              description: Value(c['description']!.text), notes: Value(c['notes']!.text), kind: Value(kind), owned: Value(owned),
             ));
             if (context.mounted) Navigator.pop(context);
           }, child: const Text('Save')),
         ]),
         body: ListView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: const EdgeInsets.all(16), children: [
           f('title', 'Title', cap: TextCapitalization.words), f('author', 'Author', cap: TextCapitalization.words), f('series', 'Series', cap: TextCapitalization.words),
-          f('seriesNumber', 'Number in series (e.g. 2 or 2.5)', num: true, decimal: true), f('seriesTotal', 'Books in the series (optional)', num: true), f('genre', 'Genre (fantasy, romance, science…)', cap: TextCapitalization.words),
+          f('seriesNumber', 'Number in series (e.g. 2 or 2.5)', num: true, decimal: true), f('seriesTotal', 'Books in the series (optional)', num: true),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: DropdownButtonFormField<String>(
+              initialValue: kind,
+              decoration: const InputDecoration(labelText: 'Kind', border: OutlineInputBorder()),
+              items: [for (final e in kinds.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
+              onChanged: (v) => setState(() => kind = v ?? ''),
+            ),
+          ),
+          SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('I own this'), subtitle: const Text('Turn off to keep it on your list as a book you want to get'), value: owned, onChanged: (v) => setState(() => owned = v)),
+          f('genre', 'Genre (fantasy, romance, science…)', cap: TextCapitalization.words),
           f('tags', 'Tags (separate with commas)'), f('publisher', 'Publisher', cap: TextCapitalization.words), f('isbn', 'ISBN'), f('coverUrl', 'Cover picture web address'),
           f('year', 'Year', num: true), f('pages', 'Pages', num: true),
           f('description', 'Description', lines: 4, cap: TextCapitalization.sentences), f('notes', 'Private notes', lines: 4, cap: TextCapitalization.sentences),
         ]),
         ),
       );
+}
+
+/// "Series: Berserk, volume 3 of 41" with buttons to the volumes either side, and a way into the whole series.
+class VolumeNav extends StatelessWidget {
+  final Book book;
+  const VolumeNav({super.key, required this.book});
+
+  @override
+  Widget build(BuildContext context) {
+    final key = AppDb.seriesKey(book.series);
+    return StreamBuilder<SeriesInfoRow?>(
+      stream: (db.select(db.seriesInfo)..where((s) => s.nameKey.equals(key))..where((s) => s.locked.equals(book.locked))).watchSingleOrNull(),
+      builder: (context, infoSnap) => StreamBuilder<List<Book>>(
+      stream: (db.select(db.books)..where((b) => b.locked.equals(book.locked))..where((b) => b.deletedAt.isNull())).watch(),
+      builder: (context, snap) {
+        final mates = [for (final b in snap.data ?? const <Book>[]) if (AppDb.seriesKey(b.series) == key && b.seriesNumber != null) b]
+          ..sort((a, b) => a.seriesNumber!.compareTo(b.seriesNumber!));
+        final n = book.seriesNumber;
+        Book? before, after;
+        if (n != null) {
+          for (final b in mates) {
+            if (b.seriesNumber! < n) before = b;
+            if (b.seriesNumber! > n && after == null) after = b;
+          }
+        }
+        var stored = infoSnap.data?.total ?? 0;
+        for (final m in snap.data ?? const <Book>[]) {
+          if (infoSnap.data?.total == null && (m.seriesTotal ?? 0) > stored) stored = m.seriesTotal!;
+        }
+        final highest = mates.fold<int>(0, (a, m) => m.seriesNumber!.ceil() > a ? m.seriesNumber!.ceil() : a);
+        final total = stored > 0 ? (stored > highest ? stored : highest) : null;
+        final label = n == null ? 'Series: ${book.series}' : 'Series: ${book.series}, volume ${SeriesPage.fmtNum(n)}${total == null ? '' : ' of $total'}';
+        void open(Book b) => openBookIn(context, b.id, () => BookPage(bookId: b.id));
+        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          InkWell(
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SeriesDetailPage(locked: book.locked, nameKey: key))),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: Align(alignment: Alignment.centerLeft, child: Text(label, style: TextStyle(color: Theme.of(context).colorScheme.primary, decoration: TextDecoration.underline))),
+            ),
+          ),
+          if (before != null || after != null)
+            Row(children: [
+              TextButton.icon(onPressed: before == null ? null : () => open(before!), icon: const Icon(Icons.chevron_left), label: const Text('Previous volume')),
+              TextButton.icon(onPressed: after == null ? null : () => open(after!), icon: const Icon(Icons.chevron_right), label: const Text('Next volume')),
+            ]),
+        ]);
+      },
+    ),
+    );
+  }
 }

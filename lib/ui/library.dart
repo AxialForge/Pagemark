@@ -38,6 +38,11 @@ class _LibraryState extends State<Library> {
   StreamSubscription<Map<int, String>>? _quoteSub;
   List<BookRow> _shown = []; // what the list currently shows (for Select all)
   bool groupShelves = false; // Bookshelf/Spines: one named wooden shelf per user shelf
+  String seriesMode = 'auto'; // auto | on | off: one row per series instead of one per volume
+  List<BookRow> _everyRow = const [];
+  late final Stream<List<SeriesInfoRow>> _infoStream = db.watchSeriesInfo(locked: widget.locked);
+
+  bool get _seriesOn => seriesMode == 'on' || (seriesMode == 'auto' && shouldAutoGroup(_everyRow));
   List<Shelf> shelves = [];
   Map<int, Set<int>> shelfBooks = {}; // shelf id -> book ids
   StreamSubscription<List<Shelf>>? _shelfSub;
@@ -61,6 +66,7 @@ class _LibraryState extends State<Library> {
     shelf = prefs.getInt('${_pk}_shelf');
     skin = skinById(prefs.getString('${_pk}_skin'));
     groupShelves = prefs.getBool('${_pk}_group') ?? false;
+    seriesMode = prefs.getString('${_pk}_series') ?? 'auto';
     _quoteSub = db.watchQuoteText().listen((m) { if (mounted) setState(() => _quoteText = m); });
     if (!widget.locked) Incoming.readingShortcut.addListener(_showReading);
     _shelfSub = db.watchShelves(locked: widget.locked).listen((v) {
@@ -165,6 +171,7 @@ class _LibraryState extends State<Library> {
     prefs.setString('${_pk}_format', format);
     prefs.setString('${_pk}_skin', skin.name);
     prefs.setBool('${_pk}_group', groupShelves);
+    prefs.setString('${_pk}_series', seriesMode);
     shelf == null ? prefs.remove('${_pk}_shelf') : prefs.setInt('${_pk}_shelf', shelf!);
   }
 
@@ -186,7 +193,8 @@ class _LibraryState extends State<Library> {
           icon: Icon(skin.icon), tooltip: 'Library style: ${skin.label}',
           onPressed: () async {
             final picked = await showSkinPicker(context, skin,
-                grouped: groupShelves, hasShelves: shelves.isNotEmpty, onGrouped: (v) { setState(() => groupShelves = v); _save(); });
+                grouped: groupShelves, hasShelves: shelves.isNotEmpty, onGrouped: (v) { setState(() => groupShelves = v); _save(); },
+                seriesGrouped: _seriesOn, onSeriesGrouped: (v) { setState(() => seriesMode = v ? 'on' : 'off'); _save(); });
             if (picked != null && picked != skin) { setState(() => skin = picked); _save(); }
           },
         ),
@@ -307,7 +315,10 @@ class _LibraryState extends State<Library> {
                     : const Center(child: Text('No matches.'));
               }
               _shown = rows;
-              final list = SkinView(skin: skin, rows: rows, groupByShelf: groupShelves, shelves: shelves, shelfBooks: shelfBooks);
+              _everyRow = snap.data ?? const [];
+              final list = _seriesOn && q.isEmpty
+                  ? SeriesGroupedList(rows: rows, infoStream: _infoStream, locked: widget.locked)
+                  : SkinView(skin: skin, rows: rows, groupByShelf: groupShelves, shelves: shelves, shelfBooks: shelfBooks);
               final reading = (snap.data ?? []).where((r) => r.status == 'reading').toList();
               final unfiltered = q.isEmpty && status == 'all' && format == 'all' && shelf == null;
               if (!unfiltered || reading.isEmpty) return list;
@@ -346,6 +357,63 @@ class _LibraryState extends State<Library> {
       ]),
         ),
       ),
+    );
+  }
+}
+
+/// The Library with one row per series (for series with two or more volumes) and a normal row for every other book.
+class SeriesGroupedList extends StatelessWidget {
+  final List<BookRow> rows;
+  final Stream<List<SeriesInfoRow>> infoStream;
+  final bool locked;
+  const SeriesGroupedList({super.key, required this.rows, required this.infoStream, required this.locked});
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<List<SeriesInfoRow>>(
+        stream: infoStream,
+        builder: (context, infos) {
+          final groups = {for (final g in groupSeries(rows, infos.data ?? const <SeriesInfoRow>[])) g.key: g};
+          final seen = <String>{};
+          final items = <Widget>[];
+          for (final r in rows) {
+            final k = AppDb.seriesKey(r.book.series);
+            final g = groups[k];
+            if (g == null || g.rows.length < 2) {
+              items.add(BookTile(key: ValueKey('b${r.book.id}'), row: r));
+            } else if (seen.add(k)) {
+              items.add(SeriesRowTile(key: ValueKey('s$k'), group: g, locked: locked));
+            }
+          }
+          return ListView(padding: const EdgeInsets.only(bottom: 88), children: items);
+        },
+      );
+}
+
+/// A series as one Library row: a small stack of covers, how many volumes are here and how many are read.
+class SeriesRowTile extends StatelessWidget {
+  final SeriesGroup group;
+  final bool locked;
+  const SeriesRowTile({super.key, required this.group, required this.locked});
+
+  @override
+  Widget build(BuildContext context) {
+    final covers = group.rows.take(3).toList();
+    return ListTile(
+      leading: SizedBox(
+        width: 48 + 8.0 * (covers.length - 1),
+        height: 72,
+        child: Stack(children: [
+          for (var i = covers.length - 1; i >= 0; i--) Positioned(left: 8.0 * i, child: Cover(covers[i].book.coverUrl, locked: covers[i].book.locked, title: covers[i].book.title)),
+        ]),
+      ),
+      title: Text(group.name, maxLines: 2, overflow: TextOverflow.ellipsis),
+      subtitle: Text([
+        '${group.rows.length} volumes',
+        '${group.readCount} read',
+        if (group.status.isNotEmpty) group.status == 'ongoing' ? 'ongoing' : 'complete',
+      ].join(' · ')),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SeriesDetailPage(locked: locked, nameKey: group.key))),
     );
   }
 }

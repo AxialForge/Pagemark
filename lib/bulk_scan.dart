@@ -7,6 +7,8 @@ import 'log.dart';
 import 'lookup.dart';
 import 'main.dart';
 import 'ui.dart';
+import 'volume.dart';
+import 'volume_ui.dart';
 
 /// What happened to one scanned barcode.
 enum ScanState { looking, added, already, notFound, failed }
@@ -16,6 +18,9 @@ class ScanItem {
   String title;
   ScanState state = ScanState.looking;
   String note = ''; // why a lookup failed, in plain words
+  int? bookId;
+  VolumeGuess? guess; // a suggestion only: it is applied when the owner taps it
+  bool applied = false;
   ScanItem(this.isbn, this.title);
 }
 
@@ -61,7 +66,8 @@ class _BulkScanPageState extends State<BulkScanPage> {
           if (again != null) {
             item.state = ScanState.already;
           } else {
-            await insertMeta(m, locked: widget.locked);
+            item.bookId = await insertMeta(m, locked: widget.locked);
+            if (m.series.trim().isEmpty) item.guess = parseVolume(m.title);
             item.state = ScanState.added;
           }
         }
@@ -133,6 +139,17 @@ class _BulkScanPageState extends State<BulkScanPage> {
                 },
                 title: Text(it.title, maxLines: 1, overflow: TextOverflow.ellipsis),
                 subtitle: Text(_label(it)),
+                trailing: it.guess == null || it.bookId == null
+                    ? null
+                    : it.applied
+                        ? const Icon(Icons.check)
+                        : TextButton(
+                            onPressed: () async {
+                              await applyVolume(it.bookId!, it.guess!);
+                              if (mounted) setState(() => it.applied = true);
+                            },
+                            child: Text(guessText(it.guess!)),
+                          ),
               );
             },
           ),

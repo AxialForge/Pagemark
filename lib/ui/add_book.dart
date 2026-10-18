@@ -163,6 +163,8 @@ class _AddBookState extends State<AddBook> {
   Future<void> _insert(BookMeta m) async {
     final id = await insertMeta(m, locked: widget.locked);
     if (!mounted) return;
+    await offerVolume(context, id);
+    if (!mounted) return;
     Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: id))); // Back returns to your search results
   }
 

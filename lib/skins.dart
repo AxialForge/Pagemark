@@ -26,7 +26,7 @@ LibrarySkin skinById(String? id) => LibrarySkin.values.firstWhere((s) => s.name 
 /// Bottom sheet to pick the style. [onGrouped] fires immediately when the "Group by my shelves" switch changes
 /// (it applies to Bookshelf and Spines); picking a style closes the sheet and returns it.
 Future<LibrarySkin?> showSkinPicker(BuildContext context, LibrarySkin current,
-        {bool grouped = false, ValueChanged<bool>? onGrouped, bool hasShelves = false}) =>
+        {bool grouped = false, ValueChanged<bool>? onGrouped, bool hasShelves = false, bool seriesGrouped = false, ValueChanged<bool>? onSeriesGrouped}) =>
     showModalBottomSheet<LibrarySkin>(
       context: context,
       showDragHandle: true,
@@ -53,6 +53,16 @@ Future<LibrarySkin?> showSkinPicker(BuildContext context, LibrarySkin current,
                     : 'Create a shelf first: Library menu, then Manage shelves'),
                 value: grouped && hasShelves,
                 onChanged: hasShelves ? (v) { grouped = v; onGrouped(v); setSheet(() {}); } : null,
+              ),
+            ],
+            if (onSeriesGrouped != null) ...[
+              const Divider(height: 8),
+              SwitchListTile(
+                secondary: const Icon(Icons.layers_outlined),
+                title: const Text('Group volumes by series'),
+                subtitle: const Text('One row per series instead of one per volume. It turns on by itself when a series has 3 or more volumes. Searching shows every volume.'),
+                value: seriesGrouped,
+                onChanged: (v) { seriesGrouped = v; onSeriesGrouped(v); setSheet(() {}); },
               ),
             ],
             const SizedBox(height: 8),
