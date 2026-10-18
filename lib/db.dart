@@ -8,6 +8,7 @@ part 'db.g.dart';
 
 @TableIndex(name: 'books_locked', columns: {#locked})
 @TableIndex(name: 'books_title', columns: {#title})
+@TableIndex(name: 'books_series', columns: {#series})
 class Books extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get title => text()();
@@ -28,6 +29,23 @@ class Books extends Table {
   DateTimeColumn get added => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()(); // soft delete (Trash)
   IntColumn get queuePos => integer().nullable()(); // place in the "read next" order (smaller first); null = not placed
+  TextColumn get kind => text().withDefault(const Constant(''))(); // '' (a plain book) | manga | comic | lightnovel
+  BoolColumn get owned => boolean().withDefault(const Constant(true))(); // false: on the list but not owned yet (a wanted volume)
+}
+
+/// Facts about a whole series, per library: how many volumes it has and whether it is still coming out.
+@DataClassName('SeriesInfoRow')
+class SeriesInfo extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get nameKey => text()(); // the name lower-cased and trimmed
+  TextColumn get name => text()(); // as typed
+  BoolColumn get locked => boolean().withDefault(const Constant(false))();
+  IntColumn get total => integer().nullable()();
+  TextColumn get status => text().withDefault(const Constant(''))(); // '' | ongoing | complete
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {nameKey, locked}
+      ];
 }
 
 @TableIndex(name: 'reads_book', columns: {#bookId})
@@ -102,12 +120,12 @@ class BookShelves extends Table {
   Set<Column> get primaryKey => {bookId, shelfId};
 }
 
-@DriftDatabase(tables: [Books, Reads, Shelves, BookShelves, Quotes, ReadingSessions, Loans])
+@DriftDatabase(tables: [Books, Reads, Shelves, BookShelves, Quotes, ReadingSessions, Loans, SeriesInfo])
 class AppDb extends _$AppDb {
   AppDb() : super(_open());
   AppDb.forFile(File f) : super(NativeDatabase(f, setup: _pragmas));
   AppDb.memory() : super(NativeDatabase.memory());
-  static const currentSchema = 6;
+  static const currentSchema = 7;
   @override
   int get schemaVersion => currentSchema;
 
@@ -148,6 +166,18 @@ class AppDb extends _$AppDb {
             await m.createTable(readingSessions);
             await m.createTable(loans);
           }
+          if (from < 7) {
+            await m.addColumn(books, books.kind);
+            await m.addColumn(books, books.owned);
+            await m.createTable(seriesInfo);
+            await m.createIndex(booksSeries);
+            // one row per series and library, taking the largest total any of its books carried
+            await customStatement(
+              "INSERT OR IGNORE INTO series_info (name_key, name, locked, total, status) "
+              "SELECT lower(trim(series)), min(trim(series)), locked, max(series_total), '' FROM books "
+              "WHERE trim(series) <> '' GROUP BY lower(trim(series)), locked",
+            );
+          }
         },
         beforeOpen: (details) async {
           // Without this SQLite ignores ON DELETE CASCADE and leaves orphaned reads.
@@ -156,6 +186,30 @@ class AppDb extends _$AppDb {
       );
 
   static const trashDays = 30;
+
+  // ── series ──
+  static String seriesKey(String name) => name.trim().toLowerCase();
+
+  Stream<List<SeriesInfoRow>> watchSeriesInfo({required bool locked}) =>
+      (select(seriesInfo)..where((s) => s.locked.equals(locked))).watch();
+
+  Future<SeriesInfoRow?> seriesInfoFor(String name, {required bool locked}) =>
+      (select(seriesInfo)..where((s) => s.nameKey.equals(seriesKey(name)) & s.locked.equals(locked))).getSingleOrNull();
+
+  /// Sets what is known about a series (total volumes, ongoing or complete), creating its row when needed.
+  Future<void> setSeriesInfo(String name, {required bool locked, int? total, bool clearTotal = false, String? status}) async {
+    final key = seriesKey(name);
+    if (key.isEmpty) return;
+    final have = await seriesInfoFor(name, locked: locked);
+    if (have == null) {
+      await into(seriesInfo).insert(SeriesInfoCompanion.insert(nameKey: key, name: name.trim(), locked: Value(locked), total: Value(total), status: Value(status ?? '')));
+    } else {
+      await (update(seriesInfo)..where((s) => s.id.equals(have.id))).write(SeriesInfoCompanion(
+        total: clearTotal ? const Value(null) : (total == null ? const Value.absent() : Value(total)),
+        status: status == null ? const Value.absent() : Value(status),
+      ));
+    }
+  }
 
   // ── shelves ──
   /// All shelves, or (with [locked]) only the ones that library may show: a shelf is visible in a library when one of its books lives

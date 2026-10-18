@@ -30,6 +30,8 @@ class ImportQuote {
 class ImportBook {
   final List<ImportQuote> quotes = [];
   int? seriesTotal;
+  String kind = '', seriesStatus = '';
+  bool owned = true;
   String title, author, isbn, genre, series, publisher, tags, notes, coverUrl, description = '';
   double? seriesNumber;
   int? year, pages;
@@ -210,6 +212,11 @@ class Importer {
         publisher: _unsafe(_s(r['publisher'])), year: _int(r['year']), pages: _int(r['pages']), tags: normalizeTags(_unsafe(_s(r['tags']))), notes: _unsafe(_s(r['notes'])),
       );
       b.seriesTotal = _int(r['series_total']);
+      final kind = _s(r['kind']).toLowerCase();
+      b.kind = const {'manga', 'comic', 'lightnovel'}.contains(kind) ? kind : '';
+      b.owned = _s(r['owned']).toLowerCase() != 'false';
+      final st = _s(r['series_status']).toLowerCase();
+      b.seriesStatus = const {'ongoing', 'complete'}.contains(st) ? st : '';
       final sn = double.tryParse(_s(r['series_number']));
       b.seriesNumber = sn != null && sn.isFinite && sn > 0 && sn < 100000 ? sn : null;
       b.description = _unsafe(_s(r['description']));
@@ -373,8 +380,13 @@ class ImportRunner {
         final id = await db.into(db.books).insert(BooksCompanion.insert(
               title: b.title, author: Value(b.author), isbn: Value(b.isbn), genre: Value(b.genre), series: Value(b.series), seriesNumber: Value(b.seriesNumber), description: Value(b.description),
               publisher: Value(b.publisher), year: Value(b.year), pages: Value(b.pages), tags: Value(b.tags), notes: Value(b.notes), coverUrl: Value(b.coverUrl),
-              seriesTotal: Value(b.seriesTotal),
+              seriesTotal: Value(b.seriesTotal), kind: Value(b.kind), owned: Value(b.owned),
             ));
+        if (b.series.trim().isNotEmpty && (b.seriesTotal != null || b.seriesStatus.isNotEmpty)) {
+          final have = await db.seriesInfoFor(b.series, locked: false);
+          await db.setSeriesInfo(b.series, locked: false,
+              total: have?.total == null ? b.seriesTotal : null, status: (have?.status ?? '').isEmpty && b.seriesStatus.isNotEmpty ? b.seriesStatus : null);
+        }
         return id;
       }
 

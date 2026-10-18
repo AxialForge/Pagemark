@@ -211,6 +211,29 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _ownedMeta = const VerificationMeta('owned');
+  @override
+  late final GeneratedColumn<bool> owned = GeneratedColumn<bool>(
+    'owned',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("owned" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -232,6 +255,8 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
     added,
     deletedAt,
     queuePos,
+    kind,
+    owned,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -367,6 +392,18 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
         queuePos.isAcceptableOrUnknown(data['queue_pos']!, _queuePosMeta),
       );
     }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    }
+    if (data.containsKey('owned')) {
+      context.handle(
+        _ownedMeta,
+        owned.isAcceptableOrUnknown(data['owned']!, _ownedMeta),
+      );
+    }
     return context;
   }
 
@@ -452,6 +489,14 @@ class $BooksTable extends Books with TableInfo<$BooksTable, Book> {
         DriftSqlType.int,
         data['${effectivePrefix}queue_pos'],
       ),
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      owned: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}owned'],
+      )!,
     );
   }
 
@@ -481,6 +526,8 @@ class Book extends DataClass implements Insertable<Book> {
   final DateTime added;
   final DateTime? deletedAt;
   final int? queuePos;
+  final String kind;
+  final bool owned;
   const Book({
     required this.id,
     required this.title,
@@ -501,6 +548,8 @@ class Book extends DataClass implements Insertable<Book> {
     required this.added,
     this.deletedAt,
     this.queuePos,
+    required this.kind,
+    required this.owned,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -536,6 +585,8 @@ class Book extends DataClass implements Insertable<Book> {
     if (!nullToAbsent || queuePos != null) {
       map['queue_pos'] = Variable<int>(queuePos);
     }
+    map['kind'] = Variable<String>(kind);
+    map['owned'] = Variable<bool>(owned);
     return map;
   }
 
@@ -570,6 +621,8 @@ class Book extends DataClass implements Insertable<Book> {
       queuePos: queuePos == null && nullToAbsent
           ? const Value.absent()
           : Value(queuePos),
+      kind: Value(kind),
+      owned: Value(owned),
     );
   }
 
@@ -598,6 +651,8 @@ class Book extends DataClass implements Insertable<Book> {
       added: serializer.fromJson<DateTime>(json['added']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       queuePos: serializer.fromJson<int?>(json['queuePos']),
+      kind: serializer.fromJson<String>(json['kind']),
+      owned: serializer.fromJson<bool>(json['owned']),
     );
   }
   @override
@@ -623,6 +678,8 @@ class Book extends DataClass implements Insertable<Book> {
       'added': serializer.toJson<DateTime>(added),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'queuePos': serializer.toJson<int?>(queuePos),
+      'kind': serializer.toJson<String>(kind),
+      'owned': serializer.toJson<bool>(owned),
     };
   }
 
@@ -646,6 +703,8 @@ class Book extends DataClass implements Insertable<Book> {
     DateTime? added,
     Value<DateTime?> deletedAt = const Value.absent(),
     Value<int?> queuePos = const Value.absent(),
+    String? kind,
+    bool? owned,
   }) => Book(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -666,6 +725,8 @@ class Book extends DataClass implements Insertable<Book> {
     added: added ?? this.added,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     queuePos: queuePos.present ? queuePos.value : this.queuePos,
+    kind: kind ?? this.kind,
+    owned: owned ?? this.owned,
   );
   Book copyWithCompanion(BooksCompanion data) {
     return Book(
@@ -694,6 +755,8 @@ class Book extends DataClass implements Insertable<Book> {
       added: data.added.present ? data.added.value : this.added,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       queuePos: data.queuePos.present ? data.queuePos.value : this.queuePos,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      owned: data.owned.present ? data.owned.value : this.owned,
     );
   }
 
@@ -718,13 +781,15 @@ class Book extends DataClass implements Insertable<Book> {
           ..write('locked: $locked, ')
           ..write('added: $added, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('queuePos: $queuePos')
+          ..write('queuePos: $queuePos, ')
+          ..write('kind: $kind, ')
+          ..write('owned: $owned')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     title,
     author,
@@ -744,7 +809,9 @@ class Book extends DataClass implements Insertable<Book> {
     added,
     deletedAt,
     queuePos,
-  );
+    kind,
+    owned,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -767,7 +834,9 @@ class Book extends DataClass implements Insertable<Book> {
           other.locked == this.locked &&
           other.added == this.added &&
           other.deletedAt == this.deletedAt &&
-          other.queuePos == this.queuePos);
+          other.queuePos == this.queuePos &&
+          other.kind == this.kind &&
+          other.owned == this.owned);
 }
 
 class BooksCompanion extends UpdateCompanion<Book> {
@@ -790,6 +859,8 @@ class BooksCompanion extends UpdateCompanion<Book> {
   final Value<DateTime> added;
   final Value<DateTime?> deletedAt;
   final Value<int?> queuePos;
+  final Value<String> kind;
+  final Value<bool> owned;
   const BooksCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -810,6 +881,8 @@ class BooksCompanion extends UpdateCompanion<Book> {
     this.added = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.queuePos = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.owned = const Value.absent(),
   });
   BooksCompanion.insert({
     this.id = const Value.absent(),
@@ -831,6 +904,8 @@ class BooksCompanion extends UpdateCompanion<Book> {
     this.added = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.queuePos = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.owned = const Value.absent(),
   }) : title = Value(title);
   static Insertable<Book> custom({
     Expression<int>? id,
@@ -852,6 +927,8 @@ class BooksCompanion extends UpdateCompanion<Book> {
     Expression<DateTime>? added,
     Expression<DateTime>? deletedAt,
     Expression<int>? queuePos,
+    Expression<String>? kind,
+    Expression<bool>? owned,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -873,6 +950,8 @@ class BooksCompanion extends UpdateCompanion<Book> {
       if (added != null) 'added': added,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (queuePos != null) 'queue_pos': queuePos,
+      if (kind != null) 'kind': kind,
+      if (owned != null) 'owned': owned,
     });
   }
 
@@ -896,6 +975,8 @@ class BooksCompanion extends UpdateCompanion<Book> {
     Value<DateTime>? added,
     Value<DateTime?>? deletedAt,
     Value<int?>? queuePos,
+    Value<String>? kind,
+    Value<bool>? owned,
   }) {
     return BooksCompanion(
       id: id ?? this.id,
@@ -917,6 +998,8 @@ class BooksCompanion extends UpdateCompanion<Book> {
       added: added ?? this.added,
       deletedAt: deletedAt ?? this.deletedAt,
       queuePos: queuePos ?? this.queuePos,
+      kind: kind ?? this.kind,
+      owned: owned ?? this.owned,
     );
   }
 
@@ -980,6 +1063,12 @@ class BooksCompanion extends UpdateCompanion<Book> {
     if (queuePos.present) {
       map['queue_pos'] = Variable<int>(queuePos.value);
     }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (owned.present) {
+      map['owned'] = Variable<bool>(owned.value);
+    }
     return map;
   }
 
@@ -1004,7 +1093,9 @@ class BooksCompanion extends UpdateCompanion<Book> {
           ..write('locked: $locked, ')
           ..write('added: $added, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('queuePos: $queuePos')
+          ..write('queuePos: $queuePos, ')
+          ..write('kind: $kind, ')
+          ..write('owned: $owned')
           ..write(')'))
         .toString();
   }
@@ -3661,6 +3752,401 @@ class LoansCompanion extends UpdateCompanion<Loan> {
   }
 }
 
+class $SeriesInfoTable extends SeriesInfo
+    with TableInfo<$SeriesInfoTable, SeriesInfoRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SeriesInfoTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameKeyMeta = const VerificationMeta(
+    'nameKey',
+  );
+  @override
+  late final GeneratedColumn<String> nameKey = GeneratedColumn<String>(
+    'name_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lockedMeta = const VerificationMeta('locked');
+  @override
+  late final GeneratedColumn<bool> locked = GeneratedColumn<bool>(
+    'locked',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("locked" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _totalMeta = const VerificationMeta('total');
+  @override
+  late final GeneratedColumn<int> total = GeneratedColumn<int>(
+    'total',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    nameKey,
+    name,
+    locked,
+    total,
+    status,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'series_info';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SeriesInfoRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name_key')) {
+      context.handle(
+        _nameKeyMeta,
+        nameKey.isAcceptableOrUnknown(data['name_key']!, _nameKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameKeyMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('locked')) {
+      context.handle(
+        _lockedMeta,
+        locked.isAcceptableOrUnknown(data['locked']!, _lockedMeta),
+      );
+    }
+    if (data.containsKey('total')) {
+      context.handle(
+        _totalMeta,
+        total.isAcceptableOrUnknown(data['total']!, _totalMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {nameKey, locked},
+  ];
+  @override
+  SeriesInfoRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SeriesInfoRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      nameKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name_key'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      locked: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}locked'],
+      )!,
+      total: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+    );
+  }
+
+  @override
+  $SeriesInfoTable createAlias(String alias) {
+    return $SeriesInfoTable(attachedDatabase, alias);
+  }
+}
+
+class SeriesInfoRow extends DataClass implements Insertable<SeriesInfoRow> {
+  final int id;
+  final String nameKey;
+  final String name;
+  final bool locked;
+  final int? total;
+  final String status;
+  const SeriesInfoRow({
+    required this.id,
+    required this.nameKey,
+    required this.name,
+    required this.locked,
+    this.total,
+    required this.status,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name_key'] = Variable<String>(nameKey);
+    map['name'] = Variable<String>(name);
+    map['locked'] = Variable<bool>(locked);
+    if (!nullToAbsent || total != null) {
+      map['total'] = Variable<int>(total);
+    }
+    map['status'] = Variable<String>(status);
+    return map;
+  }
+
+  SeriesInfoCompanion toCompanion(bool nullToAbsent) {
+    return SeriesInfoCompanion(
+      id: Value(id),
+      nameKey: Value(nameKey),
+      name: Value(name),
+      locked: Value(locked),
+      total: total == null && nullToAbsent
+          ? const Value.absent()
+          : Value(total),
+      status: Value(status),
+    );
+  }
+
+  factory SeriesInfoRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SeriesInfoRow(
+      id: serializer.fromJson<int>(json['id']),
+      nameKey: serializer.fromJson<String>(json['nameKey']),
+      name: serializer.fromJson<String>(json['name']),
+      locked: serializer.fromJson<bool>(json['locked']),
+      total: serializer.fromJson<int?>(json['total']),
+      status: serializer.fromJson<String>(json['status']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'nameKey': serializer.toJson<String>(nameKey),
+      'name': serializer.toJson<String>(name),
+      'locked': serializer.toJson<bool>(locked),
+      'total': serializer.toJson<int?>(total),
+      'status': serializer.toJson<String>(status),
+    };
+  }
+
+  SeriesInfoRow copyWith({
+    int? id,
+    String? nameKey,
+    String? name,
+    bool? locked,
+    Value<int?> total = const Value.absent(),
+    String? status,
+  }) => SeriesInfoRow(
+    id: id ?? this.id,
+    nameKey: nameKey ?? this.nameKey,
+    name: name ?? this.name,
+    locked: locked ?? this.locked,
+    total: total.present ? total.value : this.total,
+    status: status ?? this.status,
+  );
+  SeriesInfoRow copyWithCompanion(SeriesInfoCompanion data) {
+    return SeriesInfoRow(
+      id: data.id.present ? data.id.value : this.id,
+      nameKey: data.nameKey.present ? data.nameKey.value : this.nameKey,
+      name: data.name.present ? data.name.value : this.name,
+      locked: data.locked.present ? data.locked.value : this.locked,
+      total: data.total.present ? data.total.value : this.total,
+      status: data.status.present ? data.status.value : this.status,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SeriesInfoRow(')
+          ..write('id: $id, ')
+          ..write('nameKey: $nameKey, ')
+          ..write('name: $name, ')
+          ..write('locked: $locked, ')
+          ..write('total: $total, ')
+          ..write('status: $status')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, nameKey, name, locked, total, status);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SeriesInfoRow &&
+          other.id == this.id &&
+          other.nameKey == this.nameKey &&
+          other.name == this.name &&
+          other.locked == this.locked &&
+          other.total == this.total &&
+          other.status == this.status);
+}
+
+class SeriesInfoCompanion extends UpdateCompanion<SeriesInfoRow> {
+  final Value<int> id;
+  final Value<String> nameKey;
+  final Value<String> name;
+  final Value<bool> locked;
+  final Value<int?> total;
+  final Value<String> status;
+  const SeriesInfoCompanion({
+    this.id = const Value.absent(),
+    this.nameKey = const Value.absent(),
+    this.name = const Value.absent(),
+    this.locked = const Value.absent(),
+    this.total = const Value.absent(),
+    this.status = const Value.absent(),
+  });
+  SeriesInfoCompanion.insert({
+    this.id = const Value.absent(),
+    required String nameKey,
+    required String name,
+    this.locked = const Value.absent(),
+    this.total = const Value.absent(),
+    this.status = const Value.absent(),
+  }) : nameKey = Value(nameKey),
+       name = Value(name);
+  static Insertable<SeriesInfoRow> custom({
+    Expression<int>? id,
+    Expression<String>? nameKey,
+    Expression<String>? name,
+    Expression<bool>? locked,
+    Expression<int>? total,
+    Expression<String>? status,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (nameKey != null) 'name_key': nameKey,
+      if (name != null) 'name': name,
+      if (locked != null) 'locked': locked,
+      if (total != null) 'total': total,
+      if (status != null) 'status': status,
+    });
+  }
+
+  SeriesInfoCompanion copyWith({
+    Value<int>? id,
+    Value<String>? nameKey,
+    Value<String>? name,
+    Value<bool>? locked,
+    Value<int?>? total,
+    Value<String>? status,
+  }) {
+    return SeriesInfoCompanion(
+      id: id ?? this.id,
+      nameKey: nameKey ?? this.nameKey,
+      name: name ?? this.name,
+      locked: locked ?? this.locked,
+      total: total ?? this.total,
+      status: status ?? this.status,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (nameKey.present) {
+      map['name_key'] = Variable<String>(nameKey.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (locked.present) {
+      map['locked'] = Variable<bool>(locked.value);
+    }
+    if (total.present) {
+      map['total'] = Variable<int>(total.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SeriesInfoCompanion(')
+          ..write('id: $id, ')
+          ..write('nameKey: $nameKey, ')
+          ..write('name: $name, ')
+          ..write('locked: $locked, ')
+          ..write('total: $total, ')
+          ..write('status: $status')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDb extends GeneratedDatabase {
   _$AppDb(QueryExecutor e) : super(e);
   $AppDbManager get managers => $AppDbManager(this);
@@ -3673,6 +4159,7 @@ abstract class _$AppDb extends GeneratedDatabase {
     this,
   );
   late final $LoansTable loans = $LoansTable(this);
+  late final $SeriesInfoTable seriesInfo = $SeriesInfoTable(this);
   late final Index booksLocked = Index(
     'books_locked',
     'CREATE INDEX books_locked ON books (locked)',
@@ -3680,6 +4167,10 @@ abstract class _$AppDb extends GeneratedDatabase {
   late final Index booksTitle = Index(
     'books_title',
     'CREATE INDEX books_title ON books (title)',
+  );
+  late final Index booksSeries = Index(
+    'books_series',
+    'CREATE INDEX books_series ON books (series)',
   );
   late final Index readsBook = Index(
     'reads_book',
@@ -3705,8 +4196,10 @@ abstract class _$AppDb extends GeneratedDatabase {
     quotes,
     readingSessions,
     loans,
+    seriesInfo,
     booksLocked,
     booksTitle,
+    booksSeries,
     readsBook,
     sessionsBook,
     loansBook,
@@ -3778,6 +4271,8 @@ typedef $$BooksTableCreateCompanionBuilder = BooksCompanion Function({
   Value<DateTime> added,
   Value<DateTime?> deletedAt,
   Value<int?> queuePos,
+  Value<String> kind,
+  Value<bool> owned,
 });
 typedef $$BooksTableUpdateCompanionBuilder = BooksCompanion Function({
   Value<int> id,
@@ -3799,6 +4294,8 @@ typedef $$BooksTableUpdateCompanionBuilder = BooksCompanion Function({
   Value<DateTime> added,
   Value<DateTime?> deletedAt,
   Value<int?> queuePos,
+  Value<String> kind,
+  Value<bool> owned,
 });
 
 final class $$BooksTableReferences
@@ -4001,6 +4498,16 @@ class $$BooksTableFilterComposer extends Composer<_$AppDb, $BooksTable> {
 
   ColumnFilters<int> get queuePos => $composableBuilder(
     column: $table.queuePos,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get owned => $composableBuilder(
+    column: $table.owned,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4232,6 +4739,16 @@ class $$BooksTableOrderingComposer extends Composer<_$AppDb, $BooksTable> {
     column: $table.queuePos,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get owned => $composableBuilder(
+    column: $table.owned,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$BooksTableAnnotationComposer extends Composer<_$AppDb, $BooksTable> {
@@ -4304,6 +4821,12 @@ class $$BooksTableAnnotationComposer extends Composer<_$AppDb, $BooksTable> {
 
   GeneratedColumn<int> get queuePos =>
       $composableBuilder(column: $table.queuePos, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<bool> get owned =>
+      $composableBuilder(column: $table.owned, builder: (column) => column);
 
   Expression<T> readsRefs<T extends Object>(
     Expression<T> Function($$ReadsTableAnnotationComposer a) f,
@@ -4484,6 +5007,8 @@ class $$BooksTableTableManager
                 Value<DateTime> added = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int?> queuePos = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<bool> owned = const Value.absent(),
               }) => BooksCompanion(
                 id: id,
                 title: title,
@@ -4504,6 +5029,8 @@ class $$BooksTableTableManager
                 added: added,
                 deletedAt: deletedAt,
                 queuePos: queuePos,
+                kind: kind,
+                owned: owned,
               ),
           createCompanionCallback:
               ({
@@ -4526,6 +5053,8 @@ class $$BooksTableTableManager
                 Value<DateTime> added = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int?> queuePos = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<bool> owned = const Value.absent(),
               }) => BooksCompanion.insert(
                 id: id,
                 title: title,
@@ -4546,6 +5075,8 @@ class $$BooksTableTableManager
                 added: added,
                 deletedAt: deletedAt,
                 queuePos: queuePos,
+                kind: kind,
+                owned: owned,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -6812,6 +7343,223 @@ typedef $$LoansTableProcessedTableManager =
       Loan,
       PrefetchHooks Function({bool bookId})
     >;
+typedef $$SeriesInfoTableCreateCompanionBuilder = SeriesInfoCompanion Function({
+  Value<int> id,
+  required String nameKey,
+  required String name,
+  Value<bool> locked,
+  Value<int?> total,
+  Value<String> status,
+});
+typedef $$SeriesInfoTableUpdateCompanionBuilder = SeriesInfoCompanion Function({
+  Value<int> id,
+  Value<String> nameKey,
+  Value<String> name,
+  Value<bool> locked,
+  Value<int?> total,
+  Value<String> status,
+});
+
+class $$SeriesInfoTableFilterComposer
+    extends Composer<_$AppDb, $SeriesInfoTable> {
+  $$SeriesInfoTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nameKey => $composableBuilder(
+    column: $table.nameKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get locked => $composableBuilder(
+    column: $table.locked,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SeriesInfoTableOrderingComposer
+    extends Composer<_$AppDb, $SeriesInfoTable> {
+  $$SeriesInfoTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nameKey => $composableBuilder(
+    column: $table.nameKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get locked => $composableBuilder(
+    column: $table.locked,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get total => $composableBuilder(
+    column: $table.total,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SeriesInfoTableAnnotationComposer
+    extends Composer<_$AppDb, $SeriesInfoTable> {
+  $$SeriesInfoTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get nameKey =>
+      $composableBuilder(column: $table.nameKey, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<bool> get locked =>
+      $composableBuilder(column: $table.locked, builder: (column) => column);
+
+  GeneratedColumn<int> get total =>
+      $composableBuilder(column: $table.total, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+}
+
+class $$SeriesInfoTableTableManager
+    extends
+        RootTableManager<
+          _$AppDb,
+          $SeriesInfoTable,
+          SeriesInfoRow,
+          $$SeriesInfoTableFilterComposer,
+          $$SeriesInfoTableOrderingComposer,
+          $$SeriesInfoTableAnnotationComposer,
+          $$SeriesInfoTableCreateCompanionBuilder,
+          $$SeriesInfoTableUpdateCompanionBuilder,
+          (
+            SeriesInfoRow,
+            BaseReferences<_$AppDb, $SeriesInfoTable, SeriesInfoRow>,
+          ),
+          SeriesInfoRow,
+          PrefetchHooks Function()
+        > {
+  $$SeriesInfoTableTableManager(_$AppDb db, $SeriesInfoTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SeriesInfoTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SeriesInfoTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SeriesInfoTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> nameKey = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<bool> locked = const Value.absent(),
+                Value<int?> total = const Value.absent(),
+                Value<String> status = const Value.absent(),
+              }) => SeriesInfoCompanion(
+                id: id,
+                nameKey: nameKey,
+                name: name,
+                locked: locked,
+                total: total,
+                status: status,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String nameKey,
+                required String name,
+                Value<bool> locked = const Value.absent(),
+                Value<int?> total = const Value.absent(),
+                Value<String> status = const Value.absent(),
+              }) => SeriesInfoCompanion.insert(
+                id: id,
+                nameKey: nameKey,
+                name: name,
+                locked: locked,
+                total: total,
+                status: status,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$SeriesInfoTable, SeriesInfoRow>(table),
+                  BaseReferences<_$AppDb, $SeriesInfoTable, SeriesInfoRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SeriesInfoTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDb,
+      $SeriesInfoTable,
+      SeriesInfoRow,
+      $$SeriesInfoTableFilterComposer,
+      $$SeriesInfoTableOrderingComposer,
+      $$SeriesInfoTableAnnotationComposer,
+      $$SeriesInfoTableCreateCompanionBuilder,
+      $$SeriesInfoTableUpdateCompanionBuilder,
+      (SeriesInfoRow, BaseReferences<_$AppDb, $SeriesInfoTable, SeriesInfoRow>),
+      SeriesInfoRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDbManager {
   final _$AppDb _db;
@@ -6830,4 +7578,6 @@ class $AppDbManager {
       $$ReadingSessionsTableTableManager(_db, _db.readingSessions);
   $$LoansTableTableManager get loans =>
       $$LoansTableTableManager(_db, _db.loans);
+  $$SeriesInfoTableTableManager get seriesInfo =>
+      $$SeriesInfoTableTableManager(_db, _db.seriesInfo);
 }

@@ -26,7 +26,7 @@ Map<String, Object?> volume(String title, {String authors = 'Frank Herbert', Str
       }
     };
 
-Book book({String author = '', String isbn = '', String cover = '', int? pages, String publisher = '', String genre = '', String desc = ''}) => Book(
+Book book({String author = '', String isbn = '', String cover = '', int? pages, String publisher = '', String genre = '', String desc = ''}) => Book(kind: '', owned: true,
     id: 1, title: 'Dune', author: author, isbn: isbn, coverUrl: cover, genre: genre, series: '', publisher: publisher, year: null, pages: pages, description: desc,
     tags: '', notes: '', locked: false, added: DateTime(2026), queuePos: null);
 

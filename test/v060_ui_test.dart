@@ -15,7 +15,7 @@ void main() {
       expect(authorsOf('A. One & B. Two'), ['A. One', 'B. Two']);
       expect(authorsOf('A and B; C'), ['A', 'B', 'C']);
       expect(authorsOf(''), isEmpty);
-      final b = Book(id: 1, title: 't', author: 'Terry Pratchett, Neil Gaiman', isbn: '', coverUrl: '', genre: '', series: '', publisher: '', description: '', tags: '', notes: '', locked: false, added: DateTime(2026), seriesNumber: null, seriesTotal: null, year: null, pages: null, deletedAt: null);
+      final b = Book(kind: '', owned: true, id: 1, title: 't', author: 'Terry Pratchett, Neil Gaiman', isbn: '', coverUrl: '', genre: '', series: '', publisher: '', description: '', tags: '', notes: '', locked: false, added: DateTime(2026), seriesNumber: null, seriesTotal: null, year: null, pages: null, deletedAt: null);
       expect(bookBy(b, 'neil gaiman'), isTrue);
       expect(bookBy(b, 'Pratchett'), isFalse, reason: 'whole names only');
     });

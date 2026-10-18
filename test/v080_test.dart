@@ -7,7 +7,7 @@ import 'package:pagemark/updater_ui.dart';
 import 'package:pagemark/widget_sync.dart';
 
 BookRow row(String title, {bool locked = false, String? status, DateTime? finished, bool trashed = false}) {
-  final b = Book(
+  final b = Book(kind: '', owned: true,
     id: title.hashCode, title: title, author: '', isbn: '', coverUrl: '', genre: '', series: '', seriesNumber: null, publisher: '', year: null,
     pages: null, description: '', tags: '', notes: '', locked: locked, added: DateTime(2026), deletedAt: trashed ? DateTime(2026) : null, seriesTotal: null,
   );

@@ -77,6 +77,7 @@ class Exporter {
   static Future<List<Map<String, Object?>>> rows(AppDb db, {bool includeLocked = false, bool includePrivateFields = false}) async {
     final books = await (db.select(db.books)..where((b) => b.deletedAt.isNull())).get();
     final reads = await db.select(db.reads).get();
+    final statuses = {for (final s in await (db.select(db.seriesInfo)..where((s) => s.locked.equals(false))).get()) s.nameKey: s.status};
     final out = <Map<String, Object?>>[];
     for (final b in books.where((b) => includeLocked || !b.locked)) {
       final rs = reads.where((r) => r.bookId == b.id).toList();
@@ -88,6 +89,7 @@ class Exporter {
           'started': r?.started?.toIso8601String(), 'finished': r?.finished?.toIso8601String(),
           'rating': r?.rating, 'thoughts': r?.thoughts, 'narrator': r?.narrator, 'minutes': r?.minutes,
           'series_total': b.seriesTotal, 'series_number': b.seriesNumber, 'description': b.description,
+          'kind': b.kind, 'owned': b.owned, 'series_status': b.locked ? '' : statuses[AppDb.seriesKey(b.series)] ?? '',
           'rating_story': r?.ratingStory, 'rating_characters': r?.ratingCharacters, 'rating_writing': r?.ratingWriting,
           'rating_pace': r?.ratingPace, 'rating_feeling': r?.ratingFeeling, 'rating_narrator': r?.ratingNarrator,
           if (includePrivateFields) ...{'heat': r?.heat, 'content_notes': r?.contentNotes},

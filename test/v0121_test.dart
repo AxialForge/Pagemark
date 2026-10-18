@@ -21,7 +21,7 @@ void main() {
       SharedPreferences.setMockInitialValues({'timer_book': 1, 'timer_start': DateTime.now().subtract(const Duration(minutes: 5)).toIso8601String()});
       final p = await SharedPreferences.getInstance();
       prefs = p;
-      final other = Book(id: 2, title: 'Other', author: '', isbn: '', coverUrl: '', genre: '', series: '', publisher: '', description: '', tags: '', notes: '', locked: false, added: DateTime(2026));
+      final other = Book(kind: '', owned: true, id: 2, title: 'Other', author: '', isbn: '', coverUrl: '', genre: '', series: '', publisher: '', description: '', tags: '', notes: '', locked: false, added: DateTime(2026));
       final read = Read(id: 9, bookId: 2, format: 'print', status: 'reading', thoughts: '', narrator: '', contentNotes: '');
       await t.pumpWidget(MaterialApp(home: Scaffold(body: ReadingTimerCard(book: other, read: read))));
       expect(find.text('The reading timer is running for another book.'), findsOneWidget);
