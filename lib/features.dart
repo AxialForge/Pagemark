@@ -2,11 +2,14 @@ import 'dart:math' as math;
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'adaptive.dart';
 import 'book_extras.dart' show heatStatsCard, adultFieldsOn;
 import 'detailed_ratings.dart';
 import 'reading_life.dart';
 import 'reading_life_ui.dart';
+import 'series.dart';
+import 'volume.dart' show kinds;
 import 'branding.dart';
 import 'db.dart';
 import 'main.dart';
@@ -372,52 +375,333 @@ class SeriesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: const Text('Series')),
-        body: StreamBuilder<List<BookRow>>(
-          stream: db.watchLibrary(locked: locked),
-          builder: (_, snap) {
-            final groups = <String, List<BookRow>>{};
-            for (final r in snap.data ?? const <BookRow>[]) {
-              final k = r.book.series.trim();
-              if (k.isEmpty) continue;
-              groups.putIfAbsent(k.toLowerCase(), () => []).add(r);
+        body: SeriesData(
+          locked: locked,
+          builder: (context, groups) {
+            if (groups.isEmpty) {
+              return const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('No series yet. Put a series name (and number) on a book via Edit and it appears here.', textAlign: TextAlign.center)));
             }
-            if (groups.isEmpty) return const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('No series yet. Put a series name (and number) on a book via Edit and it appears here.', textAlign: TextAlign.center)));
-            final keys = groups.keys.toList()..sort();
-            return ListView(children: [
-              for (final k in keys) _group(context, groups[k]!),
-            ]);
+            return ListView(children: [for (final g in groups) SeriesTile(group: g, locked: locked)]);
           },
         ),
       );
+}
 
-  Widget _group(BuildContext context, List<BookRow> rows) {
-    rows.sort((a, b) {
-      final x = a.book.seriesNumber, y = b.book.seriesNumber;
-      if (x != null && y != null && x != y) return x.compareTo(y);
-      if (x != null && y == null) return -1;
-      if (x == null && y != null) return 1;
-      return a.book.title.compareTo(b.book.title);
-    });
-    final read = rows.where((r) => r.reads.any((e) => e.status == 'finished')).length;
-    final total = rows.map((r) => r.book.seriesTotal ?? 0).fold<int>(0, (a, b) => a > b ? a : b);
-    final outside = total > rows.length ? total - rows.length : 0; // volumes you do not have yet
-    final next = rows.where((r) => !r.reads.any((e) => e.status == 'finished')).firstOrNull;
-    final avg = seriesAverage(rows);
-    return ExpansionTile(
-      initiallyExpanded: rows.length <= 4,
-      title: Text(rows.first.book.series.trim()),
-      subtitle: Text('$read of ${total > 0 ? total : rows.length} read${outside > 0 ? ' · $outside not in your library' : ''}${next == null ? (outside > 0 ? '' : ' — all done') : ' · next: ${next.book.title}'}${avg.average == null ? '' : ' · average ${avg.average!.toStringAsFixed(1)} stars (${avg.rated} rated)'}'),
-      children: [
-        for (final r in rows)
-          ListTile(
-            leading: Cover(r.book.coverUrl, locked: r.book.locked, title: r.book.title),
-            title: Text('${r.book.seriesNumber == null ? '' : '#${fmtNum(r.book.seriesNumber)}  '}${r.book.title}'),
-            subtitle: Text(r.reads.isEmpty ? 'Not logged' : statuses[r.status] ?? ''),
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: r.book.id))),
-          ),
-      ],
+/// Feeds a builder the series of one library, kept up to date as books and series facts change.
+class SeriesData extends StatelessWidget {
+  final bool locked;
+  final Widget Function(BuildContext, List<SeriesGroup>) builder;
+  const SeriesData({super.key, required this.locked, required this.builder});
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<List<BookRow>>(
+        stream: db.watchLibrary(locked: locked),
+        builder: (_, books) => StreamBuilder<List<SeriesInfoRow>>(
+          stream: db.watchSeriesInfo(locked: locked),
+          builder: (c, infos) => builder(c, groupSeries(books.data ?? const <BookRow>[], infos.data ?? const <SeriesInfoRow>[])),
+        ),
+      );
+}
+
+String seriesSummary(SeriesGroup g) {
+  final total = g.total;
+  return [
+    '${g.ownedCount} of $total owned',
+    '${g.readCount} read',
+    if (g.wantedCount > 0) '${g.wantedCount} wanted',
+    if (g.status.isNotEmpty) g.status == 'ongoing' ? 'ongoing' : 'complete',
+  ].join(' · ');
+}
+
+class SeriesTile extends StatelessWidget {
+  final SeriesGroup group;
+  final bool locked;
+  const SeriesTile({super.key, required this.group, required this.locked});
+
+  @override
+  Widget build(BuildContext context) {
+    final first = group.rows.first.book;
+    return ListTile(
+      leading: Cover(first.coverUrl, locked: first.locked, title: first.title),
+      title: Text(group.name),
+      subtitle: Text(seriesSummary(group)),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SeriesDetailPage(locked: locked, nameKey: group.key))),
     );
   }
+}
+
+/// One series: its volumes as a grid, what is missing, and a quick way to add the next volume.
+class SeriesDetailPage extends StatelessWidget {
+  final bool locked;
+  final String nameKey;
+  const SeriesDetailPage({super.key, required this.locked, required this.nameKey});
+
+  @override
+  Widget build(BuildContext context) => SeriesData(
+        locked: locked,
+        builder: (context, groups) {
+          final g = groups.where((x) => x.key == nameKey).firstOrNull;
+          if (g == null) {
+            return Scaffold(appBar: AppBar(), body: const Center(child: Padding(padding: EdgeInsets.all(24), child: Text('This series has no books left.', textAlign: TextAlign.center))));
+          }
+          return _SeriesBody(group: g, locked: locked);
+        },
+      );
+}
+
+class _SeriesBody extends StatelessWidget {
+  final SeriesGroup group;
+  final bool locked;
+  const _SeriesBody({required this.group, required this.locked});
+
+  Future<int> _addVolume(int n, {required bool owned}) {
+    final seed = group.rows.last.book;
+    return db.into(db.books).insert(BooksCompanion.insert(
+          title: volumeTitle(group.name, n),
+          author: Value(group.rows.map((r) => r.book.author).firstWhere((a) => a.isNotEmpty, orElse: () => '')),
+          series: Value(group.name),
+          seriesNumber: Value(n.toDouble()),
+          kind: Value(group.kind),
+          owned: Value(owned),
+          genre: Value(seed.genre),
+          publisher: Value(seed.publisher),
+          locked: Value(locked),
+        ));
+  }
+
+  Future<void> _add(BuildContext context, int n, {required bool owned}) async {
+    final id = await _addVolume(n, owned: owned);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(
+        content: Text(owned ? 'Added volume $n' : 'Volume $n is on your wanted list'),
+        action: SnackBarAction(label: 'Open', onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: id)))),
+      ));
+  }
+
+  Future<void> _tapMissing(BuildContext context, int n) async {
+    final pick = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (c) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(title: Text('Volume $n', style: const TextStyle(fontWeight: FontWeight.bold)), subtitle: const Text('Not in your library yet')),
+          ListTile(leading: const Icon(Icons.add_circle_outline), title: const Text('I own it'), subtitle: const Text('Add it to your library'), onTap: () => Navigator.pop(c, 'own')),
+          ListTile(leading: const Icon(Icons.bookmark_border), title: const Text('Add to my wanted list'), subtitle: const Text('Remember to get it'), onTap: () => Navigator.pop(c, 'want')),
+        ]),
+      ),
+    );
+    if (pick == null || !context.mounted) return;
+    await _add(context, n, owned: pick == 'own');
+  }
+
+  Future<void> _tapBooks(BuildContext context, VolumeCell cell) async {
+    if (cell.books.length == 1) {
+      await Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: cell.books.first.book.id)));
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (c) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          for (final r in cell.books)
+            ListTile(
+              title: Text(r.book.title),
+              subtitle: Text(r.book.owned ? (SeriesGroup.isRead(r) ? 'Owned, read' : 'Owned') : 'Wanted'),
+              onTap: () {
+                Navigator.pop(c);
+                Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: r.book.id)));
+              },
+            ),
+        ]),
+      ),
+    );
+  }
+
+  Future<void> _editTotal(BuildContext context) async {
+    final t = await ask(context, 'How many volumes does it have?', group.info?.total == null ? '' : '${group.info!.total}', false, false, TextInputType.number);
+    if (t == null) return;
+    final n = int.tryParse(t.trim());
+    await db.setSeriesInfo(group.name, locked: locked, total: n?.clamp(1, 5000), clearTotal: n == null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final g = group;
+    final cells = g.cells;
+    final next = g.nextToRead;
+    return Scaffold(
+      appBar: AppBar(title: Text(g.name, overflow: TextOverflow.ellipsis)),
+      floatingActionButton: FloatingActionButton.extended(
+        icon: const Icon(Icons.add),
+        label: Text('Add volume ${g.nextNumber}'),
+        onPressed: () => _add(context, g.nextNumber, owned: true),
+      ),
+      body: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 96), children: [
+        Text(seriesSummary(g), style: Theme.of(context).textTheme.titleMedium),
+        if (g.nextToBuy != null) Padding(padding: const EdgeInsets.only(top: 4), child: Text('Next to get: volume ${g.nextToBuy}')),
+        if (next != null) Padding(padding: const EdgeInsets.only(top: 4), child: Text('Next to read: ${next.book.title}')),
+        const SizedBox(height: 12),
+        Wrap(spacing: 8, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
+          for (final e in const {'ongoing': 'Ongoing', 'complete': 'Complete'}.entries)
+            ChoiceChip(
+              label: Text(e.value),
+              selected: g.status == e.key,
+              onSelected: (on) => db.setSeriesInfo(g.name, locked: locked, status: on ? e.key : ''),
+            ),
+          ActionChip(avatar: const Icon(Icons.edit_outlined, size: 18), label: Text(g.info?.total == null ? 'Set the number of volumes' : '${g.info!.total} volumes'), onPressed: () => _editTotal(context)),
+        ]),
+        const SizedBox(height: 8),
+        Wrap(spacing: 8, runSpacing: 4, children: [
+          for (final e in kinds.entries)
+            ChoiceChip(
+              label: Text(e.value),
+              selected: g.kind == e.key,
+              onSelected: (_) => db.setSeriesKind(g.name, locked: locked, kind: e.key),
+            ),
+        ]),
+        const SizedBox(height: 16),
+        Semantics(
+          label: 'Volumes. Each button is one volume: read, owned, wanted or missing.',
+          child: Wrap(spacing: 8, runSpacing: 8, children: [
+            for (final c in cells)
+              VolumeButton(
+                cell: c,
+                onTap: () => c.state == VolumeState.missing ? _tapMissing(context, c.number) : _tapBooks(context, c),
+              ),
+          ]),
+        ),
+        const SizedBox(height: 12),
+        ExcludeSemantics(
+          child: Wrap(spacing: 16, runSpacing: 4, children: [
+            for (final s in VolumeState.values) Row(mainAxisSize: MainAxisSize.min, children: [VolumeBox(state: s, size: 18), const SizedBox(width: 6), Text(volumeStateName(s), style: Theme.of(context).textTheme.bodySmall)]),
+          ]),
+        ),
+        const SizedBox(height: 12),
+        Row(children: [
+          OutlinedButton.icon(
+            icon: const Icon(Icons.share_outlined),
+            label: const Text('Share missing list'),
+            onPressed: g.missing.isEmpty && g.wantedCount == 0 ? null : () => SharePlus.instance.share(ShareParams(text: g.missingText)),
+          ),
+        ]),
+        if (g.others.isNotEmpty) ...[
+          const Divider(height: 32),
+          Text('Other books in this series', style: Theme.of(context).textTheme.titleMedium),
+          for (final r in g.others) _bookTile(context, r),
+        ],
+        const Divider(height: 32),
+        Text('All books', style: Theme.of(context).textTheme.titleMedium),
+        for (final r in g.rows) _bookTile(context, r),
+        if (_ratingLine(g).isNotEmpty) Padding(padding: const EdgeInsets.only(top: 12), child: Text(_ratingLine(g), style: Theme.of(context).textTheme.bodySmall)),
+      ]),
+    );
+  }
+
+  static String _ratingLine(SeriesGroup g) {
+    final avg = seriesAverage(g.rows);
+    return avg.average == null ? '' : 'Average ${avg.average!.toStringAsFixed(1)} stars (${avg.rated} rated)';
+  }
+
+  Widget _bookTile(BuildContext context, BookRow r) => ListTile(
+        leading: Cover(r.book.coverUrl, locked: r.book.locked, title: r.book.title),
+        title: Text('${r.book.seriesNumber == null ? '' : '#${SeriesPage.fmtNum(r.book.seriesNumber)}  '}${r.book.title}'),
+        subtitle: Text(!r.book.owned ? 'Wanted' : r.reads.isEmpty ? 'Not logged' : statuses[r.status] ?? ''),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BookPage(bookId: r.book.id))),
+      );
+}
+
+String volumeStateName(VolumeState s) => switch (s) {
+      VolumeState.read => 'Read',
+      VolumeState.owned => 'Owned',
+      VolumeState.wanted => 'Wanted',
+      VolumeState.missing => 'Missing',
+    };
+
+/// One volume of the grid: a labelled button at least 48 dp square.
+class VolumeButton extends StatelessWidget {
+  final VolumeCell cell;
+  final VoidCallback onTap;
+  const VolumeButton({super.key, required this.cell, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: 'Volume ${cell.number}, ${volumeStateName(cell.state).toLowerCase()}',
+        excludeSemantics: true,
+        onTap: onTap,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            child: VolumeBox(state: cell.state, size: 48, label: '${cell.number}'),
+          ),
+        ),
+      );
+}
+
+/// The picture of a volume: filled (read), outlined (owned), dashed (wanted) or grey (missing). The state is also in the words of the
+/// legend and the spoken label, never colour alone.
+class VolumeBox extends StatelessWidget {
+  final VolumeState state;
+  final double size;
+  final String? label;
+  const VolumeBox({super.key, required this.state, required this.size, this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final (fill, line, ink) = switch (state) {
+      VolumeState.read => (cs.primary, cs.primary, cs.onPrimary),
+      VolumeState.owned => (Colors.transparent, cs.primary, cs.onSurface),
+      VolumeState.wanted => (Colors.transparent, cs.tertiary, cs.onSurface),
+      VolumeState.missing => (cs.surfaceContainerHighest, cs.outlineVariant, cs.onSurfaceVariant),
+    };
+    return CustomPaint(
+      painter: _BoxPainter(fill: fill, line: line, dashed: state == VolumeState.wanted, radius: size / 5),
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: label == null
+            ? null
+            : Center(child: Text(label!, style: TextStyle(color: ink, fontWeight: state == VolumeState.read ? FontWeight.bold : FontWeight.normal, fontSize: label!.length > 3 ? 12 : 15))),
+      ),
+    );
+  }
+}
+
+class _BoxPainter extends CustomPainter {
+  final Color fill, line;
+  final bool dashed;
+  final double radius;
+  _BoxPainter({required this.fill, required this.line, required this.dashed, required this.radius});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rrect = RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(radius)).deflate(1);
+    canvas.drawRRect(rrect, Paint()..color = fill);
+    final stroke = Paint()
+      ..color = line
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    if (!dashed) {
+      canvas.drawRRect(rrect, stroke);
+      return;
+    }
+    final path = Path()..addRRect(rrect);
+    for (final m in path.computeMetrics()) {
+      for (var d = 0.0; d < m.length; d += 8) {
+        canvas.drawPath(m.extractPath(d, (d + 4).clamp(0, m.length)), stroke);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_BoxPainter o) => o.fill != fill || o.line != line || o.dashed != dashed || o.radius != radius;
 }
 
 // ───────────────────────── Stats ─────────────────────────

@@ -211,6 +211,15 @@ class AppDb extends _$AppDb {
     }
   }
 
+  /// Gives every live book of a series (in one library) the same kind, so a whole series is manga, a comic or a light novel at once.
+  Future<void> setSeriesKind(String name, {required bool locked, required String kind}) async {
+    final key = seriesKey(name);
+    if (key.isEmpty) return;
+    final rows = await (select(books)..where((b) => b.locked.equals(locked) & b.deletedAt.isNull())).get();
+    final ids = [for (final b in rows) if (seriesKey(b.series) == key) b.id];
+    await _inChunks(ids, (s) => (update(books)..where((b) => b.id.isIn(s))).write(BooksCompanion(kind: Value(kind))));
+  }
+
   // ── shelves ──
   /// All shelves, or (with [locked]) only the ones that library may show: a shelf is visible in a library when one of its books lives
   /// there, or when it is still empty. A shelf holding only locked books therefore never appears (by name) in the main library.
