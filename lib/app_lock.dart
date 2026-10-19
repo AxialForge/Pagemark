@@ -39,6 +39,7 @@ class AppLockOverlay extends StatefulWidget {
 
 class _AppLockOverlayState extends State<AppLockOverlay> with WidgetsBindingObserver {
   DateTime? _leftAt;
+  bool _wasPaused = false; // paused seen and not yet resumed
 
   @override
   void initState() {
@@ -59,9 +60,21 @@ class _AppLockOverlayState extends State<AppLockOverlay> with WidgetsBindingObse
     if (state == AppLifecycleState.resumed && !appLocked.value && !Secure.hold) Secure.set(false);
     if (!appLockEnabled.value) return;
     if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
+      // While the gate is up, the phone's fingerprint sheet pauses the app too. That is not "leaving": counting it made the app lock
+      // again the moment the fingerprint was accepted, over and over.
+      if (appLocked.value) {
+        if (state == AppLifecycleState.paused) _wasPaused = true;
+        return;
+      }
+      // coming back from the background Android replays paused, hidden, inactive, resumed: that second "hidden" is the app returning,
+      // not leaving, and must not lock it again
+      final returning = state == AppLifecycleState.hidden && _wasPaused;
+      if (state == AppLifecycleState.paused) _wasPaused = true;
+      if (returning) return;
       _leftAt ??= DateTime.now();
       if (lockDelay.value == 0) _engage(); // lock before the recents card is captured
     } else if (state == AppLifecycleState.resumed) {
+      _wasPaused = false;
       final away = _leftAt == null ? Duration.zero : DateTime.now().difference(_leftAt!);
       _leftAt = null;
       if (!appLocked.value && _leftAt == null && away > Duration.zero && shouldRelock(away, lockDelay.value)) _engage();
@@ -76,6 +89,7 @@ class _AppLockOverlayState extends State<AppLockOverlay> with WidgetsBindingObse
   }
 
   void _unlocked() {
+    _leftAt = null; // whatever happened while the gate was up (the fingerprint sheet) is not time spent away
     appLocked.value = false;
     Secure.set(false);
   }

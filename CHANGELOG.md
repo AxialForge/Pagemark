@@ -6,6 +6,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-10-18
+
+### Fixed
+- Whole-app lock: accepting the fingerprint could lock the app again straight away, over and over. Android sends "hidden" again when an app comes back from the background (for example when the fingerprint sheet closes), and Pagemark took that for you leaving. Returning to the app, and the fingerprint sheet itself, no longer count as leaving.
+
 ## [1.1.0] - 2026-10-18
 
 ### Added

@@ -82,6 +82,26 @@ void main() {
       expect(appLocked.value, isFalse, reason: 'back after a moment: still unlocked');
     });
 
+    testWidgets('the fingerprint sheet pausing the app while the gate is up does not lock it again after the unlock', (t) async {
+      appLocked.value = true;
+      await t.pumpWidget(host());
+      await t.pumpAndSettle();
+      // the phone's fingerprint sheet opens over the app: Android pauses it
+      t.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      t.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      t.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await t.pump();
+      // the fingerprint is accepted and the gate opens, then the app comes back to the front
+      appLocked.value = false;
+      await t.pump();
+      t.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      t.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      t.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await t.pump();
+      expect(appLocked.value, isFalse, reason: 'this was an unlock loop: every unlock locked the app again');
+      expect(find.text('secret library contents').hitTestable(), findsOneWidget);
+    });
+
     testWidgets('with the lock switched off, leaving the app never locks it', (t) async {
       appLockEnabled.value = false;
       await t.pumpWidget(host());
