@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -9,7 +9,8 @@ import 'main.dart';
 import 'updater.dart';
 
 /// The Google Play build (`--flavor play`) never updates itself: Play does that, and Play forbids installing APKs from outside the store.
-final bool selfUpdates = appFlavor != 'play';
+/// iOS never does either: it can't install APKs and the App Store forbids self-updating apps.
+final bool selfUpdates = defaultTargetPlatform == TargetPlatform.android && appFlavor != 'play';
 
 /// Set when a check found a newer release; drives the badge on Settings.
 final updateAvailable = ValueNotifier<UpdateInfo?>(null);

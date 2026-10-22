@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show appFlavor, rootBundle;
+import 'package:flutter/services.dart' show rootBundle;
 import 'adaptive.dart';
 import 'updater_ui.dart';
 
@@ -75,7 +75,7 @@ class GuidePage extends StatefulWidget {
 }
 
 class _GuidePageState extends State<GuidePage> {
-  late final Future<List<GuideTopic>> _topics = rootBundle.loadString('assets/guide.md').then((s) => parseGuide(s, github: appFlavor != 'play'));
+  late final Future<List<GuideTopic>> _topics = rootBundle.loadString('assets/guide.md').then((s) => parseGuide(s, github: selfUpdates));
   String q = '';
 
   @override
