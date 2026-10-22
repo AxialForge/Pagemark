@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'main.dart';
 import 'log.dart';
 import 'notifier.dart';
@@ -51,7 +50,7 @@ class Reminders {
 
   /// Turns reminders on (asking for notification permission first) or off. Returns false when permission was refused.
   static Future<bool> setEnabled(bool on) async {
-    if (on && defaultTargetPlatform == TargetPlatform.android && !await Notifier.requestPermission()) return false;
+    if (on && !await Notifier.requestPermission()) return false;
     await prefs.setBool('rem_on', on);
     await apply();
     return true;

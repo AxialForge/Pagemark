@@ -332,7 +332,7 @@ class LoansSection extends StatelessWidget {
         await Notifier.scheduleAt(_noteId(id), [remind],
             title: 'Pagemark', messages: ['A book you lent is due back. Open Pagemark to see which.'], channelId: 'loans', channelName: 'Lent books', channelDescription: 'A reminder to ask for a lent book back');
       } else if (context.mounted) {
-        snack(context, 'Notifications are off, so there will be no reminder. You can turn them on in Android settings.');
+        snack(context, 'Notifications are off, so there will be no reminder. You can turn them on in your phone settings.');
       }
     }
   }

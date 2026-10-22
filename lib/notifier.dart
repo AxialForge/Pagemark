@@ -7,24 +7,36 @@ class Notifier {
   static final _plugin = FlutterLocalNotificationsPlugin();
   static bool _ready = false;
 
+  static bool get _supported => defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS;
+
   static Future<void> init() async {
-    if (_ready || defaultTargetPlatform != TargetPlatform.android) return;
-    await _plugin.initialize(settings: const InitializationSettings(android: AndroidInitializationSettings('@mipmap/ic_launcher')));
+    if (_ready || !_supported) return;
+    // iOS: don't ask at launch; requestPermission() asks at the same moments Android does
+    const ios = DarwinInitializationSettings(requestAlertPermission: false, requestBadgePermission: false, requestSoundPermission: false);
+    await _plugin.initialize(settings: const InitializationSettings(android: AndroidInitializationSettings('@mipmap/ic_launcher'), iOS: ios));
     _ready = true;
   }
 
-  /// Android 13+ asks the user once; older versions grant it implicitly. Returns whether notifications are allowed.
+  /// Android 13+ and iOS ask the user once; older Android versions grant it implicitly. Returns whether notifications are allowed.
   static Future<bool> requestPermission() async {
-    if (defaultTargetPlatform != TargetPlatform.android) return false;
+    if (!_supported) return false;
     await init();
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final ios = _plugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+      return await ios?.requestPermissions(alert: true, sound: true) ?? false;
+    }
     final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     return await android?.requestNotificationsPermission() ?? false;
   }
 
-  /// Whether Android currently lets Pagemark show notifications.
+  /// Whether the phone currently lets Pagemark show notifications.
   static Future<bool> areEnabled() async {
-    if (defaultTargetPlatform != TargetPlatform.android) return false;
+    if (!_supported) return false;
     await init();
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final ios = _plugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+      return (await ios?.checkPermissions())?.isEnabled ?? false;
+    }
     final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     return await android?.areNotificationsEnabled() ?? false;
   }
@@ -53,6 +65,7 @@ class Notifier {
             channelDescription: channelDescription,
             importance: Importance.defaultImportance, priority: Priority.defaultPriority,
           ),
+          iOS: const DarwinNotificationDetails(),
         ),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       );

@@ -103,7 +103,7 @@ class _NotificationsPageState extends State<_NotificationsPage> with WidgetsBind
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _check(); // back from Android's settings
+    if (state == AppLifecycleState.resumed) _check(); // back from the phone's settings
   }
 
   Future<void> _check() async {
@@ -124,7 +124,17 @@ class _NotificationsPageState extends State<_NotificationsPage> with WidgetsBind
               leading: Icon(Icons.notifications_off_outlined, color: cs.onErrorContainer),
               title: Text('Notifications are off for Pagemark', style: TextStyle(color: cs.onErrorContainer, fontWeight: FontWeight.w600)),
               subtitle: Text('Your reminders below cannot appear until you allow them.', style: TextStyle(color: cs.onErrorContainer)),
-              trailing: TextButton(onPressed: openNotificationSettings, child: const Text('Turn on')),
+              // iOS has no page to open from here; asking shows its own question the first time.
+              // iOS refuses to schedule while notifications are off, so rebuild the schedules once allowed.
+              trailing: TextButton(
+                onPressed: defaultTargetPlatform == TargetPlatform.iOS
+                    ? () async {
+                        if (await Notifier.requestPermission()) await Future.wait([Reminders.apply(), BackupReminder.apply()]);
+                        await _check();
+                      }
+                    : openNotificationSettings,
+                child: const Text('Turn on'),
+              ),
             ),
           ),
         )
@@ -156,7 +166,7 @@ class _BackupReminderTilesState extends State<_BackupReminderTiles> {
           value: BackupReminder.enabled,
           onChanged: (v) async {
             final ok = await BackupReminder.setEnabled(v);
-            if (!ok && context.mounted) snack(context, 'Allow notifications for Pagemark in Android settings to get reminders.');
+            if (!ok && context.mounted) snack(context, 'Allow notifications for Pagemark in your phone settings to get reminders.');
             if (mounted) setState(() {});
           },
         ),

@@ -64,7 +64,7 @@ class BackupReminder {
   }
 
   static Future<bool> setEnabled(bool on) async {
-    if (on && defaultTargetPlatform == TargetPlatform.android && !await Notifier.requestPermission()) return false;
+    if (on && !await Notifier.requestPermission()) return false;
     await prefs.setBool('bkr_on', on);
     await apply();
     return true;

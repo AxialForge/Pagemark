@@ -72,11 +72,11 @@ class _ReminderTilesState extends State<_ReminderTiles> {
       SwitchListTile(
         secondary: const Icon(Icons.notifications_active_outlined),
         title: const Text('Daily reading reminder'),
-        subtitle: const Text('A notification at the time you choose. It never names a book. Android may deliver it a few minutes late.'),
+        subtitle: const Text('A notification at the time you choose. It never names a book. It may arrive a few minutes late.'),
         value: on,
         onChanged: (v) async {
           final ok = await Reminders.setEnabled(v);
-          if (!ok && context.mounted) snack(context, 'Allow notifications for Pagemark in Android settings to use reminders.');
+          if (!ok && context.mounted) snack(context, 'Allow notifications for Pagemark in your phone settings to use reminders.');
           if (mounted) setState(() {});
         },
       ),
