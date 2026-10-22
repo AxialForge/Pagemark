@@ -16,7 +16,7 @@
 </head>
 <body>
 <h1>Pagemark — Privacy Policy</h1>
-<p><em>Last updated 2026-10-14 · applies to Pagemark 0.13.2 and later</em></p>
+<p><em>Last updated 2026-10-22 · applies to Pagemark 0.13.2 and later on Android, and to the iPhone version</em></p>
 <p>Pagemark is a private reading log. It has no accounts, no servers of its own, no advertising and no analytics. This page says exactly what the app stores and when anything leaves your phone.</p>
 <h2>Our promise</h2>
 <ul>
@@ -78,6 +78,17 @@
 <p>Locked books stay in the same database but are hidden from the main library, Stats, Trash, search and CSV/JSON exports. They <strong>are</strong> included in whole-database exports and folder backups, which is why encrypting those with a passphrase is recommended. Searching for a book while in the locked library sends your search text to Open Library; add the book manually to avoid that.</p>
 <h2>Permissions</h2>
 <p>Internet (lookup, updates, backup) · Camera (barcode scanner, only when you open it) · Biometric (fingerprint/device unlock) · Install packages (to install a downloaded update) · Notifications (a warning when scheduled backups keep failing) · Background work, network state, wake lock, foreground service and start-after-reboot (scheduled backups and reminders; they let the system run those jobs and re-schedule reminders after a restart) · Vibrate (notification vibration) · Fingerprint (older-Android fingerprint unlock). Pagemark does not ask for location, contacts, microphone, storage or accounts.</p>
+<h2>On iPhone</h2>
+<p>The iPhone version follows the same rules, with these differences:</p>
+<ul>
+<li>Your PIN hash, recovery code and backup passphrase are kept in the iPhone Keychain instead of Android's secure storage.</li>
+<li>Face ID or Touch ID is handled by iOS; Pagemark only learns whether it succeeded.</li>
+<li>The barcode reader uses Apple's on-device Vision framework. Nothing from the camera is saved or sent, and no Google library is involved.</li>
+<li>There is no update check or download: the App Store updates the app. There are no folder backups and no home-screen widget yet; you save backups yourself with the Share sheet.</li>
+<li>While the locked library is open, Pagemark covers its screen when you switch apps, so the app switcher does not show your private books.</li>
+<li>Permissions asked for: camera (barcode scanner), Face ID, photos (only when you pick a cover picture) and notifications (reminders).</li>
+</ul>
+
 <h2>Your control</h2>
 <ul>
 <li>Export everything any time (Settings → Import and export), or back it up yourself.</li>

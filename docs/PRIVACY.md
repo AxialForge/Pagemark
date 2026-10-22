@@ -1,6 +1,6 @@
 # Pagemark — Privacy Policy
 
-*Last updated 2026-10-14 · applies to Pagemark 0.13.2 and later*
+*Last updated 2026-10-22 · applies to Pagemark 0.13.2 and later on Android, and to the iPhone version*
 
 Pagemark is a private reading log. It has no accounts, no servers of its own, no advertising and no analytics. This page says exactly what the app stores and when anything leaves your phone.
 
@@ -43,6 +43,17 @@ Locked books stay in the same database but are hidden from the main library, Sta
 
 ## Permissions
 Internet (lookup, updates, backup) · Camera (barcode scanner, only when you open it) · Biometric (fingerprint/device unlock) · Install packages (to install a downloaded update) · Notifications (a warning when scheduled backups keep failing) · Background work, network state, wake lock, foreground service and start-after-reboot (scheduled backups and reminders; they let the system run those jobs and re-schedule reminders after a restart) · Vibrate (notification vibration) · Fingerprint (older-Android fingerprint unlock). Pagemark does not ask for location, contacts, microphone, storage or accounts.
+
+
+## On iPhone
+
+The iPhone version follows the same rules, with these differences:
+- Your PIN hash, recovery code and backup passphrase are kept in the iPhone Keychain instead of Android's secure storage.
+- Face ID or Touch ID is handled by iOS; Pagemark only learns whether it succeeded.
+- The barcode reader uses Apple's on-device Vision framework. Nothing from the camera is saved or sent, and no Google library is involved.
+- There is no update check or download: the App Store updates the app. There are no folder backups and no home-screen widget yet; you save backups yourself with the Share sheet.
+- While the locked library is open, Pagemark covers its screen when you switch apps, so the app switcher does not show your private books.
+- Permissions asked for: camera (barcode scanner), Face ID, photos (only when you pick a cover picture) and notifications (reminders).
 
 ## Your control
 - Export everything any time (Settings → Import and export), or back it up yourself.
