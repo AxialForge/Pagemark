@@ -26,6 +26,12 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Pagemark uses the camera only to scan book barcodes. Nothing is recorded or sent anywhere.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Pagemark uses Face ID to unlock your locked books.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Pagemark opens your photos only when you choose a cover picture for a book.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
