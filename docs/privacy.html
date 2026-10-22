@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pagemark Privacy Policy</title>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; max-width: 780px; margin: 2rem auto; padding: 0 1rem; line-height: 1.65; color: #222; background: #fff; }
+  h1 { font-size: 1.8rem; }
+  h2 { font-size: 1.25rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: .2rem; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+  th, td { border: 1px solid #ccc; padding: .5rem; text-align: left; vertical-align: top; font-size: .95rem; }
+  th { background: #f3f3f3; }
+  a { color: #0b5cad; }
+</style>
+</head>
+<body>
+<h1>Pagemark — Privacy Policy</h1>
+<p><em>Last updated 2026-10-22 · applies to Pagemark 0.13.2 and later on Android, and to the iPhone version</em></p>
+<p>Pagemark is a private reading log. It has no accounts, no servers of its own, no advertising and no analytics. This page says exactly what the app stores and when anything leaves your phone.</p>
+<h2>Our promise</h2>
+<ul>
+<li><strong>We never collect your data.</strong> No account, no analytics, no tracking, no advertising ID, no crash-reporting service. There is no Pagemark server to send anything to.</li>
+<li><strong>No ads, no selling, no sharing.</strong></li>
+<li><strong>No AI inside the app.</strong> No assistant, no AI features, and nothing you write is sent to or used to train an AI service.</li>
+<li><strong>Your books stay on your phone</strong> unless you save a backup, and then only where you put it.</li>
+<li><strong>Free and open to inspect:</strong> the code is public.</li>
+<li><strong>The only internet use:</strong> book searches (to Open Library and, unless turned off in Settings, Google Books), the GitHub build's update check, and whatever a cloud app does with a backup folder you choose.</li>
+<li><strong>About the barcode reader:</strong> it uses Google's on-device ML Kit vision tool. Pagemark never saves or sends the camera picture, but the Google library may report anonymous technical information to Google.</li>
+</ul>
+<p>A test in the project fails if a tracking, advertising or AI package is added or the app contacts a new internet address.</p>
+<h2>What Pagemark stores on your phone</h2>
+<ul>
+<li><strong>Your library:</strong> books, reads (dates, ratings, your thoughts), shelves, series, notes, tags and the Trash — in one database file inside the app's private storage.</li>
+<li><strong>Settings:</strong> theme, library style, filters, backup options.</li>
+<li><strong>Your PIN (if you set one)</strong> as a salted hash, and its recovery code as a hash, in Android's secure storage. The PIN itself is never stored.</li>
+<li><strong>A backup passphrase (if you set one)</strong> in Android's secure storage, so scheduled backups can encrypt without you.</li>
+<li><strong>Reminders and widget:</strong> the reminder is a notification scheduled on your phone and never names a book. The widget is drawn from the main library only (never the locked library) and shows counts only when the whole-app lock is on.</li>
+<li><strong>Share target:</strong> text another app shares with Pagemark only fills the search box; it is never saved or sent anywhere until you pick a result, and then only the usual Open Library lookup happens.</li>
+<li><strong>Folder backups:</strong> if you choose a folder for automatic backups, Pagemark writes its backup files only into that folder (Android gives it access to that one folder and nothing else). If the folder belongs to a cloud app such as Google Drive, that app uploads the files under its own rules.</li>
+<li><strong>A small event log</strong> (Settings → Help and about → Problem report): error messages and backup run results. Database error details are removed before anything is written, so it does not keep book titles or your writing.</li>
+<li><strong>Cached cover images.</strong> Covers of locked books use a separate cache that is erased when the locked library closes.</li>
+</ul>
+<p>Android's own cloud backup and device-transfer are switched off for this app, so Google does not receive this data through Android.</p>
+<h2>When data leaves your phone</h2>
+<table>
+<thead>
+<tr>
+<th>What</th>
+<th>Where it goes</th>
+<th>When</th>
+<th>What is sent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Book search / ISBN lookup / covers</td>
+<td>Open Library (openlibrary.org, Internet Archive) and Google Books (googleapis.com; can be turned off in Settings)</td>
+<td>when you search, scan, or a cover is shown</td>
+<td>the text you typed or the ISBN; your IP address is visible to them as for any website</td>
+</tr>
+<tr>
+<td>Update check</td>
+<td>GitHub (api.github.com)</td>
+<td>at most once a day while the app is open, if you leave "Check automatically" on</td>
+<td>a request for the public release list; nothing about you or your library</td>
+</tr>
+<tr>
+<td>Update download</td>
+<td>GitHub</td>
+<td>when you tap Download &amp; install</td>
+<td>a request for the APK file</td>
+</tr>
+</tbody>
+</table>
+<p>Pagemark does <strong>not</strong> send anything to its developer or to any analytics, advertising or crash-reporting service.</p>
+<h2>Locked library</h2>
+<p>Locked books stay in the same database but are hidden from the main library, Stats, Trash, search and CSV/JSON exports. They <strong>are</strong> included in whole-database exports and folder backups, which is why encrypting those with a passphrase is recommended. Searching for a book while in the locked library sends your search text to Open Library; add the book manually to avoid that.</p>
+<h2>Permissions</h2>
+<p>Internet (lookup, updates, backup) · Camera (barcode scanner, only when you open it) · Biometric (fingerprint/device unlock) · Install packages (to install a downloaded update) · Notifications (a warning when scheduled backups keep failing) · Background work, network state, wake lock, foreground service and start-after-reboot (scheduled backups and reminders; they let the system run those jobs and re-schedule reminders after a restart) · Vibrate (notification vibration) · Fingerprint (older-Android fingerprint unlock). Pagemark does not ask for location, contacts, microphone, storage or accounts.</p>
+<h2>On iPhone</h2>
+<p>The iPhone version follows the same rules, with these differences:</p>
+<ul>
+<li>Your PIN hash, recovery code and backup passphrase are kept in the iPhone Keychain instead of Android's secure storage.</li>
+<li>Face ID or Touch ID is handled by iOS; Pagemark only learns whether it succeeded.</li>
+<li>The barcode reader uses Apple's on-device Vision framework. Nothing from the camera is saved or sent, and no Google library is involved.</li>
+<li>There is no update check or download: the App Store updates the app. There are no folder backups and no home-screen widget yet; you save backups yourself with the Share sheet.</li>
+<li>While the locked library is open, Pagemark covers its screen when you switch apps, so the app switcher does not show your private books.</li>
+<li>Permissions asked for: camera (barcode scanner), Face ID, photos (only when you pick a cover picture) and notifications (reminders).</li>
+</ul>
+
+<h2>Your control</h2>
+<ul>
+<li>Export everything any time (Settings → Import and export), or back it up yourself.</li>
+<li>Delete everything by uninstalling the app. Backup files you saved yourself stay wherever you put them; delete them there.</li>
+<li>Turn off automatic update checks and automatic backups in Settings.</li>
+</ul>
+<h2>Children</h2>
+<p>Pagemark is a general-purpose tool and collects no personal information from anyone, including children.</p>
+<h2>Changes</h2>
+<p>If this policy changes, the new version ships with the app (Settings → Updates → Version history) and in the repository: https://github.com/AxialForge/Pagemark</p>
+<h2>Contact</h2>
+<p>Questions or concerns: open an issue at https://github.com/AxialForge/Pagemark/issues.</p>
+</body>
+</html>
