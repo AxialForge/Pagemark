@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart' as c;
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, visibleForTesting;
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -200,11 +200,14 @@ class LockService {
     }
   }
 
-  /// Does the phone offer a *strong* biometric (fingerprint)? Face unlock on many phones is only "weak".
+  /// Does the phone offer a *strong* biometric (fingerprint)? Face unlock on many Android phones is only "weak".
+  /// iOS never reports strong/weak: Face ID and Touch ID are both strong, and come back as face or fingerprint.
   static Future<bool> strongBiometricAvailable() async {
     if (debugDeviceSupported != null) return debugDeviceSupported!;
     try {
-      return (await _auth.getAvailableBiometrics()).contains(BiometricType.strong);
+      final types = await _auth.getAvailableBiometrics();
+      if (defaultTargetPlatform == TargetPlatform.iOS) return types.contains(BiometricType.face) || types.contains(BiometricType.fingerprint);
+      return types.contains(BiometricType.strong);
     } catch (_) {
       return false;
     }

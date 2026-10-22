@@ -36,7 +36,7 @@ Future<bool> chooseDeviceLock(BuildContext context) async {
     final go = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('No fingerprint on this phone'),
+        title: const Text('No fingerprint or Face ID on this phone'),
         content: const Text('Without a strong biometric, "device lock" means your screen-lock PIN or pattern, or a weaker face unlock. '
             'A Pagemark PIN is stronger. Use the device lock anyway?'),
         actions: [
