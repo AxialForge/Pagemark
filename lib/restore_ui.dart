@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/services.dart' show SystemNavigator;
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -55,10 +56,15 @@ Future<void> restoreFlow(BuildContext context, File picked) async {
     barrierDismissible: false,
     builder: (c) => AlertDialog(
       title: const Text('Restored'),
-      content: Text('Pagemark will now close. Open it again to see your restored library.'
+      content: Text(defaultTargetPlatform == TargetPlatform.iOS
+          ? 'Swipe up from the bottom of the screen and pause, swipe Pagemark away, then open it again to see your restored library.'
+          : 'Pagemark will now close. Open it again to see your restored library.'
           '${check.lockedBooks > 0 ? '\n\nYour ${check.lockedBooks} locked book${check.lockedBooks == 1 ? '' : 's'} came back too, but your PIN is not part of backups. '
               'Open the Locked tab and set a new PIN to reach ${check.lockedBooks == 1 ? 'it' : 'them'}.' : ''}'),
-      actions: [FilledButton(onPressed: () => SystemNavigator.pop(), child: const Text('Close Pagemark'))], // a graceful exit, not exit(0)
+      // iOS ignores SystemNavigator.pop and forbids quitting in code, so the user closes it from the app switcher
+      actions: [
+        if (defaultTargetPlatform != TargetPlatform.iOS) FilledButton(onPressed: () => SystemNavigator.pop(), child: const Text('Close Pagemark')), // a graceful exit, not exit(0)
+      ],
     ),
   );
 }

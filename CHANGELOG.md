@@ -6,6 +6,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- iPhone: Pagemark now runs on iOS (reading and backup reminders, Face ID, barcode scanning). The app-switcher preview is covered while the Locked tab is open.
+
+### Fixed
+- iPhone: after restoring a backup, Pagemark explains how to close and reopen it, because iOS apps cannot close themselves.
+
 ## [1.1.1] - 2026-10-18
 
 ### Fixed

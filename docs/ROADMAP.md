@@ -108,6 +108,11 @@ Running-timer notification that shows on the lock screen; timer without logging 
 
 ---
 
+### Post-publish: GitHub cleanup (after the first App Store / Play release)
+- One `main` branch for every platform and store; Android `sideload`/`play` are flavors, iOS is `flutter build ipa`. No long-lived per-store branches; releases are tags (`vX.Y.Z`, `vX.Y.Z-ios` if iOS needs its own build).
+- Merge `ios-first-build` (with the release fixes) into `main`, then delete it and `Pagemark-APK`; merge or close `privacy-page`.
+- Protect `main`: pull requests only, CI required (both Android flavors + an iOS `--no-codesign` build). Turn on "Automatically delete head branches".
+
 ## 4. Working away from home
 
 ### Get a working checkout (any OS)
