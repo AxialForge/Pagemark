@@ -294,7 +294,7 @@ class _ScanPageState extends State<ScanPage> {
                   const SizedBox(height: 16),
                   Text(
                     error.errorCode == MobileScannerErrorCode.permissionDenied
-                        ? 'Pagemark needs the camera to scan barcodes. Allow it in Android Settings, or type the number under the barcode instead.'
+                        ? 'Pagemark needs the camera to scan barcodes. Allow it in $phoneSettingsName, or type the number under the barcode instead.'
                         : 'The camera is not available right now. You can type the number under the barcode instead.',
                     textAlign: TextAlign.center,
                   ),

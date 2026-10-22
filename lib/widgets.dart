@@ -46,6 +46,14 @@ class _ExpandableTextState extends State<ExpandableText> {
       });
 }
 
+/// Words that differ between phones, so screens name what the user actually has.
+bool get _ios => defaultTargetPlatform == TargetPlatform.iOS;
+String get biometricName => _ios ? 'Face ID' : 'fingerprint';
+String get biometricNameCap => _ios ? 'Face ID' : 'Fingerprint';
+IconData get biometricIcon => _ios ? Icons.face : Icons.fingerprint;
+String get phoneSettingsName => _ios ? 'iPhone Settings' : 'Android Settings';
+String get cloudDriveName => _ios ? 'iCloud Drive' : 'Google Drive';
+
 /// Open this app's page in Android settings (permissions, battery, ...). No-op elsewhere.
 Future<void> openAppSettings() async {
   if (defaultTargetPlatform != TargetPlatform.android) return;

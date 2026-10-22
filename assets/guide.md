@@ -88,12 +88,12 @@ Pagemark locks again when you leave the app. You can choose how long it waits in
 
 If you forget your PIN, tap **Forgot PIN?** on the lock screen and type the recovery code.
 
-To change between a PIN and the fingerprint or device lock only, go to Settings → Privacy and lock and tap **How you unlock**. You confirm it is you first. Choosing the device lock switches off the PIN for the whole app, because that setting needs a PIN.
+To change between a PIN and the fingerprint, Face ID or device lock only, go to Settings → Privacy and lock and tap **How you unlock**. You confirm it is you first. Choosing the device lock switches off the PIN for the whole app, because that setting needs a PIN.
 
 To hide the Locked tab completely, go to Settings → Privacy and lock and turn on **Hide the Locked tab**. To open it afterwards, press and hold the word "Library" at the top of the Library screen.
 
 ## Notifications and reminders
-Go to Settings → Notifications. Android may ask if Pagemark can send notifications: say yes. If you said no before, the page shows a red box with a **Turn on** button.
+Go to Settings → Notifications. Your phone may ask if Pagemark can send notifications: say yes. If you said no before, the page shows a red box with a **Turn on** button.
 - **Daily reading reminder** nudges you to read at the time you choose. It never names a book.
 - **Remind me to back up** reminds you every week, 2 weeks or month to save a copy of your library. Choose **How often**.
 
@@ -117,9 +117,9 @@ The **Stats** tab shows how many books you finished each month, your ratings, yo
 
 ## Keep your library safe
 Your books live only on this phone. A backup is a safe copy you can bring back if the phone is lost or broken. Go to Settings → Backup and restore:
-- **Save a copy as a file** makes one file with your whole library, including your locked books. Choose a password so nobody else can open it, then pick where to keep it: your email, Google Drive, a computer or a USB stick.
+- **Save a copy as a file** makes one file with your whole library, including your locked books. Choose a password so nobody else can open it, then pick where to keep it: your email, Google Drive, iCloud Drive, a computer or a USB stick.
 - **Save my list as a spreadsheet** makes a list you can read in Excel or Google Sheets. It does not include your locked books.
-- **Save backups to a folder automatically** lets you pick a folder once. Pagemark then saves a fresh backup there by itself, about as often as you choose, and keeps the newest 5. If you pick a folder inside Google Drive, OneDrive or Dropbox (when that app is on your phone), Android copies it to the cloud for you. Tap **Choose a folder** to start, and **Back up now** any time.
+- **Save backups to a folder automatically** (Android only for now) lets you pick a folder once. Pagemark then saves a fresh backup there by itself, about as often as you choose, and keeps the newest 5. If you pick a folder inside Google Drive, OneDrive or Dropbox (when that app is on your phone), Android copies it to the cloud for you. Tap **Choose a folder** to start, and **Back up now** any time.
 - **Restore from a file** replaces your library with a saved copy. Pagemark closes afterwards. Open it again to see the restored library.
 - **Go back to an earlier copy** lists the copies Pagemark made on its own before each restore and import.
 

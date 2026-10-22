@@ -9,6 +9,7 @@ import 'main.dart';
 import 'ui.dart';
 import 'volume.dart';
 import 'volume_ui.dart';
+import 'widgets.dart';
 
 /// What happened to one scanned barcode.
 enum ScanState { looking, added, already, notFound, failed }
@@ -110,7 +111,7 @@ class _BulkScanPageState extends State<BulkScanPage> {
                 padding: const EdgeInsets.all(20),
                 child: Text(
                   error.errorCode == MobileScannerErrorCode.permissionDenied
-                      ? 'Pagemark needs the camera to scan barcodes. Allow it in Android Settings.'
+                      ? 'Pagemark needs the camera to scan barcodes. Allow it in $phoneSettingsName.'
                       : 'The camera is not available right now.',
                   textAlign: TextAlign.center,
                 ),

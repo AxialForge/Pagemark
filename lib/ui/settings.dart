@@ -32,7 +32,7 @@ class SettingsPage extends StatelessWidget {
           _row(context, Icons.palette_outlined, SettingsTitles.appearance, 'Choose your colours', () => const _AppearancePage()),
           _row(context, Icons.notifications_active_outlined, SettingsTitles.notifications, 'Reading and backup reminders', () => const _NotificationsPage()),
           _row(context, Icons.widgets_outlined, SettingsTitles.widget, 'Home-screen widget and icon shortcuts', () => const _WidgetPage()),
-          _row(context, Icons.lock_outline, SettingsTitles.privacy, 'PIN, fingerprint and your private library', () => _PrivacyPage(onLockNow: onLockNow)),
+          _row(context, Icons.lock_outline, SettingsTitles.privacy, 'PIN, $biometricName and your private library', () => _PrivacyPage(onLockNow: onLockNow)),
           _row(context, Icons.cloud_upload_outlined, SettingsTitles.backup, 'Keep your library safe, or bring it back', () => const BackupSettingsPage()),
           _row(context, Icons.swap_horiz, SettingsTitles.importExport, 'Bring books in from another app, or take your list out', () => const _ImportExportPage()),
           _row(context, Icons.collections_bookmark_outlined, SettingsTitles.library, 'Deleted books, cover pictures and extra notes', () => const _LibraryExtrasPage()),
@@ -212,7 +212,7 @@ class _PrivacyPage extends StatelessWidget {
   const _PrivacyPage({required this.onLockNow});
   @override
   Widget build(BuildContext context) => _SettingsSub(SettingsTitles.privacy, [
-        const _Hint('Books you move to the Locked tab are hidden behind a PIN or your fingerprint.'),
+        _Hint('Books you move to the Locked tab are hidden behind a PIN or your $biometricName.'),
         ListTile(leading: const Icon(Icons.lock_clock), title: const Text('Lock now'), subtitle: const Text('Close your private library right away'), onTap: () { onLockNow(); Navigator.pop(context); }),
         ValueListenableBuilder<int>(
           valueListenable: lockDelay,
@@ -326,7 +326,7 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
             title: Text(last == null ? 'You have not saved a backup yet' : 'Last backup: ${_date.format(last)}', style: TextStyle(color: overdue ? cs.onErrorContainer : cs.onPrimaryContainer, fontWeight: FontWeight.w600)),
             subtitle: Text(
               last == null
-                  ? 'Your books are only on this phone. Save a copy somewhere safe, like your email, Google Drive or a computer.'
+                  ? 'Your books are only on this phone. Save a copy somewhere safe, like your email, $cloudDriveName or a computer.'
                   : days == 0 ? 'Saved today.' : days == 1 ? 'Saved yesterday.' : 'Saved $days days ago.',
               style: TextStyle(color: overdue ? cs.onErrorContainer : cs.onPrimaryContainer),
             ),
@@ -340,8 +340,8 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
         if (mounted) setState(() {});
       }),
       const Divider(),
-      const _FolderBackupTiles(),
-      const Divider(),
+      // the folder picker and the automatic backups are Android-only for now
+      if (defaultTargetPlatform == TargetPlatform.android) ...[const _FolderBackupTiles(), const Divider()],
       ListTile(leading: const Icon(Icons.restore), title: const Text('Restore from a file'), subtitle: const Text('Replace your library with a saved copy'), onTap: () async {
         final r = await FilePicker.pickFile();
         final path = r?.path;
@@ -554,8 +554,8 @@ class _UnlockMethodTileState extends State<_UnlockMethodTile> {
   }
 
   static String label(String? m) => switch (m) {
-        'pin' => 'A PIN (the fingerprint button works as a shortcut)',
-        'device' => 'Fingerprint or device lock only',
+        'pin' => 'A PIN (the $biometricName button works as a shortcut)',
+        'device' => '$biometricNameCap or device lock only',
         'lost' || 'unavailable' => 'Needs confirming (open the Locked tab)',
         _ => 'Not set up yet (open the Locked tab)',
       };
@@ -570,13 +570,13 @@ class _UnlockMethodTileState extends State<_UnlockMethodTile> {
           ListTile(
             leading: const Icon(Icons.pin_outlined),
             title: const Text('A PIN'),
-            subtitle: const Text('You can still use your fingerprint as a shortcut. You get a recovery code.'),
+            subtitle: Text('You can still use $biometricName as a shortcut. You get a recovery code.'),
             trailing: mode == 'pin' ? const Icon(Icons.check) : null,
             onTap: () => Navigator.pop(c, 'pin'),
           ),
           ListTile(
-            leading: const Icon(Icons.fingerprint),
-            title: const Text('Fingerprint or device lock only'),
+            leading: Icon(biometricIcon),
+            title: Text('$biometricNameCap or device lock only'),
             subtitle: const Text('Uses the screen lock of your phone. No PIN to remember.'),
             trailing: mode == 'device' ? const Icon(Icons.check) : null,
             onTap: () => Navigator.pop(c, 'device'),
@@ -609,7 +609,7 @@ class _UnlockMethodTileState extends State<_UnlockMethodTile> {
       }
       if (await chooseDeviceLock(context)) {
         appLockEnabled.value = false;
-        if (mounted) snack(context, 'Now unlocking with your fingerprint or device lock');
+        if (mounted) snack(context, 'Now unlocking with your $biometricName or device lock');
       }
     }
     await _load();
@@ -617,7 +617,7 @@ class _UnlockMethodTileState extends State<_UnlockMethodTile> {
 
   @override
   Widget build(BuildContext context) => ListTile(
-        leading: const Icon(Icons.fingerprint),
+        leading: Icon(biometricIcon),
         title: const Text('How you unlock'),
         subtitle: Text(loaded ? label(mode) : ''),
         trailing: const Icon(Icons.chevron_right),

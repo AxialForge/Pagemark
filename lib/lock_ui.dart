@@ -254,13 +254,13 @@ class _LockGateState extends State<LockGate> {
                           : () async {
                               if (await chooseDeviceLock(context) && mounted) widget.onUnlock();
                             },
-                      icon: const Icon(Icons.fingerprint),
-                      label: Text(deviceOk ? 'Use fingerprint / device lock only' : 'Device lock unavailable (set a screen lock first)'),
+                      icon: Icon(biometricIcon),
+                      label: Text(deviceOk ? 'Use $biometricName / device lock only' : 'Device lock unavailable (set a screen lock first)'),
                     ),
                   ] else if (mode == 'lost' || mode == 'unavailable') ...[
                     Text(
                       mode == 'lost'
-                          ? 'Android cleared the saved lock for Pagemark (this can happen after a system restore or a change to the phone screen lock). '
+                          ? 'The phone cleared the saved lock for Pagemark (this can happen after a system restore or a change to the phone screen lock). '
                               'Your private library stays closed until you confirm it is you.'
                           : 'Pagemark could not read its saved lock just now, so the library stays closed. Try again in a moment.',
                       textAlign: TextAlign.center,
@@ -285,16 +285,16 @@ class _LockGateState extends State<LockGate> {
                     TextButton(onPressed: _load, child: const Text('Try again')),
                   ] else if (mode == 'device') ...[
                     if (!deviceOk) ...[
-                      const Text(
-                        'This phone no longer has a screen lock or fingerprint set up, so the locked library cannot be opened. '
-                        'Set a screen lock again in Android Settings, then come back.',
+                      Text(
+                        'This phone no longer has a screen lock or $biometricName set up, so the locked library cannot be opened. '
+                        'Set a screen lock again in $phoneSettingsName, then come back.',
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 12),
                       FilledButton(onPressed: openSecuritySettings, child: const Text('Open security settings')),
                       TextButton(onPressed: _load, child: const Text('Try again')),
                     ] else
-                      FilledButton.icon(onPressed: _device, icon: const Icon(Icons.fingerprint), label: const Text('Unlock')),
+                      FilledButton.icon(onPressed: _device, icon: Icon(biometricIcon), label: const Text('Unlock')),
                   ] else ...[
                     if (locked) Padding(padding: const EdgeInsets.only(bottom: 12), child: Text('Too many attempts. Try again in ${_fmt(wait)}.', textAlign: TextAlign.center)),
                     TextField(
@@ -304,7 +304,7 @@ class _LockGateState extends State<LockGate> {
                     ),
                     const SizedBox(height: 12),
                     FilledButton(onPressed: locked ? null : _tryPin, child: const Text('Unlock')),
-                    if (deviceOk) TextButton.icon(onPressed: locked ? null : _device, icon: const Icon(Icons.fingerprint), label: const Text('Use fingerprint / device lock')),
+                    if (deviceOk) TextButton.icon(onPressed: locked ? null : _device, icon: Icon(biometricIcon), label: Text('Use $biometricName / device lock')),
                     TextButton(onPressed: _forgot, child: const Text('Forgot PIN?')),
                   ],
                 ]),
