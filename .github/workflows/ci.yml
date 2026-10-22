@@ -28,3 +28,15 @@ jobs:
           java-version: 21
       - run: flutter build apk --debug --flavor sideload
       - run: flutter build apk --debug --flavor play
+
+  ios:
+    # Proves the iOS project compiles (Swift, Xcode project, plugins). Unsigned: signing happens on the owner's Mac.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build ios --debug --no-codesign

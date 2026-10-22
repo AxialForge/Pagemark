@@ -5,12 +5,14 @@ import 'app_lock.dart';
 import 'backup_reminder.dart';
 import 'covers.dart';
 import 'export.dart';
+import 'lock.dart';
 import 'log.dart';
 import 'notifier.dart';
 import 'privacy.dart';
 import 'db.dart';
 import 'themes.dart';
 import 'ui.dart';
+import 'widgets.dart';
 
 final db = AppDb();
 late SharedPreferences prefs;
@@ -33,6 +35,7 @@ Future<void> main() async {
   hideLockedTab.value = prefs.getBool('hide_locked') ?? false;
   hideLockedTab.addListener(() => prefs.setBool('hide_locked', hideLockedTab.value));
   initAppLockSettings();
+  iosTouchId = await LockService.hasTouchId();
   for (final k in prefs.getKeys().where((k) => k.startsWith('bk_')).toList()) {
     await prefs.remove(k); // leftovers of the Google Drive backup, removed in 0.8.2
   }

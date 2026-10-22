@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/services.dart';
 import 'lock.dart';
 import 'widgets.dart';
@@ -291,7 +292,8 @@ class _LockGateState extends State<LockGate> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 12),
-                      FilledButton(onPressed: openSecuritySettings, child: const Text('Open security settings')),
+                      // iOS has no way to open its passcode settings from an app
+                      if (defaultTargetPlatform == TargetPlatform.android) FilledButton(onPressed: openSecuritySettings, child: const Text('Open security settings')),
                       TextButton(onPressed: _load, child: const Text('Try again')),
                     ] else
                       FilledButton.icon(onPressed: _device, icon: Icon(biometricIcon), label: const Text('Unlock')),

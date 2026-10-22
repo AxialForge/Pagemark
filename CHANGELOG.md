@@ -7,7 +7,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
-- iPhone: Pagemark now runs on iOS (reading and backup reminders, Face ID, barcode scanning). The app-switcher preview is covered while the Locked tab is open.
+- iPhone: Pagemark now runs on iOS (reading and backup reminders, Face ID, barcode scanning). The app-switcher preview is covered while the Locked tab is open. iPhone only for now (no iPad layout yet).
+
+### Changed
+- iPhone: lock screens say Touch ID on phones that have it instead of Face ID; the home-screen widget page and the "Open security settings" button are hidden on iPhone, where they cannot work yet.
 
 ### Fixed
 - iPhone: after restoring a backup, Pagemark explains how to close and reopen it, because iOS apps cannot close themselves.

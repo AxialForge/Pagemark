@@ -200,6 +200,17 @@ class LockService {
     }
   }
 
+  /// iOS only: true when the device unlocks with Touch ID rather than Face ID, so screens name the right one.
+  static Future<bool> hasTouchId() async {
+    if (defaultTargetPlatform != TargetPlatform.iOS) return false;
+    try {
+      final types = await _auth.getAvailableBiometrics();
+      return types.contains(BiometricType.fingerprint) && !types.contains(BiometricType.face);
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Does the phone offer a *strong* biometric (fingerprint)? Face unlock on many Android phones is only "weak".
   /// iOS never reports strong/weak: Face ID and Touch ID are both strong, and come back as face or fingerprint.
   static Future<bool> strongBiometricAvailable() async {

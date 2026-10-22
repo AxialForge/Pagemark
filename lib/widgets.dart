@@ -48,9 +48,11 @@ class _ExpandableTextState extends State<ExpandableText> {
 
 /// Words that differ between phones, so screens name what the user actually has.
 bool get _ios => defaultTargetPlatform == TargetPlatform.iOS;
-String get biometricName => _ios ? 'Face ID' : 'fingerprint';
-String get biometricNameCap => _ios ? 'Face ID' : 'Fingerprint';
-IconData get biometricIcon => _ios ? Icons.face : Icons.fingerprint;
+/// True on an iPhone/iPad with Touch ID instead of Face ID (iPhone SE); set once at start by `LockService.hasTouchId`.
+bool iosTouchId = false;
+String get biometricName => _ios ? (iosTouchId ? 'Touch ID' : 'Face ID') : 'fingerprint';
+String get biometricNameCap => _ios ? (iosTouchId ? 'Touch ID' : 'Face ID') : 'Fingerprint';
+IconData get biometricIcon => _ios && !iosTouchId ? Icons.face : Icons.fingerprint;
 String get phoneSettingsName => _ios ? 'iPhone Settings' : 'Android Settings';
 String get cloudDriveName => _ios ? 'iCloud Drive' : 'Google Drive';
 
