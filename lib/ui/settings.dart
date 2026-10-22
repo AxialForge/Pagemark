@@ -31,7 +31,8 @@ class SettingsPage extends StatelessWidget {
           const Divider(),
           _row(context, Icons.palette_outlined, SettingsTitles.appearance, 'Choose your colours', () => const _AppearancePage()),
           _row(context, Icons.notifications_active_outlined, SettingsTitles.notifications, 'Reading and backup reminders', () => const _NotificationsPage()),
-          _row(context, Icons.widgets_outlined, SettingsTitles.widget, 'Home-screen widget and icon shortcuts', () => const _WidgetPage()),
+          // the home-screen widget is Android-only for now (iOS needs a WidgetKit extension)
+          if (defaultTargetPlatform == TargetPlatform.android) _row(context, Icons.widgets_outlined, SettingsTitles.widget, 'Home-screen widget and icon shortcuts', () => const _WidgetPage()),
           _row(context, Icons.lock_outline, SettingsTitles.privacy, 'PIN, $biometricName and your private library', () => _PrivacyPage(onLockNow: onLockNow)),
           _row(context, Icons.cloud_upload_outlined, SettingsTitles.backup, 'Keep your library safe, or bring it back', () => const BackupSettingsPage()),
           _row(context, Icons.swap_horiz, SettingsTitles.importExport, 'Bring books in from another app, or take your list out', () => const _ImportExportPage()),

@@ -98,7 +98,7 @@ Go to Settings → Notifications. Your phone may ask if Pagemark can send notifi
 - **Remind me to back up** reminds you every week, 2 weeks or month to save a copy of your library. Choose **How often**.
 
 ## Home-screen widget
-Go to Settings → Widget and shortcuts to choose whether the widget shows book titles. To add it, press and hold an empty spot on your home screen, tap **Widgets**, find **Pagemark** and tap **Add**. It shows the books you are reading and your yearly goal. It never shows your locked books.
+The widget is on Android only for now. Go to Settings → Widget and shortcuts to choose whether the widget shows book titles. To add it, press and hold an empty spot on your home screen, tap **Widgets**, find **Pagemark** and tap **Add**. It shows the books you are reading and your yearly goal. It never shows your locked books.
 
 ## Quick ways in
 Press and hold the Pagemark icon on your home screen for two shortcuts: **Add book** and **Reading now** (only the books you are reading).
