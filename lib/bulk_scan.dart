@@ -28,7 +28,9 @@ class ScanItem {
 /// added in the background. A barcode already scanned in this session, or a book already in the library, is not added twice.
 class BulkScanPage extends StatefulWidget {
   final bool locked;
-  const BulkScanPage({super.key, required this.locked});
+  /// The kind scanned books get ('manga' from the Manga & comics section).
+  final String kind;
+  const BulkScanPage({super.key, required this.locked, this.kind = ''});
   @override
   State<BulkScanPage> createState() => _BulkScanPageState();
 }
@@ -66,7 +68,7 @@ class _BulkScanPageState extends State<BulkScanPage> {
           if (again != null) {
             item.state = ScanState.already;
           } else {
-            item.bookId = await insertMeta(m, locked: widget.locked);
+            item.bookId = await insertMeta(m, locked: widget.locked, kind: widget.kind);
             if (m.series.trim().isEmpty) item.guess = parseVolume(m.title);
             item.state = ScanState.added;
           }

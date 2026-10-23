@@ -8,6 +8,9 @@ The first time you open Pagemark you see three short screens. Tap **Skip** at an
 
 The sample books are well-known classics, there so you can see how everything looks. A card at the top of the Library says so. Tap **Remove** on it when you are ready to add your own books. Your own books are never touched.
 
+## Getting around
+Tap the menu button (three lines) at the top left to open the side menu: **Library**, **Manga & comics**, **Locked**, **Stats** and **Settings**. Pressing Back takes you to the Library first.
+
 ## Add your first book
 Tap **Add book** on the Library screen (the round button at the bottom).
 1. Type a title, an author or a barcode number and tap the magnifier. Or tap the barcode icon at the top and point the camera at the barcode on the back of the book.
@@ -35,7 +38,7 @@ Open a book and tap **Log a read**.
 
 A book can have more than one read, for example if you read it again next year.
 
-Want to say more than one overall rating? Go to Settings → Your library and turn on **Rate books in more detail**. Each read then has optional stars for **Story**, **Characters**, **Writing**, **Pace** and **How it made me feel** (and **Narrator** for audiobooks). The **Stats** tab shows your average for each.
+Want to say more than one overall rating? Go to Settings → Your library and turn on **Rate books in more detail**. Each read then has optional stars for **Story**, **Characters**, **Writing**, **Pace** and **How it made me feel** (and **Narrator** for audiobooks). The **Stats** page shows your average for each.
 
 ## Keep track of your page
 While a book is **Reading**, its page shows a progress card. Tap **Update progress** and move the slider to the page you are on. Pagemark shows how far you are and about how many days are left at your pace.
@@ -58,6 +61,8 @@ To rename or delete shelves, tap the three dots at the top of the Library and ch
 To see your series (like a trilogy), which book is next and the average rating of the books you rated, tap the three dots and choose **Series**. To put a book in a series, tap its pencil icon and fill in **Series** and **Number in series**.
 
 ## Manga, comics and other series
+Manga, comics and light novels have their own page: open the menu and tap **Manga & comics**. They show there and not in the Library, so your books and your volumes stay apart. Books you add from that page are saved as manga; change a series to **Comic** or **Light novel** on its series page.
+
 For a long series, such as a manga with 40 volumes, tap the three dots in the Library and choose **Series**, then tap the series. You see one square for every volume:
 - **Read**: a filled square.
 - **Owned**: an outlined square (you have it but have not read it).
@@ -79,8 +84,8 @@ Open a book and tap **Add quote**. Type the passage, add the page if you know it
 Press and hold a book until a tick appears, then tap other books to add them. The top bar lets you mark them finished, put them on a shelf, move them to your Locked library or delete them. Every change has an **Undo** button for a few seconds.
 
 ## Your private Locked library
-The Locked tab holds books you want to keep private. They do not show in your main library, in your stats or in saved lists.
-1. Tap **Locked**, then **Set a PIN** (4 to 12 numbers) and type it twice.
+The Locked page holds books you want to keep private. They do not show in your main library, in your stats or in saved lists.
+1. Open the menu and tap **Locked**, then **Set a PIN** (4 to 12 numbers) and type it twice.
 2. Write down the **recovery code** it shows. It is shown only once and is the only way back in if you forget your PIN.
 3. To put a book there, open it, tap the three dots and choose **Move to locked library**.
 
@@ -113,7 +118,7 @@ In the Library, tap the three dots, then **Read next order**. Press and hold a b
 Open the book and tap **Lend this book**. Type who has it and choose whether to be reminded to ask for it back. The reminder never names the book or the person. When it comes home, tap **Got it back**.
 
 ## See how you are doing
-The **Stats** tab shows how many books you finished each month, your ratings, your pages and your favourite genres and authors. Tap **Set goal** to choose how many books you want to read this year. Stats never include your locked books.
+The **Stats** page shows how many books you finished each month, your ratings, your pages and your favourite genres and authors. Tap **Set goal** to choose how many books you want to read this year. Stats never include your locked books.
 
 ## Keep your library safe
 Your books live only on this phone. A backup is a safe copy you can bring back if the phone is lost or broken. Go to Settings → Backup and restore:

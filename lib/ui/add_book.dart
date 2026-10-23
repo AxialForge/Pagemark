@@ -127,7 +127,7 @@ class _AddBookState extends State<AddBook> {
   Future<void> scanMany() async {
     if (widget.locked && !await confirmVaultLookup(context)) return;
     if (!mounted) return;
-    await Navigator.push(context, MaterialPageRoute(builder: (_) => BulkScanPage(locked: widget.locked)));
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => BulkScanPage(locked: widget.locked, kind: widget.kind)));
   }
 
   bool saving = false;
