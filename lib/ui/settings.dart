@@ -62,19 +62,44 @@ class _AppearancePage extends StatelessWidget {
   const _AppearancePage();
   @override
   Widget build(BuildContext context) => _SettingsSub(SettingsTitles.appearance, [
-        const _Hint('Pick the colours you like. You can change this any time.'),
+        const _Hint('Pick the colours you like. Tap a name to choose it, or tap its light or dark colours to choose that version. You can change this any time.'),
         ValueListenableBuilder<String>(
           valueListenable: themeId,
-          builder: (_, id, _) => Column(children: [
-            for (final t in themes)
-              ListTile(
-                leading: CircleAvatar(backgroundColor: t.seed, radius: 14),
-                title: Text(t.name),
-                subtitle: Text(t.mode),
-                trailing: id == t.id ? const Icon(Icons.check) : null,
-                onTap: () => themeId.value = t.id,
+          builder: (context, id, _) {
+            final c = ThemeChoice.parse(id);
+            final cs = Theme.of(context).colorScheme;
+            final platform = MediaQuery.platformBrightnessOf(context);
+            final shown = switch (c.mode) {
+              ThemeMode.system => platform,
+              ThemeMode.dark => Brightness.dark,
+              ThemeMode.light => Brightness.light,
+            };
+            return Column(children: [
+              SwitchListTile(
+                title: const Text('Match phone'),
+                subtitle: const Text('Light or dark, following your phone'),
+                value: c.mode == ThemeMode.system,
+                onChanged: (on) => themeId.value =
+                    c.withMode(on ? ThemeMode.system : (platform == Brightness.dark ? ThemeMode.dark : ThemeMode.light)).id,
               ),
-          ]),
+              const SizedBox(height: 6),
+              for (final f in ThemeFamily.all)
+                ThemePill(
+                  name: f.label,
+                  lightColors: f.bubbles(f.light),
+                  darkColors: f.bubbles(f.dark),
+                  surface: cs.surfaceContainerLow,
+                  hairline: cs.outlineVariant,
+                  ink: cs.onSurface,
+                  accent: f.accent(f.forBrightness(shown)),
+                  selected: f == c.family,
+                  pinned: f == c.family && c.mode != ThemeMode.system ? c.mode : null,
+                  onSelectTheme: () => themeId.value = c.withFamily(f).id,
+                  onSelectLight: () => themeId.value = ThemeChoice(f, ThemeMode.light).id,
+                  onSelectDark: () => themeId.value = ThemeChoice(f, ThemeMode.dark).id,
+                ),
+            ]);
+          },
         ),
       ]);
 }

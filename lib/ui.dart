@@ -48,7 +48,8 @@ import 'reminders.dart';
 import 'welcome.dart';
 import 'widget_sync.dart';
 import 'main.dart';
-import 'themes.dart';
+import 'theme_families.dart';
+import 'kit/theme_pill.dart';
 
 // This library is split over several files (one per group of screens) so each stays readable. They share privacy on purpose.
 part 'ui/home.dart';

@@ -9,7 +9,7 @@ import 'log.dart';
 import 'notifier.dart';
 import 'privacy.dart';
 import 'db.dart';
-import 'themes.dart';
+import 'theme_families.dart';
 import 'ui.dart';
 
 final db = AppDb();
@@ -52,13 +52,18 @@ class PagemarkApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<String>(
         valueListenable: themeId,
-        builder: (_, id, _) => MaterialApp(
-          navigatorKey: navKey,
-          title: 'Pagemark',
-          debugShowCheckedModeBanner: false,
-          theme: themeById(id).data,
-          builder: (context, child) => AppLockOverlay(child: child ?? const SizedBox.shrink()),
-          home: const Home(),
-        ),
+        builder: (_, id, _) {
+          final c = ThemeChoice.parse(id);
+          return MaterialApp(
+            navigatorKey: navKey,
+            title: 'Pagemark',
+            debugShowCheckedModeBanner: false,
+            theme: c.family.light.data,
+            darkTheme: c.family.dark.data,
+            themeMode: c.mode,
+            builder: (context, child) => AppLockOverlay(child: child ?? const SizedBox.shrink()),
+            home: const Home(),
+          );
+        },
       );
 }
