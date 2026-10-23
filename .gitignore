@@ -57,3 +57,8 @@ key.properties
 docs/_tools/screenshots/out/
 Documentation/~$*
 docs/release-package/tmp*
+
+# Finished documents are built locally (docs/_tools) and kept on this PC / the NAS, not in git.
+# Markdown sources and build scripts stay tracked.
+Documentation/
+docs/release-package/*.pdf
