@@ -6,6 +6,19 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-23
+
+### Added
+- **Manga & comics** has its own page in the menu. Manga, comics and light novels show there and no longer in the Library, so books and volumes stay apart. It has the same styles, search, filters and Group by series as the Library, and remembers its own. Books added from it (searched, by hand or with Scan many books) are saved as manga.
+- **Theme pills** in Settings → Appearance: one pill per look (Harbor, Rosewater, Sage, Lamplight) with its light and dark colours. Tap the name to pick the look, or tap its light or dark colours to pick that version. **Match phone** follows your phone's light or dark setting.
+- Two new versions: **Sage Night** (Sage in dark) and **Lamplight Day** (Lamplight in light).
+
+### Changed
+- **Side menu instead of the bottom bar** on phones: tap the menu button at the top left. Tablets keep the rail on the left.
+- **A new look:** Newsreader for titles and Hanken Grotesk for text, warm neutral pages with white panels and fine lines, a charcoal menu header, and your theme's colour on buttons and highlights. Your chosen theme is kept.
+- **Settings in a new order**, most used first: Appearance, Your library, Notifications, Backup and restore, Privacy and lock, Import and export, Widget and shortcuts; help and the app version are at the bottom.
+- The guide describes the menu and the Manga & comics page.
+
 ## [1.1.1] - 2026-10-18
 
 ### Fixed
