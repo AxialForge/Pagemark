@@ -7,7 +7,7 @@ class Home extends StatefulWidget {
   State<Home> createState() => _HomeState();
 }
 
-enum _Tab { library, locked, stats, settings }
+enum _Tab { library, manga, locked, stats, settings }
 
 class _HomeState extends State<Home> with WidgetsBindingObserver {
   _Tab cur = _Tab.library;
@@ -98,11 +98,12 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   Widget build(BuildContext context) => ValueListenableBuilder<bool>(
         valueListenable: hideLockedTab,
         builder: (context, hidden, _) {
-          final visible = [_Tab.library, if (!hidden) _Tab.locked, _Tab.stats, _Tab.settings];
+          final visible = [_Tab.library, _Tab.manga, if (!hidden) _Tab.locked, _Tab.stats, _Tab.settings];
           final shown = visible.contains(cur) ? cur : _Tab.library; // the Locked tab may have just been hidden
           if (shown != cur) WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) { _lock(); setState(() => cur = _Tab.library); } });
           final page = switch (shown) {
-            _Tab.library => const Library(locked: false),
+            _Tab.library => const Library(locked: false, volumes: false),
+            _Tab.manga => const Library(locked: false, volumes: true),
             _Tab.locked => unlocked ? const Library(locked: true) : LockGate(onUnlock: _unlock),
             _Tab.stats => const Stats(),
             _Tab.settings => SettingsPage(onLockNow: () => setState(() { _lock(); cur = _Tab.library; })),
@@ -129,7 +130,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
             child: KeyedSubtree(
               key: ValueKey(shown),
               // wide screens: the main Library sits beside the open book (the locked library never uses the pane, so nothing private lingers on screen)
-              child: twoPane && shown == _Tab.library
+              child: twoPane && (shown == _Tab.library || shown == _Tab.manga)
                   ? Row(children: [
                       Expanded(flex: 5, child: DetailPane(child: page)),
                       const VerticalDivider(width: 1),
@@ -150,6 +151,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
             for (final t in visible)
               switch (t) {
                 _Tab.library => (const Icon(Icons.menu_book_outlined), 'Library'),
+                _Tab.manga => (const Icon(Icons.auto_stories_outlined), 'Manga & comics'),
                 _Tab.locked => (const Icon(Icons.lock_outline), 'Locked'),
                 _Tab.stats => (const Icon(Icons.bar_chart), 'Stats'),
                 _Tab.settings => (ValueListenableBuilder<UpdateInfo?>(valueListenable: updateAvailable, builder: (_, u, _) => Badge(isLabelVisible: u != null, child: const Icon(Icons.settings_outlined))), 'Settings'),

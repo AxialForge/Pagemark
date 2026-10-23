@@ -5,7 +5,9 @@ class AddBook extends StatefulWidget {
   final bool locked;
   /// Pre-fills the search (from the Share sheet); it is searched right away, nothing is saved until you pick a result.
   final String? initialQuery;
-  const AddBook({super.key, required this.locked, this.initialQuery});
+  /// The kind new books get: 'manga' when adding from the Manga & comics section, '' for plain books.
+  final String kind;
+  const AddBook({super.key, required this.locked, this.initialQuery, this.kind = ''});
   @override
   State<AddBook> createState() => _AddBookState();
 }
@@ -161,7 +163,7 @@ class _AddBookState extends State<AddBook> {
   }
 
   Future<void> _insert(BookMeta m) async {
-    final id = await insertMeta(m, locked: widget.locked);
+    final id = await insertMeta(m, locked: widget.locked, kind: widget.kind);
     if (!mounted) return;
     await offerVolume(context, id);
     if (!mounted) return;
@@ -247,12 +249,12 @@ Future<String?> ask(BuildContext c, String label, [String initial = '', bool mul
 }
 
 /// Saves a looked-up book (and fetches its description in the background when the lookup had none).
-Future<int> insertMeta(BookMeta m, {required bool locked}) async {
+Future<int> insertMeta(BookMeta m, {required bool locked, String kind = ''}) async {
   final id = await db.into(db.books).insert(BooksCompanion.insert(
         title: m.title,
         author: Value(m.author), isbn: Value(m.isbn), coverUrl: Value(m.coverUrl), genre: Value(m.genre),
         publisher: Value(m.publisher), year: Value(m.year), pages: Value(m.pages),
-        series: Value(m.series), description: Value(m.description), locked: Value(locked),
+        series: Value(m.series), description: Value(m.description), locked: Value(locked), kind: Value(kind),
       ));
   if (m.description.isEmpty && m.workKey.isNotEmpty) {
     Lookup.description(m.workKey).then((d) {

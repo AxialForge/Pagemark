@@ -3,7 +3,9 @@ part of '../ui.dart';
 // ───────────────────────── Library ─────────────────────────
 class Library extends StatefulWidget {
   final bool locked;
-  const Library({super.key, required this.locked});
+  /// true: only manga, comics and light novels (the Manga & comics section); false: only plain books; null: everything (the locked library).
+  final bool? volumes;
+  const Library({super.key, required this.locked, this.volumes});
   @override
   State<Library> createState() => _LibraryState();
 }
@@ -31,7 +33,8 @@ class _LibraryState extends State<Library> {
   String q = '', status = 'all', format = 'all', sort = 'added';
   int? shelf;
   LibrarySkin skin = LibrarySkin.classic;
-  late final Stream<List<BookRow>> _rowsStream = db.watchLibrary(locked: widget.locked).distinct(); // one subscription; identical re-emissions are skipped
+  late final Stream<List<BookRow>> _rowsStream = db.watchLibrary(locked: widget.locked).distinct() // one subscription; identical re-emissions are skipped
+      .map((rows) => widget.volumes == null ? rows : rows.where((r) => r.book.kind.isNotEmpty == widget.volumes).toList());
   final _searchCtl = TextEditingController();
   final Set<int> selected = {};
   Map<int, String> _quoteText = {};
@@ -48,7 +51,7 @@ class _LibraryState extends State<Library> {
   StreamSubscription<List<Shelf>>? _shelfSub;
   StreamSubscription<List<BookShelf>>? _linkSub;
 
-  String get _pk => 'lib_${widget.locked ? 'v' : 'm'}'; // sort/filters are remembered per library
+  String get _pk => 'lib_${widget.locked ? 'v' : widget.volumes == true ? 'g' : 'm'}'; // sort/filters are remembered per library
 
   /// The "Log progress" launcher shortcut: show only the books being read.
   void _showReading() {
@@ -182,11 +185,11 @@ class _LibraryState extends State<Library> {
         leading: navButton(context),
         title: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onLongPress: !widget.locked && hideLockedTab.value ? () => openVault(context) : null, // stealth entrance when the tab is hidden
+          onLongPress: !widget.locked && widget.volumes != true && hideLockedTab.value ? () => openVault(context) : null, // stealth entrance when the tab is hidden
           child: Container(
             constraints: const BoxConstraints(minWidth: 220, minHeight: kToolbarHeight),
             alignment: Alignment.centerLeft,
-            child: Text(widget.locked ? 'Locked library' : 'Library'),
+            child: Text(widget.locked ? 'Locked library' : widget.volumes == true ? 'Manga & comics' : 'Library'),
           ),
         ),
         actions: [
@@ -229,7 +232,7 @@ class _LibraryState extends State<Library> {
       ]),
       floatingActionButton: selected.isNotEmpty ? null : FloatingActionButton.extended(
         icon: const Icon(Icons.add), label: const Text('Add book'),
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddBook(locked: widget.locked))),
+        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddBook(locked: widget.locked, kind: widget.volumes == true ? 'manga' : ''))),
       ),
       body: PopScope(
         canPop: selected.isEmpty, // Back first closes the selection
@@ -277,7 +280,7 @@ class _LibraryState extends State<Library> {
             ],
           ]),
         ),
-        if (!widget.locked) const LibraryBanners(),
+        if (!widget.locked && widget.volumes != true) const LibraryBanners(),
           ]),
         ),
         Expanded(
@@ -308,7 +311,11 @@ class _LibraryState extends State<Library> {
                 final none = snap.data?.isEmpty ?? true;
                 return none
                     ? EmptyState(
-                        message: widget.locked ? 'Nothing in your locked library yet.\nTap Add book to start.' : 'Your shelf is empty.\nTap Add book to start your log.',
+                        message: widget.locked
+                            ? 'Nothing in your locked library yet.\nTap Add book to start.'
+                            : widget.volumes == true
+                                ? 'No manga or comics yet.\nTap Add book to add a volume.'
+                                : 'Your shelf is empty.\nTap Add book to start your log.',
                         actionLabel: widget.locked ? null : 'See how Pagemark works',
                         actionIcon: Icons.help_outline,
                         onAction: widget.locked ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GuidePage())),
