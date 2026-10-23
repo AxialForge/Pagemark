@@ -91,6 +91,31 @@ flutter:
     - CHANGELOG.md
     - assets/guide.md
     - assets/branding/logo.png
+    - assets/fonts/OFL-Newsreader.txt
+    - assets/fonts/OFL-HankenGrotesk.txt
+
+  # CardKeep's fonts, cut to static weights so fontWeight works (tools: fontTools varLib.instancer)
+  fonts:
+    - family: Newsreader
+      fonts:
+        - asset: assets/fonts/Newsreader-400.ttf
+          weight: 400
+        - asset: assets/fonts/Newsreader-500.ttf
+          weight: 500
+        - asset: assets/fonts/Newsreader-600.ttf
+          weight: 600
+        - asset: assets/fonts/Newsreader-700.ttf
+          weight: 700
+    - family: HankenGrotesk
+      fonts:
+        - asset: assets/fonts/HankenGrotesk-400.ttf
+          weight: 400
+        - asset: assets/fonts/HankenGrotesk-500.ttf
+          weight: 500
+        - asset: assets/fonts/HankenGrotesk-600.ttf
+          weight: 600
+        - asset: assets/fonts/HankenGrotesk-700.ttf
+          weight: 700
 
   # To add assets to your application, add an assets section, like this:
   # assets:

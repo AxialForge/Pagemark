@@ -254,21 +254,21 @@ class _NavDrawer extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final header = Container(
       width: double.infinity,
-      color: cs.primary,
+      color: cs.inverseSurface, // the charcoal band
       padding: EdgeInsets.fromLTRB(20, MediaQuery.paddingOf(context).top + 20, 20, 18),
       child: Row(children: [
         const AppLogo(size: 44, animate: false),
         const SizedBox(width: 14),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Pagemark', style: tt.titleLarge?.copyWith(color: cs.onPrimary, fontWeight: FontWeight.w600)),
-            Text('Your private reading log', style: tt.bodySmall?.copyWith(color: cs.onPrimary.withValues(alpha: 0.75))),
+            Text('Pagemark', style: tt.titleLarge?.copyWith(color: cs.onInverseSurface, fontWeight: FontWeight.w600)),
+            Text('Your private reading log', style: tt.bodySmall?.copyWith(color: cs.onInverseSurface.withValues(alpha: 0.75))),
           ]),
         ),
       ]),
     );
     // status bar icons that read on the header colour
-    final overlay = ThemeData.estimateBrightnessForColor(cs.primary) == Brightness.dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark;
+    final overlay = ThemeData.estimateBrightnessForColor(cs.inverseSurface) == Brightness.dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: overlay,
       child: Drawer(

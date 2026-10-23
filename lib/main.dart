@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app_lock.dart';
@@ -25,6 +27,11 @@ final adultFields = ValueNotifier<bool>(false);
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Log.installGlobalHandlers();
+  LicenseRegistry.addLicense(() async* {
+    for (final f in ['Newsreader', 'HankenGrotesk']) {
+      yield LicenseEntryWithLineBreaks([f], await rootBundle.loadString('assets/fonts/OFL-$f.txt'));
+    }
+  });
   if (Secure.docBuild) Log.w('build', 'documentation build: screenshot blocking is OFF (never ship this build)');
   prefs = await SharedPreferences.getInstance();
   await CoverStore.init();
