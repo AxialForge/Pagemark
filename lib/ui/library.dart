@@ -179,6 +179,7 @@ class _LibraryState extends State<Library> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: selected.isNotEmpty ? _selectionBar() : AppBar(
+        leading: navButton(context),
         title: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onLongPress: !widget.locked && hideLockedTab.value ? () => openVault(context) : null, // stealth entrance when the tab is hidden

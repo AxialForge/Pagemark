@@ -11,6 +11,7 @@ enum _Tab { library, locked, stats, settings }
 
 class _HomeState extends State<Home> with WidgetsBindingObserver {
   _Tab cur = _Tab.library;
+  final _navKey = GlobalKey<ScaffoldState>();
   bool unlocked = false;
 
   @override
@@ -171,12 +172,15 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
             );
           }
           return Scaffold(
-            body: content,
-            bottomNavigationBar: NavigationBar(
-              selectedIndex: visible.indexOf(shown),
-              onDestinationSelected: select,
-              destinations: [for (final d in destinations) NavigationDestination(icon: d.$1, label: d.$2)],
+            key: _navKey,
+            drawer: _NavDrawer(
+              items: [for (final (i, t) in visible.indexed) (destinations[i].$1, destinations[i].$2, t == shown)],
+              onSelect: (i) {
+                Navigator.pop(context);
+                select(i);
+              },
             ),
+            body: HomeNav(open: () => _navKey.currentState?.openDrawer(), child: content),
           );
         },
       );
@@ -237,3 +241,59 @@ class _VaultPageState extends State<VaultPage> with WidgetsBindingObserver {
 }
 
 void openVault(BuildContext context) => Navigator.push(context, MaterialPageRoute(builder: (_) => const VaultPage()));
+
+/// The side menu: a coloured header with the logo, then one row per section.
+class _NavDrawer extends StatelessWidget {
+  final List<(Widget, String, bool)> items;
+  final ValueChanged<int> onSelect;
+  const _NavDrawer({required this.items, required this.onSelect});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final header = Container(
+      width: double.infinity,
+      color: cs.primary,
+      padding: EdgeInsets.fromLTRB(20, MediaQuery.paddingOf(context).top + 20, 20, 18),
+      child: Row(children: [
+        const AppLogo(size: 44, animate: false),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Pagemark', style: tt.titleLarge?.copyWith(color: cs.onPrimary, fontWeight: FontWeight.w600)),
+            Text('Your private reading log', style: tt.bodySmall?.copyWith(color: cs.onPrimary.withValues(alpha: 0.75))),
+          ]),
+        ),
+      ]),
+    );
+    // status bar icons that read on the header colour
+    final overlay = ThemeData.estimateBrightnessForColor(cs.primary) == Brightness.dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: overlay,
+      child: Drawer(
+        shape: const RoundedRectangleBorder(),
+        child: ListView(
+          padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + 8),
+          children: [
+            header,
+            const SizedBox(height: 8),
+            for (final (i, (icon, label, selected)) in items.indexed)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 1),
+                child: ListTile(
+                  selected: selected,
+                  selectedTileColor: cs.secondaryContainer,
+                  selectedColor: cs.onSecondaryContainer,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  leading: icon,
+                  title: Text(label, style: TextStyle(fontWeight: selected ? FontWeight.w600 : FontWeight.w400)),
+                  onTap: () => onSelect(i),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}

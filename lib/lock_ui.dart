@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'lock.dart';
+import 'home_nav.dart';
 import 'widgets.dart';
 
 void _snack(BuildContext c, String m) => ScaffoldMessenger.of(c).showSnackBar(SnackBar(content: Text(m)));
@@ -235,7 +236,7 @@ class _LockGateState extends State<LockGate> {
   Widget build(BuildContext context) {
     final locked = wait > Duration.zero;
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: AppBar(leading: navButton(context), title: Text(widget.title)),
       body: !loaded
           ? const SizedBox()
           : Center(

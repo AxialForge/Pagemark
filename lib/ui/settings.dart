@@ -21,7 +21,7 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Settings')),
+        appBar: AppBar(leading: navButton(context), title: const Text('Settings')),
         body: ListView(children: [
           const AppHeader(),
           const UpdateTile(),

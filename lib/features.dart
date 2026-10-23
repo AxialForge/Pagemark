@@ -3,6 +3,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
+import 'home_nav.dart';
 import 'adaptive.dart';
 import 'book_extras.dart' show heatStatsCard, adultFieldsOn;
 import 'detailed_ratings.dart';
@@ -730,7 +731,7 @@ class _StatsState extends State<Stats> {
   Widget build(BuildContext context) {
     final year = DateTime.now().year;
     return Scaffold(
-      appBar: AppBar(title: const Text('Stats')),
+      appBar: AppBar(leading: navButton(context), title: const Text('Stats')),
       body: StreamBuilder<List<BookRow>>(
         // The vault never feeds the stats: only the main library is counted.
         stream: _stream,
