@@ -6,7 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-10-23
+
 ### Fixed
+- Leftover "Locked tab" wording now says **Locked** in the menu: the welcome screen, Settings → Privacy and lock (the switch is now **Hide Locked from the menu**), the restore message and the guide.
+- Stats, the year card and the PDF report show the same average rating (the year card said 4.3 where Stats said 4.25).
+- The shareable **2026 in books** card uses the charcoal band and serif figures of the new look instead of pale blue.
+- Stars, quote bars and bookmark ribbons use your theme's colour instead of a purple.
+- The Bookshelf and Spines wall is the warm panel shade instead of a cool grey.
+- On a book's page every reading-log card is the same width; in Edit there is room between **I own this** and Genre.
 - In dark themes the link on a message bar (such as **What's new** or **Undo**) was dark on the charcoal bar and hard to read. It now uses the light shade of your theme's colour.
 
 ## [1.2.1] - 2026-10-23
