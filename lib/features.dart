@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
+import 'onboarding/coach.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'home_nav.dart';
@@ -239,7 +240,7 @@ class ProgressCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleSmall,
               ),
             ),
-            FilledButton.tonal(onPressed: () => _update(context), child: const Text('Update progress')),
+            CoachTarget(id: 'book.progress', child: FilledButton.tonal(onPressed: () => _update(context), child: const Text('Update progress'))),
           ]),
           if (frac != null) Padding(padding: const EdgeInsets.only(top: 8), child: SlimProgress(frac)),
           if (frac == null && total == null)
@@ -792,7 +793,7 @@ class _StatsState extends State<Stats> {
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(goal == 0 ? 'Set a goal to track your year.' : thisYear.length >= goal ? 'Goal reached — ${thisYear.length} books!' : '${goal - thisYear.length} to go'),
                 if (goal > 0 && thisYear.isNotEmpty) Text('At this pace: about $pace books by Dec 31', style: Theme.of(context).textTheme.bodySmall),
-                TextButton(onPressed: () => _setGoal(context, year, goal), child: Text(goal == 0 ? 'Set goal' : 'Change goal')),
+                CoachScope(tipId: 'stats', child: CoachTarget(id: 'stats.goal', child: TextButton(onPressed: () => _setGoal(context, year, goal), child: Text(goal == 0 ? 'Set goal' : 'Change goal')))),
               ])),
             ])),
             section('$year in books', YearCard(s: yearSummary(rows, year))),

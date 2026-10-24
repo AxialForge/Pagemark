@@ -32,7 +32,7 @@ class SettingsPage extends StatelessWidget {
           _row(context, Icons.swap_horiz, SettingsTitles.importExport, 'Bring books in from another app, or take your list out', () => const _ImportExportPage()),
           _row(context, Icons.widgets_outlined, SettingsTitles.widget, 'Home-screen widget and icon shortcuts', () => const _WidgetPage()),
           const Divider(),
-          _row(context, Icons.menu_book_outlined, 'How to use Pagemark', 'Short, simple steps for everything the app does', () => const GuidePage()),
+          _row(context, Icons.help_outline, 'Help & tips', 'The tour, short lessons, every how-to, and tips on each screen', () => const HelpHubPage()),
           _row(context, Icons.verified_user_outlined, 'Our promise to you', 'No tracking, no ads, no AI. Your books stay yours.', () => const PromisePage()),
           _row(context, Icons.help_outline, SettingsTitles.help, 'What is new, and fixing problems', () => const _HelpPage()),
           const Divider(),
@@ -64,6 +64,15 @@ class _AppearancePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => _SettingsSub(SettingsTitles.appearance, [
         const _Hint('Pick the colours you like. Tap a name to choose it, or tap its light or dark colours to choose that version. You can change this any time.'),
+        const ThemePicker(),
+      ]);
+}
+
+/// Match phone and the theme pills (Settings > Appearance and the tour's set-up page).
+class ThemePicker extends StatelessWidget {
+  const ThemePicker({super.key});
+  @override
+  Widget build(BuildContext context) =>
         ValueListenableBuilder<String>(
           valueListenable: themeId,
           builder: (context, id, _) {
@@ -101,8 +110,7 @@ class _AppearancePage extends StatelessWidget {
                 ),
             ]);
           },
-        ),
-      ]);
+        );
 }
 
 class _NotificationsPage extends StatefulWidget {
@@ -350,7 +358,7 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
         ),
       ),
       const _Hint('A backup is a safe copy of your whole library, including your locked books. If you lose or break your phone, it brings everything back.'),
-      ListTile(leading: const Icon(Icons.save_alt), title: const Text('Save a copy as a file'), subtitle: const Text('The best backup. Choose where to keep it, and protect it with a password.'), onTap: _saveCopy),
+      CoachScope(tipId: 'backup', child: CoachTarget(id: 'backup.save', child: ListTile(leading: const Icon(Icons.save_alt), title: const Text('Save a copy as a file'), subtitle: const Text('The best backup. Choose where to keep it, and protect it with a password.'), onTap: _saveCopy))),
       ListTile(leading: const Icon(Icons.table_chart_outlined), title: const Text('Save my list as a spreadsheet'), subtitle: const Text('Easy to read in Excel or Google Sheets. Your locked books are not included.'), onTap: () async {
         await Exporter.shareCsv(db, includePrivateFields: adultFieldsOn());
         if (mounted) setState(() {});
@@ -440,7 +448,7 @@ class _FolderBackupTilesState extends State<_FolderBackupTiles> {
           title: const Text('Save backups to a folder automatically'),
           subtitle: const Text('Pick a folder once. Pagemark then saves a fresh backup there by itself. Tip: choose a folder in Google Drive, OneDrive or Dropbox and Android copies it to the cloud for you.'),
         ),
-        Padding(padding: const EdgeInsets.fromLTRB(72, 0, 16, 8), child: Align(alignment: Alignment.centerLeft, child: FilledButton.icon(onPressed: _choose, icon: const Icon(Icons.create_new_folder_outlined), label: const Text('Choose a folder')))),
+        Padding(padding: const EdgeInsets.fromLTRB(72, 0, 16, 8), child: Align(alignment: Alignment.centerLeft, child: CoachTarget(id: 'backup.folder', child: FilledButton.icon(onPressed: _choose, icon: const Icon(Icons.create_new_folder_outlined), label: const Text('Choose a folder'))))),
       ]);
     }
     final last = FolderBackup.lastOk;
@@ -725,8 +733,8 @@ class _HelpPage extends StatelessWidget {
   Widget build(BuildContext context) => _SettingsSub(SettingsTitles.help, [
         ListTile(leading: const Icon(Icons.verified_user_outlined), title: const Text('Our promise to you'), subtitle: const Text('No tracking, no ads, no AI. Your books stay yours.'), trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PromisePage()))),
-        ListTile(leading: const Icon(Icons.menu_book_outlined), title: const Text('How to use Pagemark'), subtitle: const Text('Short, simple steps for everything the app does'), trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GuidePage()))),
+        ListTile(leading: const Icon(Icons.menu_book_outlined), title: const Text('Help & tips'), subtitle: const Text('The tour, short lessons, every how-to, and tips on each screen'), trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpHubPage()))),
         ListTile(leading: const Icon(Icons.new_releases_outlined), title: const Text("What's new"), subtitle: const Text('Every change in every version'), trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangelogPage()))),
         ListTile(leading: const Icon(Icons.bug_report_outlined), title: const Text('Problem report'), subtitle: const Text('Only needed if someone is helping you fix a problem. It contains no book titles.'), trailing: const Icon(Icons.chevron_right),

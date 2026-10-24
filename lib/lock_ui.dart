@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'onboarding/coach.dart';
 import 'package:flutter/services.dart';
 import 'lock.dart';
 import 'home_nav.dart';
@@ -248,7 +249,7 @@ class _LockGateState extends State<LockGate> {
                   if (mode == null) ...[
                     const Text('Choose how to protect this library.', textAlign: TextAlign.center),
                     const SizedBox(height: 12),
-                    FilledButton(onPressed: () async { if (await setupPin(context) && mounted) widget.onUnlock(); }, child: const Text('Set a PIN')),
+                    CoachScope(tipId: 'locked', child: CoachTarget(id: 'locked.setup', child: FilledButton(onPressed: () async { if (await setupPin(context) && mounted) widget.onUnlock(); }, child: const Text('Set a PIN')))),
                     TextButton.icon(
                       onPressed: !deviceOk
                           ? null

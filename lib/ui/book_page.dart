@@ -61,9 +61,13 @@ class BookPage extends StatelessWidget {
               ],
             ),
           ]),
-          floatingActionButton: FloatingActionButton.extended(
-            icon: const Icon(Icons.add), label: const Text('Log a read'),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ReadEditor(bookId: b.id))),
+          floatingActionButton: CoachScope(
+            tipId: 'book',
+            enabled: !b.locked,
+            child: CoachTarget(id: 'book.log', child: FloatingActionButton.extended(
+              icon: const Icon(Icons.add), label: const Text('Log a read'),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ReadEditor(bookId: b.id))),
+            )),
           ),
           body: ListView(padding: const EdgeInsets.all(16), children: [
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [

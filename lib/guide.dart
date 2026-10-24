@@ -119,27 +119,28 @@ class _GuidePageState extends State<GuidePage> {
                   title: Text(t.title, style: Theme.of(context).textTheme.titleMedium),
                   childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                   expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                  children: _body(t.lines),
+                  children: guideBody(t.lines),
                 ),
             ]);
           },
         ),
         ),
       );
+}
 
-  List<Widget> _body(List<String> lines) {
-    final out = <Widget>[];
-    for (final l in lines) {
-      if (l.trim().isEmpty) {
-        out.add(const SizedBox(height: 8));
-      } else if (l.startsWith('- ')) {
-        out.add(Padding(padding: const EdgeInsets.only(left: 8, top: 4), child: Text.rich(inlineMarkdown('•  ${l.substring(2)}'))));
-      } else if (RegExp(r'^\d+\. ').hasMatch(l)) {
-        out.add(Padding(padding: const EdgeInsets.only(left: 8, top: 4), child: Text.rich(inlineMarkdown(l))));
-      } else {
-        out.add(Padding(padding: const EdgeInsets.only(top: 4), child: Text.rich(inlineMarkdown(l))));
-      }
+/// One guide topic's lines as widgets (the guide and Help & tips).
+List<Widget> guideBody(List<String> lines) {
+  final out = <Widget>[];
+  for (final l in lines) {
+    if (l.trim().isEmpty) {
+      out.add(const SizedBox(height: 8));
+    } else if (l.startsWith('- ')) {
+      out.add(Padding(padding: const EdgeInsets.only(left: 8, top: 4), child: Text.rich(inlineMarkdown('•  ${l.substring(2)}'))));
+    } else if (RegExp(r'^\d+\. ').hasMatch(l)) {
+      out.add(Padding(padding: const EdgeInsets.only(left: 8, top: 4), child: Text.rich(inlineMarkdown(l))));
+    } else {
+      out.add(Padding(padding: const EdgeInsets.only(top: 4), child: Text.rich(inlineMarkdown(l))));
     }
-    return out;
   }
+  return out;
 }

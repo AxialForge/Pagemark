@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:drift/drift.dart' show BooleanExpressionOperators, Value;
 import 'package:flutter/material.dart';
+import 'onboarding/coach.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:share_plus/share_plus.dart';
@@ -47,7 +48,7 @@ class QuotesSection extends StatelessWidget {
         return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             Expanded(child: Text('Quotes', style: Theme.of(context).textTheme.titleMedium)),
-            TextButton.icon(onPressed: () => _edit(context), icon: const Icon(Icons.format_quote), label: const Text('Add quote')),
+            CoachTarget(id: 'book.quote', child: TextButton.icon(onPressed: () => _edit(context), icon: const Icon(Icons.format_quote), label: const Text('Add quote'))),
           ]),
           if (list.isEmpty) const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Text('Save a line you loved, with its page.')),
           for (final q in list)

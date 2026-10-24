@@ -193,22 +193,29 @@ class _LibraryState extends State<Library> {
           ),
         ),
         actions: [
-        IconButton(
-          icon: Icon(skin.icon), tooltip: 'Library style: ${skin.label}',
-          onPressed: () async {
-            final picked = await showSkinPicker(context, skin,
-                grouped: groupShelves, hasShelves: shelves.isNotEmpty, onGrouped: (v) { setState(() => groupShelves = v); _save(); },
-                seriesGrouped: _seriesOn, onSeriesGrouped: (v) { setState(() => seriesMode = v ? 'on' : 'off'); _save(); });
-            if (picked != null && picked != skin) { setState(() => skin = picked); _save(); }
-          },
+        CoachScope(
+          tipId: widget.volumes == true ? 'manga' : 'library',
+          enabled: !widget.locked,
+          child: CoachTarget(
+            id: 'lib.style',
+            child: IconButton(
+              icon: Icon(skin.icon), tooltip: 'Library style: ${skin.label}',
+              onPressed: () async {
+                final picked = await showSkinPicker(context, skin,
+                    grouped: groupShelves, hasShelves: shelves.isNotEmpty, onGrouped: (v) { setState(() => groupShelves = v); _save(); },
+                    seriesGrouped: _seriesOn, onSeriesGrouped: (v) { setState(() => seriesMode = v ? 'on' : 'off'); _save(); });
+                if (picked != null && picked != skin) { setState(() => skin = picked); _save(); }
+              },
+            ),
+          ),
         ),
-        PopupMenuButton<String>(
+        CoachTarget(id: 'lib.more', child: PopupMenuButton<String>(
           tooltip: 'More',
           onSelected: (v) => Navigator.push(context, MaterialPageRoute(builder: (_) => switch (v) {
                 'series' => SeriesPage(locked: widget.locked),
                 'trash' => const TrashPage(locked: true),
                 'queue' => const QueuePage(),
-                'help' => const GuidePage(),
+                'help' => const HelpHubPage(),
                 _ => ShelvesPage(locked: widget.locked),
               })),
           itemBuilder: (_) => [
@@ -216,9 +223,9 @@ class _LibraryState extends State<Library> {
             if (!widget.locked) const PopupMenuItem(value: 'queue', child: ListTile(leading: Icon(Icons.format_list_numbered), title: Text('Read next order'))),
             const PopupMenuItem(value: 'shelves', child: ListTile(leading: Icon(Icons.collections_bookmark_outlined), title: Text('Manage shelves'))),
             if (widget.locked) const PopupMenuItem(value: 'trash', child: ListTile(leading: Icon(Icons.delete_sweep_outlined), title: Text('Deleted books'))),
-            const PopupMenuItem(value: 'help', child: ListTile(leading: Icon(Icons.menu_book_outlined), title: Text('How to use Pagemark'))),
+            const PopupMenuItem(value: 'help', child: ListTile(leading: Icon(Icons.help_outline), title: Text('Help & tips'))),
           ],
-        ),
+        )),
         PopupMenuButton<String>(
           icon: const Icon(Icons.sort),
           onSelected: (v) { setState(() => sort = v); _save(); },
@@ -230,10 +237,10 @@ class _LibraryState extends State<Library> {
           ],
         ),
       ]),
-      floatingActionButton: selected.isNotEmpty ? null : FloatingActionButton.extended(
+      floatingActionButton: selected.isNotEmpty ? null : CoachTarget(id: 'lib.add', child: FloatingActionButton.extended(
         icon: const Icon(Icons.add), label: const Text('Add book'),
         onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddBook(locked: widget.locked, kind: widget.volumes == true ? 'manga' : ''))),
-      ),
+      )),
       body: PopScope(
         canPop: selected.isEmpty, // Back first closes the selection
         onPopInvokedWithResult: (didPop, _) { if (!didPop) _clearSel(); },
@@ -247,7 +254,7 @@ class _LibraryState extends State<Library> {
           duration: const Duration(milliseconds: 180),
           alignment: Alignment.topCenter,
           child: _headerHidden && _short ? const SizedBox(width: double.infinity) : Column(children: [
-        Padding(
+        CoachTarget(id: 'lib.search', child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
           child: TextField(
             controller: _searchCtl,
@@ -260,7 +267,7 @@ class _LibraryState extends State<Library> {
             ),
             onChanged: (v) => setState(() => q = v.toLowerCase()),
           ),
-        ),
+        )),
         SizedBox(
           height: 20 + MediaQuery.textScalerOf(context).scale(28), // grows with the system font size so chip text is never clipped
           child: ListView(scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 8), children: [

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
+import 'onboarding/coach.dart';
 import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -286,7 +287,7 @@ class _YearCardState extends State<YearCard> {
       ),
       const SizedBox(height: 8),
       Wrap(spacing: 8, children: [
-        FilledButton.tonalIcon(onPressed: _busy ? null : _share, icon: const Icon(Icons.share), label: const Text('Share picture')),
+        CoachTarget(id: 'stats.share', child: FilledButton.tonalIcon(onPressed: _busy ? null : _share, icon: const Icon(Icons.share), label: const Text('Share picture'))),
         OutlinedButton.icon(onPressed: _busy ? null : () => shareYearReport(context, widget.s.year), icon: const Icon(Icons.picture_as_pdf_outlined), label: const Text('Report (PDF)')),
       ]),
     ]);

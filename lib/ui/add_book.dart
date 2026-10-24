@@ -172,11 +172,12 @@ class _AddBookState extends State<AddBook> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Add a book'), actions: [IconButton(icon: const Icon(Icons.qr_code_scanner), tooltip: 'Scan a barcode', onPressed: scan),
-          IconButton(icon: const Icon(Icons.library_add_check_outlined), tooltip: 'Scan many books', onPressed: scanMany),
+        appBar: AppBar(title: const Text('Add a book'), actions: [
+          CoachScope(tipId: 'add', enabled: !widget.locked, child: CoachTarget(id: 'add.scan', child: IconButton(icon: const Icon(Icons.qr_code_scanner), tooltip: 'Scan a barcode', onPressed: scan))),
+          CoachTarget(id: 'add.many', child: IconButton(icon: const Icon(Icons.library_add_check_outlined), tooltip: 'Scan many books', onPressed: scanMany)),
         ]),
         body: NarrowColumn(child: Column(children: [
-          Padding(
+          CoachTarget(id: 'add.search', child: Padding(
             padding: const EdgeInsets.all(12),
             child: TextField(
               controller: qc,
@@ -187,7 +188,7 @@ class _AddBookState extends State<AddBook> {
               ),
               onSubmitted: go,
             ),
-          ),
+          )),
           if (busy) const LinearProgressIndicator(),
           Expanded(
             child: ListView(children: [
@@ -204,11 +205,11 @@ class _AddBookState extends State<AddBook> {
                   onTap: () => setState(() => showAll = true),
                 ),
               if (searched && !busy && results.isEmpty && qc.text.trim().isNotEmpty) _noResults(),
-              ListTile(
+              CoachTarget(id: 'add.hand', child: ListTile(
                 leading: const Icon(Icons.edit_note), title: const Text('Add by hand'),
                 subtitle: const Text('Not found? Enter the details yourself.'),
                 onTap: manual,
-              ),
+              )),
             ]),
           ),
         ])),

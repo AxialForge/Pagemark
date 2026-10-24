@@ -6,6 +6,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **A guided tour** on first start: what Pagemark is and exactly what it keeps and sends, the camera and notification permissions explained before Android asks (with Not now, Ask again and Open phone settings), set-up choices (colours, how new reads start, Google Books, backup reminders), eight short lessons with an animation and a **Try it** button that opens the real screen, and a finale (add a book, import, sample books, restore). Skip or step back at any time.
+- **Tips on each screen**: the first time you open the Library, Manga & comics, Add book, a book, Stats, Locked or Backup, a spotlight points out what is there. Shown once; off if you skip the tour.
+- **Help & tips** in the menu and in Settings: search every lesson and how-to, take the tour again, turn tips on or off or show them all again, remove the sample books, and report a problem on GitHub.
+- People updating from an earlier version get a short sheet offering the tour instead of the tour itself.
+
 ## [1.2.2] - 2026-10-23
 
 ### Fixed

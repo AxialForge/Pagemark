@@ -13,6 +13,7 @@ import 'privacy.dart';
 import 'db.dart';
 import 'theme_families.dart';
 import 'ui.dart';
+import 'onboarding/tips.dart';
 
 final db = AppDb();
 late SharedPreferences prefs;
@@ -34,6 +35,7 @@ Future<void> main() async {
   });
   if (Secure.docBuild) Log.w('build', 'documentation build: screenshot blocking is OFF (never ship this build)');
   prefs = await SharedPreferences.getInstance();
+  Guidance.init(prefs);
   await CoverStore.init();
   themeId.value = prefs.getString('theme') ?? 'light_him';
   themeId.addListener(() => prefs.setString('theme', themeId.value));

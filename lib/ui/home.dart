@@ -60,17 +60,20 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
 
   DateTime? _leftAt;
 
-  /// First start with an empty library: the welcome screens, once. Anyone who already has books never sees them.
+  /// First start with an empty library: the guided tour. Someone who already uses Pagemark gets a short "What's new"
+  /// sheet that offers the tour instead (never forced). Either way, only once per tour version.
   Future<void> _maybeWelcome() async {
-    if (prefs.getBool('welcome_seen') ?? false) return;
-    final n = (await db.select(db.books).get()).length;
-    if (n > 0) {
-      await prefs.setBool('welcome_seen', true);
+    final existing = (prefs.getBool('welcome_seen') ?? false) || (await db.select(db.books).get()).isNotEmpty;
+    final start = decideOnboarding(doneVersion: Guidance.doneVersion, newsSeen: Guidance.newsSeen, existingUser: existing);
+    if (!mounted || start == OnboardingStart.none) return;
+    if (start == OnboardingStart.tour) {
+      await Navigator.push(context, MaterialPageRoute(fullscreenDialog: true, builder: (_) => const TourScreen()));
       return;
     }
-    if (!mounted) return;
-    await Navigator.push(context, MaterialPageRoute(fullscreenDialog: true, builder: (_) => const WelcomePage()));
-    await prefs.setBool('welcome_seen', true);
+    final choice = await showWhatsNewSheet(context);
+    if (choice == WhatsNewChoice.tour && mounted) {
+      await Navigator.push(context, MaterialPageRoute(fullscreenDialog: true, builder: (_) => const TourScreen(replay: true)));
+    }
   }
 
   /// After a few books are in, ask once for permission to send reminders (Android 13+ shows its own question).
@@ -184,6 +187,10 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                 Navigator.pop(context);
                 select(i);
               },
+              onHelp: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpHubPage()));
+              },
             ),
             body: HomeNav(open: () => _navKey.currentState?.openDrawer(), child: content),
           );
@@ -251,7 +258,8 @@ void openVault(BuildContext context) => Navigator.push(context, MaterialPageRout
 class _NavDrawer extends StatelessWidget {
   final List<(Widget, String, bool)> items;
   final ValueChanged<int> onSelect;
-  const _NavDrawer({required this.items, required this.onSelect});
+  final VoidCallback onHelp;
+  const _NavDrawer({required this.items, required this.onSelect, required this.onHelp});
 
   @override
   Widget build(BuildContext context) {
@@ -296,6 +304,16 @@ class _NavDrawer extends StatelessWidget {
                   onTap: () => onSelect(i),
                 ),
               ),
+            const Divider(indent: 20, endIndent: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 1),
+              child: ListTile(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                leading: const Icon(Icons.help_outline),
+                title: const Text('Help & tips'),
+                onTap: onHelp,
+              ),
+            ),
           ],
         ),
       ),

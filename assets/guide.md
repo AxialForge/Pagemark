@@ -8,8 +8,11 @@ The first time you open Pagemark you see three short screens. Tap **Skip** at an
 
 The sample books are well-known classics, there so you can see how everything looks. A card at the top of the Library says so. Tap **Remove** on it when you are ready to add your own books. Your own books are never touched.
 
+## The tour and tips
+The first time you open Pagemark a short tour explains the app, asks about the camera and notifications only after telling you why, and ends with eight short lessons. Each lesson has a **Try it** button that opens the real screen. Open the menu and tap **Help & tips** to take the tour again, to turn the tips on each screen on or off, or to show them all again.
+
 ## Getting around
-Tap the menu button (three lines) at the top left to open the side menu: **Library**, **Manga & comics**, **Locked**, **Stats** and **Settings**. Pressing Back takes you to the Library first.
+Tap the menu button (three lines) at the top left to open the side menu: **Library**, **Manga & comics**, **Locked**, **Stats**, **Settings** and **Help & tips**. Pressing Back takes you to the Library first.
 
 ## Add your first book
 Tap **Add book** on the Library screen (the round button at the bottom).
