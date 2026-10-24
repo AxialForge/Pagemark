@@ -12,6 +12,9 @@ enum _Tab { library, manga, locked, stats, settings }
 class _HomeState extends State<Home> with WidgetsBindingObserver {
   _Tab cur = _Tab.library;
   final _navKey = GlobalKey<ScaffoldState>();
+  /// The pages' own message area: message bars then sit above each page's Add book button instead of on the outer
+  /// (menu) Scaffold, which knows nothing about it.
+  final _messengerKey = GlobalKey<ScaffoldMessengerState>();
   bool unlocked = false;
 
   @override
@@ -32,7 +35,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Incoming.start(); // a Share or shortcut that started the app
       _maybeWelcome();
-      if (mounted) announceNewVersion(context);
+      if (mounted) announceNewVersion(context, messenger: _messengerKey.currentState);
     });
   }
 
@@ -115,7 +118,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                 if (shown == _Tab.locked && next != _Tab.locked) _lock(); // re-lock when leaving the locked tab
                 cur = next;
               });
-          final content = PopScope(
+          final content = ScaffoldMessenger(key: _messengerKey, child: PopScope(
             canPop: shown == _Tab.library, // Back on Stats, Locked or Settings goes to Library first; Back on Library leaves the app
             onPopInvokedWithResult: (didPop, _) {
               if (!didPop) select(visible.indexOf(_Tab.library));
@@ -146,7 +149,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                     ])
                   : page,
             ),
-          ));
+          )));
           final destinations = [
             for (final t in visible)
               switch (t) {

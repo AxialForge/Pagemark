@@ -29,12 +29,12 @@ Future<void> autoCheckUpdates() async {
 }
 
 /// After an upgrade, point at what changed (offline: the changelog ships inside the app).
-Future<void> announceNewVersion(BuildContext context) async {
+Future<void> announceNewVersion(BuildContext context, {ScaffoldMessengerState? messenger}) async {
   final v = (await PackageInfo.fromPlatform()).version;
   final seen = prefs.getString('seen_version');
   await prefs.setString('seen_version', v);
   if (seen == null || seen == v || !context.mounted) return; // fresh install, or nothing new
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  (messenger ?? ScaffoldMessenger.of(context)).showSnackBar(SnackBar(
     content: Text('Updated to Pagemark $v'),
     duration: const Duration(seconds: 8),
     action: SnackBarAction(label: "What's new", onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangelogPage()))),

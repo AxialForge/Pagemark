@@ -316,9 +316,11 @@ class _LibraryState extends State<Library> {
                             : widget.volumes == true
                                 ? 'No manga or comics yet.\nTap Add book to add a volume.'
                                 : 'Your shelf is empty.\nTap Add book to start your log.',
-                        actionLabel: widget.locked ? null : 'See how Pagemark works',
+                        actionLabel: widget.locked ? null : widget.volumes == true ? 'How manga and series work' : 'See how Pagemark works',
                         actionIcon: Icons.help_outline,
-                        onAction: widget.locked ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GuidePage())),
+                        onAction: widget.locked
+                            ? null
+                            : () => Navigator.push(context, MaterialPageRoute(builder: (_) => GuidePage(openTopic: widget.volumes == true ? mangaGuideTopic : null))),
                       )
                     : const Center(child: Text('No matches.'));
               }

@@ -15,6 +15,10 @@ void main() {
     }
   });
 
+  test('the topic the empty Manga & comics page opens exists', () {
+    expect(topics.map((t) => t.title), contains(mangaGuideTopic));
+  });
+
   test('github-only lines are dropped for the Play build', () {
     final play = parseGuide(md, github: false).map((t) => t.text).join('\n');
     final gh = topics.map((t) => t.text).join('\n');

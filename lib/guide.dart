@@ -13,6 +13,9 @@ class GuideTopic {
 
 /// The names of the Settings pages. The guide refers to them, and a test checks that every "Settings → X" in the guide uses one of
 /// these, so renaming a page without updating the guide fails the build.
+/// The guide topic the empty Manga & comics page opens (a heading in assets/guide.md).
+const mangaGuideTopic = 'Manga, comics and other series';
+
 class SettingsTitles {
   static const promise = 'Our promise to you';
   static const appearance = 'Appearance';
@@ -69,7 +72,9 @@ List<String> _trim(List<String> l) {
 
 /// "How to use Pagemark": the topics in plain words, with a search box.
 class GuidePage extends StatefulWidget {
-  const GuidePage({super.key});
+  /// A topic title to open straight away (for example the manga topic from the empty Manga & comics page).
+  final String? openTopic;
+  const GuidePage({super.key, this.openTopic});
   @override
   State<GuidePage> createState() => _GuidePageState();
 }
@@ -77,6 +82,8 @@ class GuidePage extends StatefulWidget {
 class _GuidePageState extends State<GuidePage> {
   late final Future<List<GuideTopic>> _topics = rootBundle.loadString('assets/guide.md').then((s) => parseGuide(s, github: appFlavor != 'play'));
   String q = '';
+  final _openKey = GlobalKey();
+  bool _scrolled = false;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -89,6 +96,13 @@ class _GuidePageState extends State<GuidePage> {
             final all = snap.data!;
             final needle = q.trim().toLowerCase();
             final shown = needle.isEmpty ? all : all.where((t) => t.text.toLowerCase().contains(needle)).toList();
+            if (widget.openTopic != null && !_scrolled) {
+              _scrolled = true; // bring the opened topic to the top once
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                final c = _openKey.currentContext;
+                if (c != null) Scrollable.ensureVisible(c, duration: const Duration(milliseconds: 300));
+              });
+            }
             return ListView(padding: const EdgeInsets.only(bottom: 24), children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -100,8 +114,8 @@ class _GuidePageState extends State<GuidePage> {
               if (shown.isEmpty) const Padding(padding: EdgeInsets.all(24), child: Text('Nothing matches that. Try a simpler word, like "backup", "PIN" or "shelf".')),
               for (final t in shown)
                 ExpansionTile(
-                  key: PageStorageKey('${t.title}|${needle.isNotEmpty}'),
-                  initiallyExpanded: needle.isNotEmpty && shown.length <= 3,
+                  key: needle.isEmpty && t.title == widget.openTopic ? _openKey : PageStorageKey('${t.title}|${needle.isNotEmpty}'),
+                  initiallyExpanded: (needle.isNotEmpty && shown.length <= 3) || (needle.isEmpty && t.title == widget.openTopic),
                   title: Text(t.title, style: Theme.of(context).textTheme.titleMedium),
                   childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                   expandedCrossAxisAlignment: CrossAxisAlignment.start,
