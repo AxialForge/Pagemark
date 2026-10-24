@@ -113,7 +113,7 @@ class BookPage extends StatelessWidget {
                   if (active != null) ProgressCard(book: b, read: active),
                   if (active != null) ReadingTimerCard(book: b, read: active),
                   for (final r in list)
-                    Card(child: ListTile(
+                    Card(margin: const EdgeInsets.only(bottom: 8), child: ListTile( // same width as the progress and timer cards
                       leading: Icon(r.format == 'audio' ? Icons.headphones : r.format == 'ebook' ? Icons.tablet_android : Icons.menu_book),
                       title: Text('${formats[r.format]} · ${statuses[r.status]}'),
                       subtitle: Text([
@@ -234,6 +234,7 @@ class _EditBookState extends State<EditBook> {
             ),
           ),
           SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('I own this'), subtitle: const Text('Turn off to keep it on your list as a book you want to get'), value: owned, onChanged: (v) => setState(() => owned = v)),
+          const SizedBox(height: 12),
           f('genre', 'Genre (fantasy, romance, science…)', cap: TextCapitalization.words),
           f('tags', 'Tags (separate with commas)'), f('publisher', 'Publisher', cap: TextCapitalization.words), f('isbn', 'ISBN'), f('coverUrl', 'Cover picture web address'),
           f('year', 'Year', num: true), f('pages', 'Pages', num: true),

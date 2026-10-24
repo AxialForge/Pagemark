@@ -95,7 +95,7 @@ If you forget your PIN, tap **Forgot PIN?** on the lock screen and type the reco
 
 To change between a PIN and the fingerprint or device lock only, go to Settings → Privacy and lock and tap **How you unlock**. You confirm it is you first. Choosing the device lock switches off the PIN for the whole app, because that setting needs a PIN.
 
-To hide the Locked tab completely, go to Settings → Privacy and lock and turn on **Hide the Locked tab**. To open it afterwards, press and hold the word "Library" at the top of the Library screen.
+To hide Locked from the menu completely, go to Settings → Privacy and lock and turn on **Hide Locked from the menu**. To open it afterwards, press and hold the word "Library" at the top of the Library screen.
 
 ## Notifications and reminders
 Go to Settings → Notifications. Android may ask if Pagemark can send notifications: say yes. If you said no before, the page shows a red box with a **Turn on** button.

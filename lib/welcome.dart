@@ -25,7 +25,7 @@ class _WelcomePageState extends State<WelcomePage> {
   static const _pages = [
     (Icons.menu_book_rounded, 'Your private reading log', 'Keep track of every book you read or listen to: what you thought, how far you are, and what you want to read next. Everything stays on this phone. No account, no ads, no tracking, no AI.'),
     (Icons.qr_code_scanner, 'Adding a book is easy', 'Scan the barcode on the back of a book, or type its title. Pagemark finds the cover and the details for you.'),
-    (Icons.lock_outline, 'Private and safe', 'Keep some books behind a PIN in the Locked tab. Save a backup copy now and then, so you never lose your library. Pagemark will remind you.'),
+    (Icons.lock_outline, 'Private and safe', 'Keep some books behind a PIN in your Locked library. Save a backup copy now and then, so you never lose your library. Pagemark will remind you.'),
   ];
 
   Future<void> _finish(Widget? then) async {

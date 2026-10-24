@@ -57,7 +57,7 @@ Future<void> restoreFlow(BuildContext context, File picked) async {
       title: const Text('Restored'),
       content: Text('Pagemark will now close. Open it again to see your restored library.'
           '${check.lockedBooks > 0 ? '\n\nYour ${check.lockedBooks} locked book${check.lockedBooks == 1 ? '' : 's'} came back too, but your PIN is not part of backups. '
-              'Open the Locked tab and set a new PIN to reach ${check.lockedBooks == 1 ? 'it' : 'them'}.' : ''}'),
+              'Open Locked in the menu and set a new PIN to reach ${check.lockedBooks == 1 ? 'it' : 'them'}.' : ''}'),
       actions: [FilledButton(onPressed: () => SystemNavigator.pop(), child: const Text('Close Pagemark'))], // a graceful exit, not exit(0)
     ),
   );

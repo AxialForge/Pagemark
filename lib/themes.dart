@@ -48,6 +48,9 @@ class PTheme {
       outlineVariant: n.hairline,
       inverseSurface: n.strong,
       onInverseSurface: n.onStrong,
+      // stars, quote bars and bookmark ribbons: the theme colour, not a second generated hue
+      tertiary: tones.primary,
+      onTertiary: tones.onPrimary,
     );
     final accentText = tones.primary; // M3 tone 40/80: AA on the page in both modes
 

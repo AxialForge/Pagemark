@@ -35,7 +35,7 @@ class ReportPdf {
           pw.Text('${s.books} ${s.books == 1 ? 'book' : 'books'} finished${s.pages > 0 ? ', ${NumberFormat.decimalPattern().format(s.pages)} pages' : ''}${s.minutes >= 60 ? ', about ${(s.minutes / 60).round()} hours' : ''}.'),
           if (s.topGenre != null) pw.Text('Favourite genre: ${clean(s.topGenre!)}'),
           if (s.topAuthor != null) pw.Text('Most-read author: ${clean(s.topAuthor!)}'),
-          if (s.avgRating != null) pw.Text('Average rating: ${s.avgRating!.toStringAsFixed(1)} of 5'),
+          if (s.avgRating != null) pw.Text('Average rating: ${ratingText(s.avgRating!)} of 5'),
           pw.SizedBox(height: 14),
           pw.TableHelper.fromTextArray(
             headers: ['Finished', 'Title', 'Author', 'Pages', 'Stars'],

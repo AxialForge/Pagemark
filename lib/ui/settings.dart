@@ -228,7 +228,7 @@ class _PrivacyPage extends StatelessWidget {
   const _PrivacyPage({required this.onLockNow});
   @override
   Widget build(BuildContext context) => _SettingsSub(SettingsTitles.privacy, [
-        const _Hint('Books you move to the Locked tab are hidden behind a PIN or your fingerprint.'),
+        const _Hint('Books you move to Locked (in the menu) are hidden behind a PIN or your fingerprint.'),
         ListTile(leading: const Icon(Icons.lock_clock), title: const Text('Lock now'), subtitle: const Text('Close your private library right away'), onTap: () { onLockNow(); Navigator.pop(context); }),
         ValueListenableBuilder<int>(
           valueListenable: lockDelay,
@@ -248,7 +248,7 @@ class _PrivacyPage extends StatelessWidget {
           builder: (context, on, _) => SwitchListTile(
             secondary: const Icon(Icons.phonelink_lock_outlined),
             title: const Text('Ask for my PIN to open Pagemark'),
-            subtitle: const Text('Protects the whole app, not just the Locked tab. Uses the same PIN.'),
+            subtitle: const Text('Protects the whole app, not just your locked books. Uses the same PIN.'),
             value: on,
             onChanged: (v) async {
               if (v && !await enableAppLock(context)) return;
@@ -260,12 +260,12 @@ class _PrivacyPage extends StatelessWidget {
           valueListenable: hideLockedTab,
           builder: (context, hidden, _) => SwitchListTile(
             secondary: const Icon(Icons.visibility_off_outlined),
-            title: const Text('Hide the Locked tab'),
+            title: const Text('Hide Locked from the menu'),
             subtitle: const Text('Nothing shows that you have a private library. To open it, press and hold the word "Library" at the top of the Library screen.'),
             value: hidden,
             onChanged: (v) {
               hideLockedTab.value = v;
-              if (v) snack(context, 'Locked tab hidden. Press and hold "Library" at the top to open it.');
+              if (v) snack(context, 'Locked is hidden from the menu. Press and hold "Library" at the top to open it.');
             },
           ),
         ),
@@ -572,8 +572,8 @@ class _UnlockMethodTileState extends State<_UnlockMethodTile> {
   static String label(String? m) => switch (m) {
         'pin' => 'A PIN (the fingerprint button works as a shortcut)',
         'device' => 'Fingerprint or device lock only',
-        'lost' || 'unavailable' => 'Needs confirming (open the Locked tab)',
-        _ => 'Not set up yet (open the Locked tab)',
+        'lost' || 'unavailable' => 'Needs confirming (open Locked in the menu)',
+        _ => 'Not set up yet (open Locked in the menu)',
       };
 
   Future<void> _choose() async {
@@ -602,7 +602,7 @@ class _UnlockMethodTileState extends State<_UnlockMethodTile> {
     );
     if (pick == null || pick == mode || !mounted) return;
     if (mode != 'pin' && mode != 'device') {
-      snack(context, 'Open the Locked tab once to set up the lock first.');
+      snack(context, 'Open Locked in the menu once to set up the lock first.');
       return;
     }
     if (!await confirmCurrent(context) || !mounted) return;

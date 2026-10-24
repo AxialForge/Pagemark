@@ -254,11 +254,14 @@ class _YearCardState extends State<YearCard> {
     final s = widget.s;
     final cs = Theme.of(context).colorScheme;
     if (s.isEmpty) return const Text('Finish a book this year and your card appears here.');
+    // the charcoal band of the menu header, with the light shade of the theme colour as its accent
+    final ink = cs.onInverseSurface;
+    final accent = Theme.of(context).brightness == Brightness.dark ? cs.primary : cs.inversePrimary;
     Widget line(String big, String small) => Padding(
           padding: const EdgeInsets.only(top: 8),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(big, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: cs.onPrimaryContainer)),
-            Text(small, style: TextStyle(color: cs.onPrimaryContainer)),
+            Text(big, style: TextStyle(fontFamily: 'Newsreader', fontSize: 28, fontWeight: FontWeight.w600, color: ink)),
+            Text(small, style: TextStyle(color: ink.withValues(alpha: 0.72))),
           ]),
         );
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -266,18 +269,18 @@ class _YearCardState extends State<YearCard> {
         key: _key,
         child: Container(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(color: cs.primaryContainer, borderRadius: BorderRadius.circular(16)),
+          decoration: BoxDecoration(color: cs.inverseSurface, borderRadius: BorderRadius.circular(18)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('${s.year} in books', style: TextStyle(fontSize: 14, letterSpacing: 1.2, color: cs.onPrimaryContainer)),
+            Text('${s.year} in books'.toUpperCase(), style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, letterSpacing: 1.4, color: accent)),
             line('${s.books}', s.books == 1 ? 'book finished' : 'books finished'),
             if (s.pages > 0) line(NumberFormat.decimalPattern().format(s.pages), 'pages'),
             if (s.minutes >= 60) line('${(s.minutes / 60).round()}', 'hours of reading'),
             if (s.topGenre != null) line(s.topGenre!, 'favourite genre'),
             if (s.topAuthor != null) line(s.topAuthor!, 'most-read author'),
-            if (s.avgRating != null) line(s.avgRating!.toStringAsFixed(1), 'average rating'),
+            if (s.avgRating != null) line(ratingText(s.avgRating!), 'average rating'),
             if (s.best != null) line(s.best!.book.title, 'my top rated'),
             const SizedBox(height: 14),
-            Text('Made with Pagemark', style: TextStyle(fontSize: 12, color: cs.onPrimaryContainer)),
+            Text('Made with Pagemark', style: TextStyle(fontSize: 12, color: ink.withValues(alpha: 0.6))),
           ]),
         ),
       ),

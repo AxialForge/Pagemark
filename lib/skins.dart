@@ -185,7 +185,7 @@ Color _bookColor(BuildContext context, String title) => bookColorFor(title, Them
 Color _onColor(Color c) => onBookColor(c);
 
 /// The back of the bookcase: a faint theme-tinted panel behind the books.
-Color _wall(ColorScheme cs) => Color.alphaBlend(cs.primary.withValues(alpha: 0.07), cs.surfaceContainer);
+Color _wall(ColorScheme cs) => cs.surfaceContainerHigh; // the warm panel shade (a tint of the accent turned it cool grey)
 
 // ───────────────────────── Classic ─────────────────────────
 class ClassicList extends StatelessWidget {

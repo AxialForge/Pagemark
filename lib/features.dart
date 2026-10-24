@@ -604,7 +604,7 @@ class _SeriesBody extends StatelessWidget {
 
   static String _ratingLine(SeriesGroup g) {
     final avg = seriesAverage(g.rows);
-    return avg.average == null ? '' : 'Average ${avg.average!.toStringAsFixed(1)} stars (${avg.rated} rated)';
+    return avg.average == null ? '' : 'Average ${ratingText(avg.average!)} stars (${avg.rated} rated)';
   }
 
   Widget _bookTile(BuildContext context, BookRow r) => ListTile(
@@ -806,7 +806,7 @@ class _StatsState extends State<Stats> {
                 : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     BarChart(values: hist, labels: const ['½', '1', '1½', '2', '2½', '3', '3½', '4', '4½', '5'], height: 90),
                     const SizedBox(height: 6),
-                    Text('Average ${(rated.reduce((a, b) => a + b) / rated.length).toStringAsFixed(2)} across ${rated.length} rated books', style: Theme.of(context).textTheme.bodySmall),
+                    Text('Average ${ratingText(rated.reduce((a, b) => a + b) / rated.length)} across ${rated.length} rated books', style: Theme.of(context).textTheme.bodySmall),
                   ])),
             section('Totals', Column(children: [
               _kv(context, 'Books tracked', '${rows.length}'),

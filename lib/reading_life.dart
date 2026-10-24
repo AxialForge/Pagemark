@@ -121,3 +121,6 @@ YearSummary yearSummary(Iterable<BookRow> rows, int year, {Iterable<ReadingSessi
   String? top(Map<String, int> m) => m.isEmpty ? null : (m.entries.toList()..sort((a, b) => b.value != a.value ? b.value.compareTo(a.value) : a.key.compareTo(b.key))).first.key;
   return YearSummary(year, count, pages, minutes, rated.isEmpty ? null : rated.reduce((a, b) => a + b) / rated.length, top(genres), top(authors), best);
 }
+
+/// An average rating as shown everywhere in the app: up to two decimals, no trailing zeros (4.25, 4.5, 4).
+String ratingText(double v) => v.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
