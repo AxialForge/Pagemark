@@ -6,6 +6,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-10-23
+
+### Fixed
+- Message bars (Undo, "Updated to Pagemark") no longer cover the **Add book** button. Since the side menu arrived they were drawn on the outer screen, which does not know about the button; each page now has its own.
+- The empty **Manga & comics** page offers **How manga and series work**, which opens the guide on the manga topic, instead of the general "See how Pagemark works".
+
 ## [1.2.0] - 2026-10-23
 
 ### Added
