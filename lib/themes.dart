@@ -146,7 +146,8 @@ class PTheme {
       snackBarTheme: SnackBarThemeData(
         backgroundColor: n.strong,
         contentTextStyle: TextStyle(fontFamily: _ui, fontSize: 15, color: n.onStrong),
-        actionTextColor: tones.inversePrimary,
+        // the bar is charcoal in both modes, so its link always uses the light tone of the accent
+        actionTextColor: dark ? tones.primary : tones.inversePrimary,
         behavior: SnackBarBehavior.floating,
       ),
       navigationRailTheme: NavigationRailThemeData(backgroundColor: n.surface, indicatorColor: n.selected),

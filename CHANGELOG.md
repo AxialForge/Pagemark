@@ -6,6 +6,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- In dark themes the link on a message bar (such as **What's new** or **Undo**) was dark on the charcoal bar and hard to read. It now uses the light shade of your theme's colour.
+
 ## [1.2.1] - 2026-10-23
 
 ### Fixed
